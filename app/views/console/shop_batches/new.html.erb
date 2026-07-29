@@ -2,7 +2,7 @@
 <h1>Add a batch of shops</h1>
 <p class="muted">Paste a JSON array. Neighborhood IDs must already exist. The batch is transactional: one invalid row rolls back every row.</p>
 <% if @error %><p class="flash flash--alert"><%= @error %></p><% end %>
-<%= form_with url: console_shop_batches_path, class: "stack" do |form| %>
+<%= form_with url: console_shop_batches_path, class: "stack", data: { turbo: false } do |form| %>
   <%= form.label :shops_json, "Shop array" %>
   <%= form.text_area :shops_json, required: true, placeholder: '[{"name":"Example","name_am":"ምሳሌ","neighborhood_id":1,"landmark":"Near the square","latitude":9.01,"longitude":38.76}]' %>
   <%= form.submit "Create batch" %>

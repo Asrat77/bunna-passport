@@ -13,7 +13,8 @@
   <% if @contribution.pending? %>
     <%= button_to "Approve", console_contribution_approval_path(@contribution),
       class: "button button--secondary", form: { data: { turbo: false } } %>
-    <%= form_with url: console_contribution_rejection_path(@contribution), class: "actions" do |form| %>
+    <%= form_with url: console_contribution_rejection_path(@contribution),
+      class: "actions", data: { turbo: false } do |form| %>
       <%= form.text_field :reason, required: true, placeholder: "Reason for rejection" %>
       <%= form.submit "Reject", class: "button--danger" %>
     <% end %>

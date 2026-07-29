@@ -1,7 +1,7 @@
 <% if shop.errors.any? %>
   <div class="errors"><%= shop.errors.full_messages.to_sentence %></div>
 <% end %>
-<%= form_with model: [ :console, shop ], class: "stack" do |form| %>
+<%= form_with model: [ :console, shop ], class: "stack", data: { turbo: false } do |form| %>
   <div class="form-grid">
     <div><%= form.label :name, "Latin name" %><%= form.text_field :name, required: true %></div>
     <div><%= form.label :name_am, "Amharic name" %><%= form.text_field :name_am, required: true %></div>

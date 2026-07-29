@@ -2,7 +2,7 @@
   <p class="eyebrow">Operations console</p>
   <h1>Welcome back</h1>
   <p class="muted">Sign in with the founder or moderator account.</p>
-  <%= form_with url: session_path, class: "stack" do |form| %>
+  <%= form_with url: session_path, class: "stack", data: { turbo: false } do |form| %>
     <%= form.label :email_address, "Email address" %>
     <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
     <%= form.label :password, "Password" %>
