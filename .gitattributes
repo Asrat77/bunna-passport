@@ -1,0 +1,4 @@
+db/schema.rb linguist-generated
+db/cache_schema.rb linguist-generated
+db/cable_schema.rb linguist-generated
+db/queue_schema.rb linguist-generated

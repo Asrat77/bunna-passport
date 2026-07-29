@@ -1,0 +1,17 @@
+<p class="eyebrow"><%= @shop.neighborhood.name %> · <%= @shop.status.humanize %></p>
+<h1><%= @shop.name %> <span lang="am"><%= @shop.name_am %></span></h1>
+<p class="muted"><%= @shop.landmark %></p>
+<section class="metric-grid">
+  <article class="metric"><strong><%= @shop.check_ins_count %></strong><span>Verified cups</span></article>
+  <article class="metric"><strong><%= @shop.stamps_count %></strong><span>Passport stamps</span></article>
+  <article class="metric"><strong><%= @shop.hours&.freshness || "unknown" %></strong><span>Hours status</span></article>
+</section>
+<section class="panel">
+  <p><strong>Coordinates:</strong> <%= @shop.latitude %>, <%= @shop.longitude %></p>
+  <p><strong>Attributes:</strong> <%= @shop.api_attributes.select { |_key, value| value }.keys.map(&:humanize).to_sentence.presence || "None" %></p>
+  <% if @shop.merged? %><p><strong>Canonical shop:</strong> <%= link_to @shop.merged_into.name, console_shop_path(@shop.merged_into) %></p><% end %>
+</section>
+<div class="actions">
+  <%= link_to "Edit shop", edit_console_shop_path(@shop), class: "button" %>
+  <% unless @shop.merged? %><%= link_to "Merge duplicate", new_console_shop_merge_path(@shop), class: "button button--danger" %><% end %>
+</div>

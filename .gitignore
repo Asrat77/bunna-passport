@@ -1,0 +1,17 @@
+/.bundle
+/.kamal/secrets
+/.env*
+/config/master.key
+/config/credentials/*.key
+/coverage
+/log/*
+/storage/*
+/tmp/*
+
+!/log/.keep
+!/storage/.keep
+!/tmp/.keep
+!/tmp/pids
+!/tmp/pids/.keep
+
+.DS_Store

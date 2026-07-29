@@ -1,0 +1,13 @@
+<article class="panel">
+  <h2><%= title %></h2>
+  <ul class="record-list">
+    <% records.each do |record| %>
+      <li>
+        <%= link_to label_for.call(record), path_for.call(record) %>
+        <small><%= time_ago_in_words(record.created_at) %> ago</small>
+      </li>
+    <% end %>
+    <% if records.empty? %><li class="muted">Nothing waiting.</li><% end %>
+  </ul>
+  <%= link_to "View all", all_path %>
+</article>

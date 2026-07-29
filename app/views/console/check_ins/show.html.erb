@@ -1,0 +1,15 @@
+<p class="eyebrow">Check-in #<%= @check_in.id %></p>
+<h1><%= @check_in.shop.name %></h1>
+<p>@<%= @check_in.user.handle %> · <span class="status status--<%= @check_in.status %>"><%= @check_in.status.humanize %></span></p>
+<section class="panel">
+  <p><strong>Flag:</strong> <%= @check_in.flag_reason.presence || "None" %></p>
+  <p><strong>Distance:</strong> <%= @check_in.distance_meters %>m · <strong>Accuracy:</strong> <%= @check_in.accuracy_meters %>m</p>
+  <p><strong>Coordinates:</strong> <%= @check_in.latitude %>, <%= @check_in.longitude %></p>
+  <p><strong>Device mock signal:</strong> <%= @check_in.mock_location? ? "yes" : "no" %></p>
+</section>
+<div class="actions">
+  <% if @check_in.flagged? %>
+    <%= button_to "Clear as verified", console_check_in_verification_path(@check_in), class: "button button--secondary" %>
+    <%= button_to "Reject", console_check_in_rejection_path(@check_in), class: "button--danger" %>
+  <% end %>
+</div>

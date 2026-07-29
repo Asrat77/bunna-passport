@@ -1,0 +1,14 @@
+<p class="eyebrow">Report #<%= @report.id %></p>
+<h1><%= @report.reason.humanize %></h1>
+<p><span class="status status--<%= @report.status %>"><%= @report.status.humanize %></span>
+  · reported by @<%= @report.user.handle %></p>
+<section class="panel">
+  <p><strong>Target:</strong> <%= @report.reportable_type %> #<%= @report.reportable_id %></p>
+  <p><strong>Note:</strong> <%= @report.note.presence || "No note supplied." %></p>
+</section>
+<div class="actions">
+  <% if @report.pending? %>
+    <%= button_to "Uphold", console_report_upholding_path(@report), class: "button--danger" %>
+    <%= button_to "Dismiss", console_report_dismissal_path(@report), class: "button button--secondary" %>
+  <% end %>
+</div>

@@ -1,0 +1,20 @@
+<div class="page-heading">
+  <div><p class="eyebrow">Moderation</p><h1>Reports</h1></div>
+  <div class="actions"><%= link_to "All", console_reports_path %><%= link_to "Pending", console_reports_path(status: "pending") %></div>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Reason</th><th>Target</th><th>Reporter</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+      <% @reports.each do |report| %>
+        <tr>
+          <td><%= link_to report.reason.humanize, console_report_path(report) %></td>
+          <td><%= report.reportable_type.demodulize %> #<%= report.reportable_id %></td>
+          <td>@<%= report.user.handle %></td>
+          <td><span class="status status--<%= report.status %>"><%= report.status.humanize %></span></td>
+          <td><%= time_ago_in_words(report.created_at) %> ago</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

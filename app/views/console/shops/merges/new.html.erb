@@ -1,0 +1,9 @@
+<p class="eyebrow">Duplicate resolution</p>
+<h1>Merge <%= @shop.name %></h1>
+<p class="muted">The current shop remains as a merged tombstone. Check-ins, photos, and the earliest user stamps move to the canonical shop.</p>
+<%= form_with url: console_shop_merge_path(@shop), class: "stack" do |form| %>
+  <%= form.label :winner_id, "Canonical shop" do %>
+    <%= form.collection_select :winner_id, @candidates, :id, ->(shop) { "#{shop.name} · #{shop.neighborhood.name}" } %>
+  <% end %>
+  <%= form.submit "Merge duplicate", class: "button--danger" %>
+<% end %>

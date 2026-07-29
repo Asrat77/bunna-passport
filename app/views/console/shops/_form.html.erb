@@ -1,0 +1,31 @@
+<% if shop.errors.any? %>
+  <div class="errors"><%= shop.errors.full_messages.to_sentence %></div>
+<% end %>
+<%= form_with model: [ :console, shop ], class: "stack" do |form| %>
+  <div class="form-grid">
+    <%= form.label :name, "Latin name" do %><%= form.text_field :name, required: true %><% end %>
+    <%= form.label :name_am, "Amharic name" do %><%= form.text_field :name_am, required: true %><% end %>
+    <%= form.label :neighborhood_id do %><%= form.collection_select :neighborhood_id, Neighborhood.alphabetically, :id, :name %><% end %>
+    <%= form.label :landmark do %><%= form.text_field :landmark, required: true %><% end %>
+    <%= form.label :latitude do %><%= form.number_field :latitude, step: :any, required: true %><% end %>
+    <%= form.label :longitude do %><%= form.number_field :longitude, step: :any, required: true %><% end %>
+    <%= form.label :status do %><%= form.select :status, Shop.statuses.keys.map { |value| [ value.humanize, value ] } %><% end %>
+    <%= form.label :price_band do %><%= form.select :price_band, Shop.price_bands.keys.map { |value| [ value.humanize, value ] }, include_blank: true %><% end %>
+  </div>
+  <fieldset>
+    <legend>Amenities</legend>
+    <div class="checkboxes">
+      <% Shop::AMENITIES.each do |amenity| %>
+        <%= label_tag "shop_amenities_#{amenity}" do %>
+          <%= hidden_field_tag "shop[amenities][#{amenity}]", "0" %>
+          <%= check_box_tag "shop[amenities][#{amenity}]", "1", shop.amenities[amenity], id: "shop_amenities_#{amenity}" %>
+          <%= amenity.humanize %>
+        <% end %>
+      <% end %>
+    </div>
+  </fieldset>
+  <%= label_tag "shop_hours_json", "Weekly hours JSON" do %>
+    <%= text_area_tag "shop[hours_json]", (shop.hours&.schedule&.to_json || ""), id: "shop_hours_json", placeholder: '{"monday":[{"opens":"07:00","closes":"18:00"}]}' %>
+  <% end %>
+  <%= form.submit %>
+<% end %>

@@ -1,0 +1,15 @@
+<p class="eyebrow">@<%= @user.handle %></p>
+<h1><%= @user.display_name %></h1>
+<section class="metric-grid">
+  <article class="metric"><strong><%= @user.verified_check_ins_count %></strong><span>Verified cups</span></article>
+  <article class="metric"><strong><%= @user.stamps_count %></strong><span>Shops stamped</span></article>
+  <article class="metric"><strong><%= @user.contributions.accepted.count %></strong><span>Accepted contributions</span></article>
+</section>
+<section class="panel">
+  <%= form_with model: [ :console, @user ], class: "stack" do |form| %>
+    <%= form.label :trust_level do %>
+      <%= form.select :trust_level, User.trust_levels.keys.map { |level| [ level.humanize, level ] } %>
+    <% end %>
+    <%= form.submit "Update trust" %>
+  <% end %>
+</section>

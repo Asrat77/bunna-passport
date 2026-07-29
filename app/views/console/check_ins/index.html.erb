@@ -1,0 +1,24 @@
+<div class="page-heading">
+  <div><p class="eyebrow">Moderation</p><h1>Check-ins</h1></div>
+  <div class="actions">
+    <%= link_to "Flagged", console_check_ins_path(status: "flagged") %>
+    <%= link_to "Verified", console_check_ins_path(status: "verified") %>
+    <%= link_to "Rejected", console_check_ins_path(status: "rejected") %>
+  </div>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>User</th><th>Shop</th><th>Status</th><th>Distance</th><th>Occurred</th></tr></thead>
+    <tbody>
+      <% @check_ins.each do |check_in| %>
+        <tr>
+          <td><%= link_to "@#{check_in.user.handle}", console_check_in_path(check_in) %></td>
+          <td><%= check_in.shop.name %></td>
+          <td><span class="status status--<%= check_in.status %>"><%= check_in.status.humanize %></span></td>
+          <td><%= check_in.distance_meters %>m</td>
+          <td><%= time_ago_in_words(check_in.occurred_at) %> ago</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

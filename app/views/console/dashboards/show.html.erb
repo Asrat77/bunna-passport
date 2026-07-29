@@ -1,0 +1,42 @@
+<% content_for :title, "Operations queue · Bunna Passport" %>
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Addis operations</p>
+    <h1>Community health</h1>
+    <p class="muted">One queue for the exceptions that need a human decision.</p>
+  </div>
+  <%= link_to "Add shops in bulk", new_console_shop_batch_path, class: "button button--secondary" %>
+</div>
+
+<section class="metric-grid" aria-label="Dataset metrics">
+  <% @metrics.each do |name, value| %>
+    <article class="metric">
+      <strong><%= value %><%= "%" if name == :verified_ratio %></strong>
+      <span><%= name.to_s.humanize %></span>
+    </article>
+  <% end %>
+</section>
+
+<section class="queue-grid">
+  <%= render "console/shared/queue_panel",
+    title: "Pending contributions",
+    records: @pending_contributions,
+    path_for: ->(record) { console_contribution_path(record) },
+    label_for: ->(record) { "#{record.contributable_type.demodulize} from @#{record.user.handle}" },
+    all_path: console_contributions_path(status: "pending") %>
+
+  <%= render "console/shared/queue_panel",
+    title: "Pending reports",
+    records: @pending_reports,
+    path_for: ->(record) { console_report_path(record) },
+    label_for: ->(record) { "#{record.reason.humanize}: #{record.reportable_type.demodulize}" },
+    all_path: console_reports_path(status: "pending") %>
+
+  <%= render "console/shared/queue_panel",
+    title: "Flagged check-ins",
+    records: @flagged_check_ins,
+    path_for: ->(record) { console_check_in_path(record) },
+    label_for: ->(record) { "@#{record.user.handle} at #{record.shop.name}" },
+    all_path: console_check_ins_path(status: "flagged") %>
+</section>

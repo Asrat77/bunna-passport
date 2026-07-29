@@ -1,0 +1,22 @@
+<p class="eyebrow">Contribution #<%= @contribution.id %></p>
+<h1><%= @contribution.contributable_type.demodulize %></h1>
+<p>Submitted by <%= link_to "@#{@contribution.user.handle}", console_user_path(@contribution.user) %>
+  · <span class="status status--<%= @contribution.status %>"><%= @contribution.status.humanize %></span></p>
+
+<section class="panel">
+  <h2>Proposal</h2>
+  <pre><%= JSON.pretty_generate(@contribution.contributable.attributes.except("created_at", "updated_at")) %></pre>
+  <% if @contribution.rejection_reason.present? %><p><strong>Rejection:</strong> <%= @contribution.rejection_reason %></p><% end %>
+</section>
+
+<div class="actions">
+  <% if @contribution.pending? %>
+    <%= button_to "Approve", console_contribution_approval_path(@contribution), class: "button button--secondary" %>
+    <%= form_with url: console_contribution_rejection_path(@contribution), class: "actions" do |form| %>
+      <%= form.text_field :reason, required: true, placeholder: "Reason for rejection" %>
+      <%= form.submit "Reject", class: "button--danger" %>
+    <% end %>
+  <% else %>
+    <%= button_to "Reverse decision", console_contribution_reversal_path(@contribution), class: "button--danger" %>
+  <% end %>
+</div>

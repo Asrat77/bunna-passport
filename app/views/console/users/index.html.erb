@@ -1,0 +1,22 @@
+<div class="page-heading">
+  <div><p class="eyebrow">Community</p><h1>People</h1></div>
+  <div class="actions">
+    <% User.trust_levels.each_key do |level| %><%= link_to level.humanize, console_users_path(trust_level: level) %><% end %>
+  </div>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Person</th><th>Trust</th><th>Cups</th><th>Stamps</th><th>Joined</th></tr></thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= link_to user.display_name, console_user_path(user) %><br><small>@<%= user.handle %></small></td>
+          <td><%= user.trust_level.humanize %></td>
+          <td><%= user.verified_check_ins_count %></td>
+          <td><%= user.stamps_count %></td>
+          <td><%= user.created_at.to_date.to_fs(:long) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
