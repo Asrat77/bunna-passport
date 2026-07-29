@@ -17,7 +17,13 @@ class LeaderboardEntry < ApplicationRecord
   scope :ranked, -> { order(:rank) }
 
   def self.refresh_all!
-    periods.each_key do |period|
+    refresh!(periods: periods.keys)
+  end
+
+  def self.refresh!(periods:)
+    periods.each do |period|
+      raise ArgumentError, "Unsupported leaderboard period" unless period.to_s.in?(self.periods)
+
       refresh_board!(scope_key: CITY_SCOPE, period: period)
       Neighborhood.find_each do |neighborhood|
         refresh_board!(scope_key: neighborhood.leaderboard_scope_key, period: period, neighborhood: neighborhood)

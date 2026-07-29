@@ -1,6 +1,7 @@
 class Api::V1::SessionsController < Api::V1::BaseController
   allow_unauthenticated_access only: :create
-  rate_limit to: 10, within: 3.minutes, only: :create
+  rate_limit to: 10, within: 3.minutes, only: :create,
+    with: -> { render_error(:too_many_requests, "rate_limit_exceeded", "Too many sign-in attempts. Try again later.") }
 
   def create
     credentials = params.expect(session: %i[ email_address password ])

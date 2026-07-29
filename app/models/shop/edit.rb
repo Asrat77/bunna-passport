@@ -7,6 +7,7 @@ class Shop::Edit < ApplicationRecord
   has_one :contribution, as: :contributable, touch: true
 
   validate :changes_are_supported
+  validate :hours_are_valid
 
   def apply!(contributor:, reviewer:)
     changes = proposed_changes.to_h.stringify_keys
@@ -48,5 +49,14 @@ class Shop::Edit < ApplicationRecord
       unsupported = changes.keys - EDITABLE_ATTRIBUTES
       errors.add(:proposed_changes, "must contain at least one field") if changes.empty?
       errors.add(:proposed_changes, "contains unsupported fields: #{unsupported.join(", ")}") if unsupported.any?
+    end
+
+    def hours_are_valid
+      changes = proposed_changes.to_h.stringify_keys
+      return unless changes.key?("hours")
+
+      candidate = Shop::Hours.new(schedule: changes["hours"])
+      candidate.valid?
+      errors.add(:proposed_changes, candidate.errors[:schedule].to_sentence) if candidate.errors[:schedule].any?
     end
 end

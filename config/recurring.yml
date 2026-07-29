@@ -10,6 +10,16 @@
 #     schedule: at 5am every day
 
 production:
+  refresh_current_leaderboards:
+    class: RefreshLeaderboardsJob
+    args: [ week, month ]
+    schedule: every 15 minutes
+
+  refresh_all_time_leaderboards:
+    class: RefreshLeaderboardsJob
+    args: [ all_time ]
+    schedule: every hour
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

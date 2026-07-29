@@ -1,0 +1,15 @@
+first_cup:
+  slug: first-check-in
+  name: First Cup
+  description: Record your first verified coffee.
+  artwork_key: first-cup
+  criterion: verified_check_ins
+  threshold: 1
+
+five_shops:
+  slug: five-shops
+  name: Five Shops
+  description: Collect five shop stamps.
+  artwork_key: five-shops
+  criterion: unique_shops
+  threshold: 5

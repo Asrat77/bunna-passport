@@ -79,7 +79,8 @@ class CheckIn < ApplicationRecord
   def self.classify(user:, shop:, occurred_at:, latitude:, longitude:, accuracy_meters:, distance_meters:, mock_location:)
     return [ :rejected, "weak_gps" ] if accuracy_meters.to_i > ACCURACY_LIMIT_METERS
     return [ :rejected, "too_far" ] if distance_meters > DISTANCE_LIMIT_METERS
-    return [ :rejected, "cooldown" ] if user.check_ins.where(shop: shop).where.not(status: :rejected).where(occurred_at: SHOP_COOLDOWN.ago..).exists?
+    return [ :rejected, "cooldown" ] if user.check_ins.where(shop: shop).where.not(status: :rejected)
+      .where("occurred_at > ?", SHOP_COOLDOWN.ago).exists?
     return [ :rejected, "daily_limit" ] if user.check_ins.where(created_at: Time.current.all_day).count >= DAILY_LIMIT
     return [ :flagged, "implausible_travel" ] if implausible_travel?(user, occurred_at, latitude, longitude)
     return [ :flagged, "mock_location" ] if ActiveModel::Type::Boolean.new.cast(mock_location)

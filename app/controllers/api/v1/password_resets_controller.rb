@@ -1,11 +1,14 @@
 class Api::V1::PasswordResetsController < Api::V1::BaseController
   allow_unauthenticated_access
-  rate_limit to: 5, within: 15.minutes
+  rate_limit to: 5, within: 15.minutes,
+    with: -> { render_error(:too_many_requests, "rate_limit_exceeded", "Too many password reset attempts. Try again later.") }
 
   def create
     email_address = params.expect(:email_address)
-    PasswordsMailer.reset(user).deliver_later if user = User.find_by(email_address: email_address)
-    head :accepted
+    if user = User.find_by(email_address: email_address)
+      PasswordsMailer.reset(user).deliver_later
+    end
+    render_data({ message: "If the account exists, reset instructions will be sent." }, status: :accepted)
   end
 
   def update

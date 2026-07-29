@@ -7,9 +7,8 @@
 </section>
 <section class="panel">
   <%= form_with model: [ :console, @user ], class: "stack" do |form| %>
-    <%= form.label :trust_level do %>
-      <%= form.select :trust_level, User.trust_levels.keys.map { |level| [ level.humanize, level ] } %>
-    <% end %>
+    <%= form.label :trust_level %>
+    <%= form.select :trust_level, User.trust_levels.keys.map { |level| [ level.humanize, level ] } %>
     <%= form.submit "Update trust" %>
   <% end %>
 </section>

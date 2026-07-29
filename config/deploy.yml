@@ -1,13 +1,14 @@
 # Name of your application. Used to uniquely configure containers.
 service: bunna_passport
 
-# Name of the container image (use your-user/app-name on external registries).
-image: bunna_passport
+# Required deployment values intentionally have no defaults. Supplying them is
+# an explicit infrastructure decision; this repository does not deploy itself.
+image: <%= ENV.fetch("BUNNA_DEPLOY_IMAGE") %>
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - <%= ENV.fetch("BUNNA_DEPLOY_HOST") %>
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -26,15 +27,12 @@ servers:
 
 # Where you keep your container images.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  server: <%= ENV.fetch("BUNNA_REGISTRY_SERVER") %>
 
-  # Needed for authenticated registries.
-  # username: your-user
+  username: <%= ENV.fetch("BUNNA_REGISTRY_USERNAME") %>
 
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:

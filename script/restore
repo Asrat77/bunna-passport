@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 2 || "$2" != "--confirm-overwrite" ]]; then
+  echo "Usage: script/restore /absolute/path/to/backup --confirm-overwrite" >&2
+  exit 64
+fi
+
+source_directory="${1%/}"
+if [[ "$source_directory" != /* || "$source_directory" == "/" || "$source_directory" == "$HOME" ]]; then
+  echo "Backup source must be an explicit absolute directory." >&2
+  exit 64
+fi
+if [[ ! -f "$source_directory/SHA256SUMS" || ! -f "$source_directory/active-storage.tar.gz" ]]; then
+  echo "Backup manifest or Active Storage archive is missing." >&2
+  exit 66
+fi
+
+(
+  cd "$source_directory"
+  shasum -a 256 -c SHA256SUMS
+)
+
+mkdir -p storage
+for database in "$source_directory"/databases/production*.sqlite3; do
+  [[ -f "$database" ]] || continue
+  cp "$database" "storage/$(basename "$database")"
+done
+tar -xzf "$source_directory/active-storage.tar.gz" -C storage
+
+echo "Restore complete. Run bin/rails db:prepare before starting the application."

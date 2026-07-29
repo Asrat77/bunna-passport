@@ -1,6 +1,7 @@
 class Api::V1::UsersController < Api::V1::BaseController
   allow_unauthenticated_access
-  rate_limit to: 5, within: 15.minutes, only: :create
+  rate_limit to: 5, within: 15.minutes, only: :create,
+    with: -> { render_error(:too_many_requests, "rate_limit_exceeded", "Too many signup attempts. Try again later.") }
 
   def create
     user = User.create!(user_params)

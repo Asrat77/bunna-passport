@@ -8,7 +8,12 @@
 </section>
 <div class="actions">
   <% if @report.pending? %>
-    <%= button_to "Uphold", console_report_upholding_path(@report), class: "button--danger" %>
-    <%= button_to "Dismiss", console_report_dismissal_path(@report), class: "button button--secondary" %>
+    <%= button_to "Uphold", console_report_upholding_path(@report),
+      class: "button--danger", form: { data: { turbo: false } } %>
+    <%= button_to "Dismiss", console_report_dismissal_path(@report),
+      class: "button button--secondary", form: { data: { turbo: false } } %>
+  <% else %>
+    <%= button_to "Reverse decision", console_report_reversal_path(@report),
+      class: "button--danger", form: { data: { turbo: false } } %>
   <% end %>
 </div>

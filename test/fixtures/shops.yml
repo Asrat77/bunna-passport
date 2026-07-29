@@ -1,0 +1,46 @@
+bole:
+  name: Buna House
+  name_am: ቡና ቤት
+  name_key: bunahouse
+  name_am_key: ቤት
+  slug: buna-house
+  neighborhood: bole
+  landmark: Behind the test mall
+  latitude: 8.9942000
+  longitude: 38.7877000
+  status: live
+  price_band: standard
+  amenities:
+    wifi: true
+    jebena_service: true
+  submitted_by: one
+
+piassa:
+  name: City Coffee
+  name_am: ከተማ ቡና
+  name_key: city
+  name_am_key: ከተማ
+  slug: city-coffee
+  neighborhood: piassa
+  landmark: Next to the test post office
+  latitude: 9.0357000
+  longitude: 38.7507000
+  status: live
+  price_band: budget
+  amenities:
+    outdoor_seating: true
+  submitted_by: two
+
+hidden:
+  name: Hidden Coffee
+  name_am: ድብቅ ቡና
+  name_key: hidden
+  name_am_key: ድብቅ
+  slug: hidden-coffee
+  neighborhood: bole
+  landmark: Hidden fixture
+  latitude: 8.9950000
+  longitude: 38.7880000
+  status: hidden
+  amenities: {}
+  submitted_by: one

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: script/backup /absolute/backup/directory" >&2
+  exit 64
+fi
+
+backup_root="$1"
+if [[ "$backup_root" != /* || "$backup_root" == "/" || "$backup_root" == "$HOME" ]]; then
+  echo "Backup directory must be an explicit absolute path outside the home root." >&2
+  exit 64
+fi
+
+timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+destination="${backup_root%/}/bunna-passport-${timestamp}"
+mkdir -p "$destination/databases"
+
+found_database=0
+for database in storage/production*.sqlite3; do
+  [[ -f "$database" ]] || continue
+  found_database=1
+  sqlite3 "$database" ".backup '$destination/databases/$(basename "$database")'"
+done
+
+if [[ "$found_database" -eq 0 ]]; then
+  echo "No production SQLite databases found under storage/." >&2
+  exit 66
+fi
+
+tar \
+  --exclude='production*.sqlite3' \
+  --exclude='production*.sqlite3-*' \
+  -czf "$destination/active-storage.tar.gz" \
+  -C storage .
+
+(
+  cd "$destination"
+  shasum -a 256 databases/* active-storage.tar.gz > SHA256SUMS
+)
+
+echo "$destination"

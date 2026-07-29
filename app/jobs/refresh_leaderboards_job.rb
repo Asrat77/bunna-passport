@@ -1,7 +1,7 @@
 class RefreshLeaderboardsJob < ApplicationJob
   queue_as :default
 
-  def perform
-    LeaderboardEntry.refresh_all!
+  def perform(*periods)
+    LeaderboardEntry.refresh!(periods: periods.presence || LeaderboardEntry.periods.keys)
   end
 end

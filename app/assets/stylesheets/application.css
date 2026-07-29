@@ -32,6 +32,15 @@ a { color: var(--coffee); }
 .site-header a { text-decoration: none; }
 .wordmark { font-family: Georgia, serif; font-size: 1.25rem; font-weight: 700; }
 .page-shell { margin: 0 auto; max-width: 1180px; padding: 2rem 1.25rem 5rem; }
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgb(67 42 28 / 12%);
+  margin: 10vh auto;
+  max-width: 500px;
+  padding: clamp(1.5rem, 5vw, 3rem);
+}
 .page-heading { align-items: end; display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
 .eyebrow { color: var(--leaf); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 h1, h2 { font-family: Georgia, serif; }

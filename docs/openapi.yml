@@ -1,0 +1,878 @@
+openapi: 3.1.0
+info:
+  title: Bunna Passport Mobile API
+  version: 1.0.0
+  description: |
+    The executable V1 contract for Bunna Passport clients. IDs are opaque
+    integers and all timestamps are UTC ISO 8601 strings.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Authentication
+    description: Account access, revocable device sessions, and password recovery.
+  - name: Catalog
+    description: Public bilingual shop discovery and incremental synchronization.
+  - name: Community
+    description: User-supplied shops, corrections, photos, confirmations, and reports.
+  - name: Activity
+    description: GPS check-ins, passport progress, badges, profiles, and leaderboards.
+
+paths:
+  /users:
+    post:
+      tags: [Authentication]
+      operationId: createUser
+      summary: Create an account and device session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/SignupInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/Authenticated"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /sessions:
+    post:
+      tags: [Authentication]
+      operationId: createSession
+      summary: Create a revocable device session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session]
+              properties:
+                session:
+                  type: object
+                  required: [email_address, password]
+                  properties:
+                    email_address: { type: string, format: email }
+                    password: { type: string, format: password }
+      responses:
+        "201":
+          $ref: "#/components/responses/Authenticated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /sessions/current:
+    delete:
+      tags: [Authentication]
+      operationId: deleteCurrentSession
+      summary: Revoke the current device session
+      responses:
+        "204":
+          description: Session revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /password_resets:
+    post:
+      tags: [Authentication]
+      operationId: createPasswordReset
+      summary: Request password reset instructions
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_address]
+              properties:
+                email_address: { type: string, format: email }
+      responses:
+        "202":
+          description: Request accepted without account disclosure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /password_reset:
+    patch:
+      tags: [Authentication]
+      operationId: updatePassword
+      summary: Replace a password using a reset token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password_reset]
+              properties:
+                password_reset:
+                  type: object
+                  required: [token, password, password_confirmation]
+                  properties:
+                    token: { type: string }
+                    password: { type: string, format: password }
+                    password_confirmation: { type: string, format: password }
+      responses:
+        "204":
+          description: Password replaced and all sessions revoked
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /shops:
+    get:
+      tags: [Catalog]
+      operationId: listShops
+      summary: Discover or incrementally synchronize coffee shops
+      security: []
+      parameters:
+        - name: bbox
+          in: query
+          schema: { type: string, example: "38.70,8.90,38.90,9.10" }
+          description: west,south,east,north
+        - name: updated_since
+          in: query
+          schema: { type: string, format: date-time }
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: If-None-Match
+          in: header
+          schema: { type: string }
+      responses:
+        "200":
+          description: Live shops, tombstones, and the captured sync cutoff
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [shops, tombstones]
+                    properties:
+                      shops:
+                        type: array
+                        items: { $ref: "#/components/schemas/Shop" }
+                      tombstones:
+                        type: array
+                        items: { $ref: "#/components/schemas/ShopTombstone" }
+                  meta:
+                    type: object
+                    required: [sync_until]
+                    properties:
+                      sync_until: { type: string, format: date-time }
+        "304":
+          description: The matching catalog has not changed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    post:
+      tags: [Community]
+      operationId: createShopSubmission
+      summary: Propose a missing coffee shop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shop]
+              properties:
+                shop:
+                  $ref: "#/components/schemas/ShopSubmissionInput"
+      responses:
+        "201":
+          $ref: "#/components/responses/Contribution"
+        "409":
+          description: Nearby similar shops require an explicit client decision
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      details:
+                        type: array
+                        items: { $ref: "#/components/schemas/Shop" }
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /shops/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getShop
+      summary: Fetch coffee shop details
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Coffee shop details
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/ShopDetail" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /shops/{shop_id}/edits:
+    post:
+      tags: [Community]
+      operationId: createShopEdit
+      summary: Propose field-level corrections to a live shop
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shop_edit]
+              properties:
+                shop_edit:
+                  type: object
+                  required: [proposed_changes]
+                  properties:
+                    proposed_changes:
+                      $ref: "#/components/schemas/ShopChanges"
+      responses:
+        "201":
+          $ref: "#/components/responses/Contribution"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+
+  /shops/{shop_id}/photos:
+    post:
+      tags: [Community]
+      operationId: createShopPhoto
+      summary: Propose a shop photo
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [shop_photo]
+              properties:
+                shop_photo:
+                  type: object
+                  required: [image]
+                  properties:
+                    caption: { type: string, maxLength: 240 }
+                    image:
+                      type: string
+                      format: binary
+      responses:
+        "201":
+          $ref: "#/components/responses/Contribution"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+
+  /contributions:
+    get:
+      tags: [Community]
+      operationId: listContributions
+      summary: List the current user's contribution history
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          $ref: "#/components/responses/ContributionList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /contributions/pending:
+    get:
+      tags: [Community]
+      operationId: listPendingContributions
+      summary: List pending contributions for curators
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          $ref: "#/components/responses/ContributionList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /contributions/{id}:
+    get:
+      tags: [Community]
+      operationId: getContribution
+      summary: Fetch a contribution visible to the current user
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          $ref: "#/components/responses/Contribution"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /contributions/{contribution_id}/confirmations:
+    post:
+      tags: [Community]
+      operationId: createContributionConfirmation
+      summary: Add an independent curator confirmation
+      parameters:
+        - name: contribution_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+      responses:
+        "201":
+          $ref: "#/components/responses/Contribution"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /reports:
+    post:
+      tags: [Community]
+      operationId: createReport
+      summary: Report inaccurate or inappropriate community data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report]
+              properties:
+                report:
+                  $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Report queued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [id, status]
+                    properties:
+                      id: { $ref: "#/components/schemas/OpaqueId" }
+                      status: { const: pending }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+
+  /check_ins:
+    post:
+      tags: [Activity]
+      operationId: createCheckIn
+      summary: Record a GPS-backed coffee shop visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [check_in]
+              properties:
+                check_in:
+                  $ref: "#/components/schemas/CheckInInput"
+      responses:
+        "201":
+          description: Verified or privately flagged check-in
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CheckIn" }
+        "422":
+          description: Persisted rejected check-in attempt
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    get:
+      tags: [Activity]
+      operationId: listCheckIns
+      summary: List the current user's check-in history
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Cursor-paginated history
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/CheckIn" }
+                  meta: { $ref: "#/components/schemas/CursorMeta" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /passport:
+    get:
+      tags: [Activity]
+      operationId: getPassport
+      summary: Fetch passport stamps and completion
+      responses:
+        "200":
+          description: Passport progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /profile:
+    get:
+      tags: [Activity]
+      operationId: getProfile
+      summary: Fetch the current user's profile and counters
+      responses:
+        "200":
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/User" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /badges:
+    get:
+      tags: [Activity]
+      operationId: listBadges
+      summary: Fetch badge definitions, progress, and awards
+      responses:
+        "200":
+          description: Badge catalog and progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /leaderboards:
+    get:
+      tags: [Activity]
+      operationId: listLeaderboardEntries
+      summary: Fetch a materialized public leaderboard
+      security: []
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [city, neighborhood], default: city }
+        - name: neighborhood_id
+          in: query
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+        - name: period
+          in: query
+          schema: { type: string, enum: [week, month, all_time], default: week }
+        - name: metric
+          in: query
+          schema: { type: string, enum: [cups, shops], default: cups }
+      responses:
+        "200":
+          description: Ranked entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/OpaqueId" }
+    ShopId:
+      name: shop_id
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/OpaqueId" }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { $ref: "#/components/schemas/OpaqueId" }
+
+  responses:
+    Authenticated:
+      description: Account and raw bearer token for this device
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [user, token, expires_at]
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+                  token: { type: string }
+                  expires_at: { type: string, format: date-time }
+    Contribution:
+      description: Contribution state
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data: { $ref: "#/components/schemas/Contribution" }
+    ContributionList:
+      description: Cursor-paginated contribution list
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data, meta]
+            properties:
+              data:
+                type: array
+                items: { $ref: "#/components/schemas/Contribution" }
+              meta: { $ref: "#/components/schemas/CursorMeta" }
+    BadRequest:
+      description: Invalid request syntax or unsupported parameter
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing, expired, or invalid bearer token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Authenticated user lacks domain permission
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource is missing or not visible
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unprocessable:
+      description: Valid syntax with invalid domain data
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: Request rate limit reached
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    OpaqueId:
+      type: integer
+      format: int64
+      minimum: 1
+    DataResponse:
+      type: object
+      required: [data]
+      properties:
+        data: {}
+        meta:
+          type: object
+          additionalProperties: true
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details: {}
+      additionalProperties: false
+    CursorMeta:
+      type: object
+      required: [next_cursor]
+      properties:
+        next_cursor:
+          oneOf:
+            - $ref: "#/components/schemas/OpaqueId"
+            - type: "null"
+    SignupInput:
+      type: object
+      required: [email_address, handle, display_name, password, password_confirmation]
+      properties:
+        email_address: { type: string, format: email }
+        handle: { type: string, pattern: "^[a-zA-Z0-9_@]+$", minLength: 3, maxLength: 31 }
+        display_name: { type: string, maxLength: 80 }
+        password: { type: string, format: password }
+        password_confirmation: { type: string, format: password }
+        home_neighborhood_id: { $ref: "#/components/schemas/OpaqueId" }
+    User:
+      type: object
+      required: [id, handle, display_name, trust_level, verified_check_ins_count, stamps_count]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        handle: { type: string }
+        display_name: { type: string }
+        trust_level: { type: string, enum: [newcomer, regular, curator, moderator] }
+        verified_check_ins_count: { type: integer, minimum: 0 }
+        stamps_count: { type: integer, minimum: 0 }
+        home_neighborhood_id:
+          oneOf:
+            - $ref: "#/components/schemas/OpaqueId"
+            - type: "null"
+    Neighborhood:
+      type: object
+      required: [id, name, name_am]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        name: { type: string }
+        name_am: { type: string }
+    ShopAttributes:
+      type: object
+      properties:
+        wifi: { type: boolean }
+        outdoor_seating: { type: boolean }
+        jebena_service: { type: boolean }
+        espresso_bar: { type: boolean }
+        takeaway: { type: boolean }
+        parking: { type: boolean }
+      additionalProperties: false
+    WeeklyHours:
+      type: object
+      propertyNames:
+        enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+      additionalProperties:
+        type: array
+        items:
+          type: object
+          required: [opens, closes]
+          properties:
+            opens: { type: string, pattern: "^[0-2][0-9]:[0-5][0-9]$" }
+            closes: { type: string, pattern: "^[0-2][0-9]:[0-5][0-9]$" }
+    Shop:
+      type: object
+      required:
+        [id, name, name_am, slug, neighborhood, landmark, latitude, longitude, status, attributes, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        name: { type: string }
+        name_am: { type: string }
+        slug: { type: string }
+        neighborhood: { $ref: "#/components/schemas/Neighborhood" }
+        landmark: { type: string }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        status: { type: string, enum: [live, closed, merged] }
+        price_band:
+          oneOf:
+            - type: string
+              enum: [budget, standard, premium, splurge]
+            - type: "null"
+        attributes: { $ref: "#/components/schemas/ShopAttributes" }
+        updated_at: { type: string, format: date-time }
+    ShopDetail:
+      allOf:
+        - $ref: "#/components/schemas/Shop"
+        - type: object
+          required: [check_ins_count, stamps_count, hours, photos]
+          properties:
+            check_ins_count: { type: integer, minimum: 0 }
+            stamps_count: { type: integer, minimum: 0 }
+            merged_into_id:
+              oneOf:
+                - $ref: "#/components/schemas/OpaqueId"
+                - type: "null"
+            hours:
+              type: object
+              required: [schedule, freshness, confirmed_at]
+              properties:
+                schedule: { $ref: "#/components/schemas/WeeklyHours" }
+                freshness: { type: string, enum: [fresh, stale, unknown] }
+                confirmed_at:
+                  oneOf:
+                    - type: string
+                      format: date-time
+                    - type: "null"
+            photos:
+              type: array
+              items: { $ref: "#/components/schemas/Photo" }
+    Photo:
+      type: object
+      required: [id, urls]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        caption:
+          oneOf:
+            - type: string
+            - type: "null"
+        urls:
+          type: object
+          required: [thumb, medium, full]
+          properties:
+            thumb: { type: string, format: uri }
+            medium: { type: string, format: uri }
+            full: { type: string, format: uri }
+    ShopTombstone:
+      type: object
+      required: [id, status, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        status: { type: string, enum: [hidden, closed, merged] }
+        merged_into_id:
+          oneOf:
+            - $ref: "#/components/schemas/OpaqueId"
+            - type: "null"
+        updated_at: { type: string, format: date-time }
+    ShopChanges:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string }
+        name_am: { type: string }
+        neighborhood_id: { $ref: "#/components/schemas/OpaqueId" }
+        landmark: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        price_band:
+          oneOf:
+            - type: string
+              enum: [budget, standard, premium, splurge]
+            - type: "null"
+        amenities: { $ref: "#/components/schemas/ShopAttributes" }
+        hours: { $ref: "#/components/schemas/WeeklyHours" }
+    ShopSubmissionInput:
+      allOf:
+        - $ref: "#/components/schemas/ShopChanges"
+        - type: object
+          required: [name, name_am, neighborhood_id, landmark, latitude, longitude]
+          properties:
+            duplicate_override: { type: boolean, default: false }
+      unevaluatedProperties: false
+    Contribution:
+      type: object
+      required: [id, type, status, confirmation_count, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        type: { type: string, enum: ["Shop::Submission", "Shop::Edit", "Shop::PhotoSubmission"] }
+        status: { type: string, enum: [pending, approved, rejected, auto_approved] }
+        confirmation_count: { type: integer, minimum: 0 }
+        reviewed_at:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        rejection_reason:
+          oneOf:
+            - type: string
+            - type: "null"
+        created_at: { type: string, format: date-time }
+    ReportInput:
+      type: object
+      required: [reportable_type, reportable_id, reason]
+      properties:
+        reportable_type: { type: string, enum: [shop, photo, check_in, user] }
+        reportable_id: { $ref: "#/components/schemas/OpaqueId" }
+        reason:
+          type: string
+          enum: [closed, duplicate, wrong_location, inaccurate_details, inappropriate, spam, other]
+        note: { type: string, maxLength: 1000 }
+    CheckInInput:
+      type: object
+      required: [shop_id, idempotency_key, latitude, longitude, accuracy_meters]
+      properties:
+        shop_id: { $ref: "#/components/schemas/OpaqueId" }
+        idempotency_key: { type: string, maxLength: 100 }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        accuracy_meters: { type: integer, minimum: 0 }
+        mock_location: { type: boolean, default: false }
+        drink: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        note: { type: string, maxLength: 280 }
+        photo:
+          type: string
+          format: binary
+    CheckIn:
+      type: object
+      required: [id, shop, status, distance_meters, occurred_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        shop:
+          type: object
+          required: [id, name, name_am]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            name: { type: string }
+            name_am: { type: string }
+        status: { type: string, enum: [accepted, rejected] }
+        rejection_code:
+          oneOf:
+            - type: string
+              enum: [weak_gps, too_far, cooldown, daily_limit]
+            - type: "null"
+        distance_meters: { type: integer, minimum: 0 }
+        drink:
+          oneOf:
+            - type: string
+            - type: "null"
+        rating:
+          oneOf:
+            - type: integer
+              minimum: 1
+              maximum: 5
+            - type: "null"
+        note:
+          oneOf:
+            - type: string
+            - type: "null"
+        occurred_at: { type: string, format: date-time }

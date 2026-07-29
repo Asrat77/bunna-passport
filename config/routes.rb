@@ -8,7 +8,7 @@ Rails.application.routes.draw do
       resources :sessions, only: :create
       delete "sessions/current", to: "sessions#destroy", as: :current_session
       resources :password_resets, only: :create
-      resource :password_reset, only: :update
+      patch "password_reset", to: "password_resets#update", as: :password_reset
 
       resources :shops, only: %i[ index show create ] do
         resources :edits, controller: :shop_edits, only: :create
@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
       get "contributions/pending", to: "pending_contributions#show", as: :pending_contributions
       resources :contributions, only: %i[ index show ] do
-        resource :confirmation, controller: :contribution_confirmations, only: :create
+        resources :confirmations, controller: :contribution_confirmations, only: :create
       end
 
       resources :check_ins, only: %i[ index create ]
@@ -39,6 +39,7 @@ Rails.application.routes.draw do
     resources :reports, only: %i[ index show ] do
       resource :upholding, only: :create, module: :reports
       resource :dismissal, only: :create, module: :reports
+      resource :reversal, only: :create, module: :reports
     end
     resources :check_ins, only: %i[ index show ] do
       resource :verification, only: :create, module: :check_ins

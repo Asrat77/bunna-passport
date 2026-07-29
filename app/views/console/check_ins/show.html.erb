@@ -9,7 +9,9 @@
 </section>
 <div class="actions">
   <% if @check_in.flagged? %>
-    <%= button_to "Clear as verified", console_check_in_verification_path(@check_in), class: "button button--secondary" %>
-    <%= button_to "Reject", console_check_in_rejection_path(@check_in), class: "button--danger" %>
+    <%= button_to "Clear as verified", console_check_in_verification_path(@check_in),
+      class: "button button--secondary", form: { data: { turbo: false } } %>
+    <%= button_to "Reject", console_check_in_rejection_path(@check_in),
+      class: "button--danger", form: { data: { turbo: false } } %>
   <% end %>
 </div>

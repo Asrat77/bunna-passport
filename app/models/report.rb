@@ -24,7 +24,8 @@ class Report < ApplicationRecord
   scope :reverse_chronologically, -> { order(created_at: :desc) }
 
   def uphold!(by:)
-    raise NotAuthorized unless by&.can_review?
+    raise NotAuthorized unless by&.moderator?
+    raise AlreadyReviewed unless pending?
 
     transaction do
       update!(status: :upheld, reviewed_by: by, reviewed_at: Time.current)
@@ -33,9 +34,17 @@ class Report < ApplicationRecord
   end
 
   def dismiss!(by:)
-    raise NotAuthorized unless by&.can_review?
+    raise NotAuthorized unless by&.moderator?
+    raise AlreadyReviewed unless pending?
 
     update!(status: :dismissed, reviewed_by: by, reviewed_at: Time.current)
+  end
+
+  def reverse!(by:)
+    raise NotAuthorized unless by&.moderator?
+    raise AlreadyPending if pending?
+
+    update!(status: :pending, reviewed_by: nil, reviewed_at: nil)
   end
 
   def reported_user
@@ -49,4 +58,6 @@ class Report < ApplicationRecord
   end
 
   class NotAuthorized < StandardError; end
+  class AlreadyReviewed < StandardError; end
+  class AlreadyPending < StandardError; end
 end

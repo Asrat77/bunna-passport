@@ -11,12 +11,14 @@
 
 <div class="actions">
   <% if @contribution.pending? %>
-    <%= button_to "Approve", console_contribution_approval_path(@contribution), class: "button button--secondary" %>
+    <%= button_to "Approve", console_contribution_approval_path(@contribution),
+      class: "button button--secondary", form: { data: { turbo: false } } %>
     <%= form_with url: console_contribution_rejection_path(@contribution), class: "actions" do |form| %>
       <%= form.text_field :reason, required: true, placeholder: "Reason for rejection" %>
       <%= form.submit "Reject", class: "button--danger" %>
     <% end %>
   <% else %>
-    <%= button_to "Reverse decision", console_contribution_reversal_path(@contribution), class: "button--danger" %>
+    <%= button_to "Reverse decision", console_contribution_reversal_path(@contribution),
+      class: "button--danger", form: { data: { turbo: false } } %>
   <% end %>
 </div>

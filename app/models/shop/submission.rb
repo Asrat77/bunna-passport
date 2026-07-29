@@ -15,6 +15,7 @@ class Shop::Submission < ApplicationRecord
   normalizes :name, :name_am, :landmark, with: ->(value) { value.strip }
 
   validates :name, :name_am, :landmark, presence: true
+  validate :hours_are_valid
 
   def duplicate_candidates
     Shop.duplicate_candidates(
@@ -51,4 +52,11 @@ class Shop::Submission < ApplicationRecord
   def revert!
     created_shop&.update!(status: :hidden)
   end
+
+  private
+    def hours_are_valid
+      candidate = Shop::Hours.new(schedule: hours)
+      candidate.valid?
+      errors.add(:hours, candidate.errors[:schedule].to_sentence) if candidate.errors[:schedule].any?
+    end
 end

@@ -9,7 +9,7 @@ class Api::V1::ShopsController < Api::V1::BaseController
     return unless stale?(etag: etag)
 
     live_shops = changed.live.includes(:neighborhood, :hours, photos: { image_attachment: :blob })
-    tombstones = changed.where.not(status: :live).map do |shop|
+    tombstones = changed.where(status: %w[ hidden closed merged ]).map do |shop|
       { id: shop.id, status: shop.status, merged_into_id: shop.merged_into_id, updated_at: shop.updated_at.iso8601(6) }
     end
     render_data(
@@ -22,10 +22,10 @@ class Api::V1::ShopsController < Api::V1::BaseController
   end
 
   def show
-    shop = Shop.includes(:neighborhood, :hours, photos: { image_attachment: :blob }).find(params[:id])
-    return render_data(shop_json(shop, detailed: true)) unless shop.hidden?
-
-    render_not_found
+    shop = Shop.where.not(status: %w[ hidden pending ])
+      .includes(:neighborhood, :hours, photos: { image_attachment: :blob })
+      .find(params[:id])
+    render_data(shop_json(shop, detailed: true))
   end
 
   def create
@@ -48,7 +48,7 @@ class Api::V1::ShopsController < Api::V1::BaseController
   private
     def shops_changed_before(sync_until)
       shops = Shop.where(updated_at: ...sync_until)
-      shops = shops.where(updated_at: Time.iso8601(params[:updated_since])..) if params[:updated_since].present?
+      shops = shops.where("updated_at > ?", Time.iso8601(params[:updated_since])) if params[:updated_since].present?
       shops = shops.matching(params[:q]) if params[:q].present?
       shops = within_bbox(shops) if params[:bbox].present?
       shops

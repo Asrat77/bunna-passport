@@ -7,6 +7,7 @@ class Api::V1::BaseController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_record_invalid
   rescue_from ActionController::BadRequest, ActionController::ParameterMissing, with: :render_bad_request
+  rescue_from ArgumentError, with: :render_bad_request
   rescue_from Contribution::DailyLimitExceeded, with: :render_daily_limit
   rescue_from Contribution::NotAuthorized, Contribution::AlreadyReviewed, with: :render_forbidden
   rescue_from Shop::NotAuthorized, Report::NotAuthorized, with: :render_forbidden

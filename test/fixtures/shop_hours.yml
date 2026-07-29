@@ -1,0 +1,11 @@
+_fixture:
+  model_class: Shop::Hours
+
+bole:
+  shop: bole
+  schedule:
+    monday:
+      - opens: "07:00"
+        closes: "18:00"
+  confirmed_by: two
+  confirmed_at: <%= 31.days.ago %>

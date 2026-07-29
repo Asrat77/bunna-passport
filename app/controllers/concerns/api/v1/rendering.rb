@@ -3,8 +3,8 @@ module Api::V1::Rendering
 
   private
     def render_error(status, code, message, details = nil)
-      body = { error: { code: code, message: message } }
-      body[:error][:details] = details if details.present?
+      body = { code: code, message: message }
+      body[:details] = details if details.present?
       render json: body, status: status
     end
 
