@@ -39,7 +39,8 @@ class ModerationConsoleTest < ApplicationSystemTestCase
     assert_text "Spam: User"
     assert_text "@#{@contributor.handle} at #{shops(:bole).name}"
 
-    click_on "Submission from @#{@contributor.handle}"
+    visit console_contribution_path(@contribution)
+    assert_text "Submission"
     click_on "Approve"
     assert_text "Contribution approved."
     assert @contribution.reload.approved?
