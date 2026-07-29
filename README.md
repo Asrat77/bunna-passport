@@ -54,6 +54,7 @@ bin/rails test:system
 bin/rubocop
 bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
 bin/bundler-audit
+npx --yes @redocly/cli lint --config .redocly.yaml docs/openapi.yml
 RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
 ```
 
