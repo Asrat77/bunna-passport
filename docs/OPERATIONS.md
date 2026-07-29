@@ -23,6 +23,25 @@ Required deployment values:
 Do not run `bin/kamal deploy` until the host, registry, DNS, TLS termination,
 and backup destination have been chosen explicitly.
 
+## Database initialization
+
+Prepare the schema, then explicitly install only the reference records required
+by the application:
+
+```sh
+bin/rails db:prepare
+bin/rails bunna:bootstrap_reference_data
+```
+
+Production database preparation has automatic seeds disabled, and `db:seed`
+aborts outside development and test. The reference bootstrap is idempotent and
+creates only the Addis neighborhood catalog and badge definitions. It creates
+no users, shops, check-ins, contributions, or photos.
+
+Never copy `storage/local_seed_data/` to a server or production volume. The
+directory is excluded from both Git and Docker, and the local import command
+also refuses to run outside development.
+
 ## Founder bootstrap
 
 Run this once against the target environment:

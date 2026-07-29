@@ -1,5 +1,7 @@
 require "test_helper"
 require "rake"
+require "csv"
+require "fileutils"
 
 Rails.application.load_tasks unless Rake::Task.task_defined?("bunna:bootstrap_reference_data")
 
@@ -7,11 +9,13 @@ class BunnaTasksTest < ActiveSupport::TestCase
   setup do
     reference_task.reenable
     founder_task.reenable
+    local_import_task.reenable
   end
 
   teardown do
     reference_task.reenable
     founder_task.reenable
+    local_import_task.reenable
   end
 
   test "production database preparation does not load seeds" do
@@ -71,6 +75,56 @@ class BunnaTasksTest < ActiveSupport::TestCase
     end
   end
 
+  test "local shop import task refuses test and production environments" do
+    %w[ test production ].each do |environment|
+      local_import_task.reenable
+      error = nil
+
+      _stdout, stderr = capture_io do
+        error = assert_raises(SystemExit) do
+          with_rails_environment(environment) { local_import_task.invoke }
+        end
+      end
+
+      assert_equal 1, error.status
+      assert_includes stderr, "Local shop imports are available only in development"
+    end
+  end
+
+  test "local shop import task wires the ignored catalog to the importer" do
+    FileUtils.mkdir_p(Shop::LocalCatalog::DATA_ROOT)
+    directory = Pathname(Dir.mktmpdir("task-catalog-", Shop::LocalCatalog::DATA_ROOT))
+    catalog_path = directory.join("shops.csv")
+    FileUtils.cp(Rails.root.join("public/icon.png"), directory.join("front.png"))
+    CSV.open(catalog_path, "w", write_headers: true, headers: Shop::LocalCatalog::REQUIRED_HEADERS) do |csv|
+      csv << [
+        "task-imported-shop",
+        "Task Imported Shop",
+        "በትዕዛዝ የገባ ቡና ቤት",
+        "Bole",
+        "Local task landmark",
+        "8.9944",
+        "38.7879",
+        "front.png"
+      ]
+    end
+
+    with_environment(
+      "BUNNA_LOCAL_IMPORTER_EMAIL" => users(:two).email_address,
+      "BUNNA_LOCAL_SHOPS_FILE" => catalog_path.to_s
+    ) do
+      with_rails_environment("development") do
+        stdout, _stderr = capture_io { local_import_task.invoke }
+
+        assert_includes stdout, "Local catalog ready: 1 shops, 1 new photos"
+      end
+    end
+
+    assert Shop.exists?(slug: "task-imported-shop")
+  ensure
+    FileUtils.remove_entry(directory) if directory&.exist?
+  end
+
   private
     def reference_task
       Rake::Task["bunna:bootstrap_reference_data"]
@@ -78,6 +132,10 @@ class BunnaTasksTest < ActiveSupport::TestCase
 
     def founder_task
       Rake::Task["bunna:bootstrap_founder"]
+    end
+
+    def local_import_task
+      Rake::Task["bunna:import_local_shops"]
     end
 
     def with_environment(values)

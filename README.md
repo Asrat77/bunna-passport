@@ -29,8 +29,9 @@ bin/rails db:seed
 bin/dev
 ```
 
-Neighborhoods and badge definitions are idempotent seeds. To add clearly marked
-local sample records, run `BUNNA_SEED_SAMPLES=1 bin/rails db:seed`.
+Neighborhoods and badge definitions are idempotent local seeds. `db:seed`
+refuses to run outside development and test. To add clearly marked local sample
+records, run `BUNNA_SEED_SAMPLES=1 bin/rails db:seed`.
 
 Create the founder moderator without adding an administrator role:
 
@@ -44,6 +45,35 @@ bin/rails bunna:bootstrap_founder
 The console is at `/`. The mobile API is under `/api/v1`; it accepts bearer
 tokens returned by signup or sign-in. Web cookies are deliberately not accepted
 by the API.
+
+## Local shop catalog
+
+Working Bole and Addis data belongs under `storage/local_seed_data/`. Both Git
+and Docker exclude that directory, so its CSV files, working notes, and photos
+cannot be committed or copied into a production image.
+
+Create `storage/local_seed_data/shops.csv` with these required columns:
+
+```csv
+slug,name,name_am,neighborhood,landmark,latitude,longitude,photo_paths
+```
+
+Optional columns are `city`, `price_band`, `amenities`, and `status`. Separate
+amenities and multiple photo paths with `|`. Photo paths are relative to the CSV
+file and must resolve inside `storage/local_seed_data/`. Every row requires at
+least one photo. A stable `slug` makes repeated imports update the local shop
+without creating a duplicate.
+
+Bootstrap a local founder, place the CSV and photos in the ignored directory,
+then run:
+
+```sh
+BUNNA_LOCAL_IMPORTER_EMAIL=founder@example.com \
+BUNNA_LOCAL_SHOPS_FILE=storage/local_seed_data/shops.csv \
+bin/rails bunna:import_local_shops
+```
+
+The command refuses to run in test, staging, or production.
 
 ## Verification
 

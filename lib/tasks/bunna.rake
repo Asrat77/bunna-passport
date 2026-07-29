@@ -30,4 +30,20 @@ namespace :bunna do
     user.save!
     puts "Moderator ready: @#{user.handle}"
   end
+
+  desc "Import an ignored local shop catalog into development"
+  task import_local_shops: :environment do
+    abort "Local shop imports are available only in development" unless Rails.env.development?
+
+    importer_email = ENV["BUNNA_LOCAL_IMPORTER_EMAIL"].presence
+    abort "Missing BUNNA_LOCAL_IMPORTER_EMAIL" unless importer_email
+
+    catalog = Shop::LocalCatalog.new(
+      path: ENV.fetch("BUNNA_LOCAL_SHOPS_FILE", "storage/local_seed_data/shops.csv"),
+      contributor: User.find_by!(email_address: importer_email.strip.downcase)
+    )
+    result = catalog.import!
+
+    puts "Local catalog ready: #{result.shops_count} shops, #{result.photos_count} new photos"
+  end
 end
