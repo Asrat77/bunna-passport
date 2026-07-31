@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Bunna Passport",
+    "slug": "bunna-passport",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "bunnapassport",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FAF6F0",
+    "android": {
+      "package": "et.bunnapassport.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#7B3F1D"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "et.bunnapassport.app",
+      "supportsTablet": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Bunna Passport uses your location to sort coffee shops by distance and to verify check-ins. It never tracks you in the background.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF6F0",
+          "dark": { "backgroundColor": "#1A120D" },
+          "imageWidth": 160
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "apiBaseUrl": "http://10.0.2.2:3000/api/v1"
+    }
+  }
+}

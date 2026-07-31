@@ -1,0 +1,5 @@
+---
+# The Expo client vendors React Native's CocoaPods Ruby tooling under
+# mobile/node_modules; it is not part of the Rails application surface.
+:skip_files:
+  - mobile/
