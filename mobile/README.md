@@ -11,27 +11,64 @@ mid-range Android phone on expensive, patchy data.
 ## Requirements
 
 - Node 20.19.4+ (React Native 0.86 warns below this)
-- JDK 17 and the Android SDK
-- A **development build** — Expo Go cannot load this app, because MapLibre,
-  SQLite and SecureStore are native modules
+- A **development build**. Expo Go cannot load this app: MapLibre, SQLite and
+  SecureStore are native modules that Expo Go's prebuilt binary does not
+  contain, so scanning a QR code with Expo Go fails at the first native call.
+
+Once a development build is installed on the device, the QR-code workflow works
+exactly like Expo Go — the APK is a one-time install, and JS reloads over Wi-Fi.
 
 ## Running it
 
-The Rails API must be running first:
+Start the API, bound so the phone can reach it:
 
 ```bash
-cd .. && bin/rails server
+cd .. && bin/rails server -b 0.0.0.0
 ```
 
-Then build and install a dev client on a connected device or emulator:
+Then start Metro and scan the QR code with the development build:
+
+```bash
+npx expo start --dev-client
+```
+
+The phone and the computer must be on the same Wi-Fi.
+
+### Getting a development build
+
+**Cloud (no Android SDK needed):**
+
+```bash
+npx eas-cli build --profile development --platform android
+```
+
+Needs a free Expo account. Uploads the project to Expo's build servers and
+returns an installable APK. This is the practical route on a machine without
+room for the Android SDK, Gradle caches, and an emulator image.
+
+**Local (needs the Android SDK, JDK 17, and several GB free):**
 
 ```bash
 npx expo run:android
 ```
 
-`app.json` points `extra.apiBaseUrl` at `http://10.0.2.2:3000/api/v1`, which is
-how the Android emulator reaches the host machine's localhost. On a physical
-device, change it to your machine's LAN address.
+### API base URL
+
+Resolved at runtime by `src/api/client.ts`, in this order:
+
+1. `EXPO_PUBLIC_API_BASE_URL`, if set — use this for release builds
+2. The Metro host the app was loaded from, on port 3000 — correct
+   automatically for a physical phone, an emulator, or a tunnel
+3. `localhost:3000`
+
+Deriving it from Metro matters because no single host works everywhere: an
+emulator reaches the host machine at `10.0.2.2`, a phone needs the machine's
+LAN address, and production is neither.
+
+### Development data
+
+The dev database ships empty. To see anything on the map, import the local
+catalog — see `../storage/local_seed_data/README.md`.
 
 ## Verifying
 

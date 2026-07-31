@@ -21,9 +21,32 @@ import type {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
-export const API_BASE_URL: string =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  "http://10.0.2.2:3000/api/v1";
+const API_PORT = 3000;
+
+/**
+ * Where the Rails API lives.
+ *
+ * A hardcoded host cannot serve every target: an emulator reaches the host
+ * machine at 10.0.2.2, a physical phone needs the machine's LAN address, and
+ * production is neither. So in development we derive it from the Metro server
+ * the app was loaded from — that host is by definition reachable from this
+ * device. `EXPO_PUBLIC_API_BASE_URL` overrides it for release builds.
+ */
+function resolveApiBaseUrl(): string {
+  const explicit = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (explicit) return explicit;
+
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants.expoGoConfig as { debuggerHost?: string } | undefined)?.debuggerHost;
+  const host = hostUri?.split(":")[0];
+  if (host) return `http://${host}:${API_PORT}/api/v1`;
+
+  // No Metro host means a release build with nothing configured.
+  return `http://localhost:${API_PORT}/api/v1`;
+}
+
+export const API_BASE_URL: string = resolveApiBaseUrl();
 
 type TokenSource = () => string | null;
 
