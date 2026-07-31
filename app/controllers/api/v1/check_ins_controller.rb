@@ -2,7 +2,7 @@ class Api::V1::CheckInsController < Api::V1::BaseController
   rate_limit to: 20, within: 1.hour, only: :create
 
   def index
-    check_ins = cursor_scope(Current.user.check_ins.reverse_chronologically.includes(:shop))
+    check_ins = cursor_scope(Current.user.check_ins.reverse_chronologically.includes(:shop, :stamp))
     render_data(
       check_ins.map { |check_in| check_in_json(check_in) },
       meta: { next_cursor: check_ins.last&.id }

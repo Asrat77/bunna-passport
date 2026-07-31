@@ -136,6 +136,12 @@ class CheckIn < ApplicationRecord
     rejected? ? "rejected" : "accepted"
   end
 
+  # True only for the visit that created the stamp, so a repeat visit and an
+  # idempotent replay both report the same answer.
+  def earned_stamp?
+    stamp.present?
+  end
+
   def self.implausible_travel?(user, occurred_at, latitude, longitude)
     previous = user.check_ins.where.not(status: :rejected).order(occurred_at: :desc).first
     return false unless previous

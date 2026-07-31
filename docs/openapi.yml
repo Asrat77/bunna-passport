@@ -844,7 +844,7 @@ components:
           format: binary
     CheckIn:
       type: object
-      required: [id, shop, status, distance_meters, occurred_at]
+      required: [id, shop, status, stamp_earned, distance_meters, occurred_at]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         shop:
@@ -860,6 +860,12 @@ components:
             - type: string
               enum: [weak_gps, too_far, cooldown, daily_limit]
             - type: "null"
+        stamp_earned:
+          type: boolean
+          description: |
+            True only for the visit that created the permanent stamp at this
+            shop. Repeat visits and idempotent replays of the original request
+            both report the value belonging to that first visit.
         distance_meters: { type: integer, minimum: 0 }
         drink:
           oneOf:

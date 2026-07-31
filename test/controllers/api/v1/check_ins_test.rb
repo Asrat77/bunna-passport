@@ -14,6 +14,7 @@ class Api::V1::CheckInsTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal "accepted", response_json.dig("data", "status")
+    assert_equal true, response_json.dig("data", "stamp_earned")
     assert_equal 1, user.reload.verified_check_ins_count
 
     assert_no_difference -> { CheckIn.count } do
@@ -22,7 +23,27 @@ class Api::V1::CheckInsTest < ActionDispatch::IntegrationTest
       end
     end
     assert_response :created
+    assert_equal true, response_json.dig("data", "stamp_earned"), "replay must repeat the original answer"
     assert_equal 1, user.reload.verified_check_ins_count
+  end
+
+  test "a return visit adds a cup without claiming a second stamp" do
+    user = create_user(created_at: 2.days.ago)
+    CheckIn.record!(
+      user: user, shop: shops(:bole), idempotency_key: "first-visit",
+      latitude: shops(:bole).latitude, longitude: shops(:bole).longitude, accuracy_meters: 10
+    ).update!(occurred_at: CheckIn::SHOP_COOLDOWN.ago - 1.minute)
+
+    assert_no_difference -> { Stamp.count } do
+      post api_v1_check_ins_path,
+        params: { check_in: check_in_params(idempotency_key: "return-visit") },
+        headers: bearer_headers(user),
+        as: :json
+    end
+
+    assert_response :created
+    assert_equal false, response_json.dig("data", "stamp_earned")
+    assert_equal 2, user.reload.verified_check_ins_count
   end
 
   test "rejected attempts persist and return a distinct 422 code" do
@@ -51,6 +72,7 @@ class Api::V1::CheckInsTest < ActionDispatch::IntegrationTest
     assert_response :created
     assert_equal "accepted", response_json.dig("data", "status")
     assert_nil response_json.dig("data", "flag_reason")
+    assert_equal true, response_json.dig("data", "stamp_earned"), "a flagged visit still earns its stamp"
     assert CheckIn.last.flagged?
     assert_equal 1, user.reload.stamps_count
     assert_equal 0, user.verified_check_ins_count
