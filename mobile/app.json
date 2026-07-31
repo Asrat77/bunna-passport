@@ -7,11 +7,13 @@
     "scheme": "bunnapassport",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#FAF6F0",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "et.bunnapassport.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#7B3F1D"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF6F0"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
@@ -42,8 +44,11 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-logo.png",
           "backgroundColor": "#FAF6F0",
-          "dark": { "backgroundColor": "#1A120D" },
+          "dark": {
+            "backgroundColor": "#1A120D"
+          },
           "imageWidth": 160
         }
       ]
@@ -51,6 +56,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "86394b7c-1cf9-4ca2-b2a1-b535e1a86568"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/86394b7c-1cf9-4ca2-b2a1-b535e1a86568"
     }
   }
 }
