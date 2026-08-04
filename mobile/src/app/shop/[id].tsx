@@ -7,9 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api/client";
 import type { ShopDetail } from "@/api/types";
 import { BilingualName } from "@/design/components/BilingualName";
+import { BunnaMark } from "@/design/components/BunnaMark";
 import { Button } from "@/design/components/Button";
 import { Chip } from "@/design/components/Chip";
 import { Seal } from "@/design/components/Seal";
+import { SkeletonBlock } from "@/design/components/Skeleton";
 import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
@@ -51,7 +53,17 @@ export default function ShopDetailScreen() {
   }, [shopId]);
 
   if (!cached && !detail) {
-    return <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} />;
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+        <View style={{ padding: space.lg, gap: space.lg }}>
+          <SkeletonBlock width={touchTarget} height={touchTarget} cornerRadius={touchTarget / 2} />
+          <SkeletonBlock height={220} cornerRadius={radius.xl} />
+          <SkeletonBlock width="72%" height={38} />
+          <SkeletonBlock width="42%" height={18} />
+          <SkeletonBlock height={112} cornerRadius={radius.lg} />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   const name = detail?.name ?? cached?.name ?? "";
@@ -83,13 +95,18 @@ export default function ShopDetailScreen() {
             height: touchTarget,
             alignItems: "center",
             justifyContent: "center",
+            borderRadius: radius.full,
+            backgroundColor: colors.surfaceRaised,
           }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.ink} />
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl, gap: space.xl }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl, gap: space.xl }}
+      >
         {/* Photos — thumb-first, full size only on request (DESIGN.md §7) */}
         {detail && detail.photos.length > 0 ? (
           photosRequested ? (
@@ -102,7 +119,12 @@ export default function ShopDetailScreen() {
                     accessibilityLabel={photo.caption ?? name}
                     contentFit="cover"
                     transition={200}
-                    style={{ width: 260, height: 170, borderRadius: radius.lg, backgroundColor: colors.surfaceSunken }}
+                    style={{
+                      width: 290,
+                      height: 220,
+                      borderRadius: radius.xl,
+                      backgroundColor: colors.surfaceSunken,
+                    }}
                   />
                 ))}
               </View>
@@ -114,13 +136,41 @@ export default function ShopDetailScreen() {
               variant="secondary"
             />
           )
-        ) : null}
+        ) : (
+          <View
+            style={{
+              height: 220,
+              overflow: "hidden",
+              borderRadius: radius.xl,
+              borderCurve: "continuous",
+              backgroundColor: colors.primarySoft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                width: 190,
+                height: 190,
+                borderRadius: 95,
+                right: -60,
+                top: -70,
+                borderWidth: 24,
+                borderColor: colors.accent,
+                opacity: 0.28,
+              }}
+            />
+            <BunnaMark size={118} />
+          </View>
+        )}
 
-        <View>
+        <View style={{ gap: space.xs }}>
           <BilingualName name={name} nameAm={nameAm} role="display" secondaryRole="heading" numberOfLines={2} />
-          <Text role="body" color="inkMuted" style={{ marginTop: space.sm }}>
-            {neighborhood}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+            <MaterialCommunityIcons name="map-marker-outline" size={17} color={colors.primary} />
+            <Text role="body" color="inkMuted">{neighborhood}</Text>
+          </View>
         </View>
 
         {/* Stamp status band — the passport's presence on every shop */}
@@ -131,9 +181,11 @@ export default function ShopDetailScreen() {
             gap: space.lg,
             padding: space.lg,
             borderRadius: radius.lg,
+            borderCurve: "continuous",
             backgroundColor: stamped ? colors.primarySoft : colors.surfaceRaised,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: stamped ? colors.primary : colors.border,
+            boxShadow: `0 6px 16px ${colors.shadow}`,
           }}
         >
           <Seal name={name} nameAm={nameAm} earned={stamped} size="md" />
@@ -157,12 +209,36 @@ export default function ShopDetailScreen() {
 
         {/* Landmark directions lead; there are no street addresses in Addis */}
         {landmark ? (
-          <View style={{ gap: space.sm }}>
-            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.sm }}>
-              <MaterialCommunityIcons name="sign-direction" size={20} color={colors.primary} />
-              <Text role="body" style={{ flex: 1 }}>
-                {landmark}
-              </Text>
+          <View
+            style={{
+              gap: space.lg,
+              padding: space.lg,
+              borderRadius: radius.lg,
+              borderCurve: "continuous",
+              backgroundColor: colors.surfaceRaised,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.md }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 17,
+                  backgroundColor: colors.accentSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <MaterialCommunityIcons name="sign-direction" size={24} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text role="caption" color="inkMuted">{neighborhood}</Text>
+                <Text role="body" weight="medium" style={{ marginTop: 2 }}>
+                  {landmark}
+                </Text>
+              </View>
             </View>
             <Button label={t("shop.directions")} onPress={openDirections} variant="secondary" />
           </View>
@@ -191,10 +267,19 @@ export default function ShopDetailScreen() {
           </View>
         ) : null}
 
-        <Button
-          label={t("checkin.action")}
-          onPress={() => router.push({ pathname: "/check-in", params: { shopId: String(shopId) } })}
-        />
+        <View
+          style={{
+            padding: space.sm,
+            borderRadius: radius.lg,
+            borderCurve: "continuous",
+            backgroundColor: colors.accentSoft,
+          }}
+        >
+          <Button
+            label={t("checkin.action")}
+            onPress={() => router.push({ pathname: "/check-in", params: { shopId: String(shopId) } })}
+          />
+        </View>
 
         {/* Contribution actions stay quiet — contextual, not competing */}
         <View style={{ gap: space.sm, paddingTop: space.md, borderTopWidth: 1, borderTopColor: colors.border }}>
