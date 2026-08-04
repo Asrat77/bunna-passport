@@ -81,11 +81,36 @@ export function LocationPrimer({ origin, onOrigin }: Props) {
               backgroundColor: colors.surfaceRaised,
               borderTopLeftRadius: radius.xl,
               borderTopRightRadius: radius.xl,
+              borderCurve: "continuous",
               padding: space.xl,
-              gap: space.md,
+              paddingBottom: space.xxl,
+              gap: space.lg,
             }}
           >
-            <MaterialCommunityIcons name="map-marker-radius" size={32} color={colors.primary} />
+            <View
+              style={{
+                width: 44,
+                height: 5,
+                borderRadius: 3,
+                backgroundColor: colors.borderStrong,
+                alignSelf: "center",
+                marginBottom: space.sm,
+              }}
+            />
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 26,
+                borderCurve: "continuous",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.accentSoft,
+                transform: [{ rotate: "-4deg" }],
+              }}
+            >
+              <MaterialCommunityIcons name="map-marker-radius" size={34} color={colors.primary} />
+            </View>
             <Text role="title">{t("location.primerTitle")}</Text>
             <Text role="body" color="inkMuted">
               {t("location.primerBody")}

@@ -35,8 +35,7 @@ export function ShopPeek({ shop, onClose, onOpen }: Props) {
         position: "absolute",
         left: space.lg,
         right: space.lg,
-        // Sits above the check-in pill rather than under it.
-        bottom: touchTarget * 2.2,
+        bottom: space.lg,
       }}
     >
       <Pressable
@@ -49,14 +48,11 @@ export function ShopPeek({ shop, onClose, onOpen }: Props) {
           gap: space.md,
           padding: space.lg,
           borderRadius: radius.lg,
+          borderCurve: "continuous",
           backgroundColor: colors.surfaceRaised,
           borderWidth: 1,
           borderColor: colors.border,
-          elevation: 8,
-          shadowColor: "#000",
-          shadowOpacity: 0.18,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: 6 },
+          boxShadow: `0 12px 28px ${colors.shadow}`,
         }}
       >
         <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="sm" />
