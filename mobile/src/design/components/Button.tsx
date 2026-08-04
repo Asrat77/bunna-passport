@@ -55,16 +55,21 @@ export function Button({
         {
           minHeight: touchTarget,
           paddingHorizontal: space.xl,
-          paddingVertical: space.md,
-          borderRadius: radius.full,
+          paddingVertical: space.md + 2,
+          borderRadius: variant === "quiet" ? radius.full : radius.md,
+          borderCurve: "continuous",
           backgroundColor: background,
           borderWidth: variant === "secondary" ? 1 : 0,
-          borderColor: colors.border,
+          borderColor: variant === "secondary" ? colors.borderStrong : colors.border,
           alignItems: "center",
           justifyContent: "center",
           alignSelf: fullWidth ? "stretch" : "flex-start",
-          // Opacity, not scale — a scale transform on press shifts layout.
-          opacity: inactive ? 0.55 : pressed ? 0.82 : 1,
+          opacity: inactive ? 0.55 : pressed ? 0.9 : 1,
+          transform: [{ translateY: pressed ? 1 : 0 }],
+          boxShadow:
+            variant === "primary" && !inactive
+              ? `0 8px 18px ${colors.shadow}`
+              : undefined,
         },
         style,
       ]}

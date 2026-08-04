@@ -22,7 +22,31 @@ export function EmptyState({ icon = "coffee-outline", title, body, actionLabel, 
 
   return (
     <View style={{ alignItems: "center", paddingHorizontal: space.xl, paddingVertical: space.xxxl }}>
-      <MaterialCommunityIcons name={icon} size={48} color={colors.borderStrong} />
+      <View
+        style={{
+          width: 92,
+          height: 92,
+          borderRadius: 34,
+          borderCurve: "continuous",
+          backgroundColor: colors.accentSoft,
+          alignItems: "center",
+          justifyContent: "center",
+          transform: [{ rotate: "-4deg" }],
+        }}
+      >
+        <View
+          style={{
+            position: "absolute",
+            inset: 8,
+            borderRadius: 28,
+            borderWidth: 1,
+            borderStyle: "dashed",
+            borderColor: colors.primary,
+            opacity: 0.45,
+          }}
+        />
+        <MaterialCommunityIcons name={icon} size={42} color={colors.primary} />
+      </View>
       <Text role="heading" align="center" style={{ marginTop: space.lg }}>
         {title}
       </Text>

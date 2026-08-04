@@ -53,12 +53,15 @@ export function ShopCard({ shop, onPress }: Props) {
         gap: space.md,
         // Comfortably past the 48dp floor once padding is counted.
         minHeight: 72,
-        padding: space.md,
+        padding: space.lg,
         borderRadius: radius.lg,
+        borderCurve: "continuous",
         backgroundColor: colors.surfaceRaised,
         borderWidth: 1,
         borderColor: colors.border,
-        opacity: pressed ? 0.9 : 1,
+        opacity: pressed ? 0.93 : 1,
+        transform: [{ translateY: pressed ? 1 : 0 }],
+        boxShadow: `0 5px 14px ${colors.shadow}`,
       })}
     >
       <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="sm" />
