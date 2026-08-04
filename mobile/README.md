@@ -11,7 +11,7 @@ mid-range Android phone on expensive, patchy data.
 ## Requirements
 
 - Node 20.19.4+ (React Native 0.86 warns below this)
-- A **development build**. Expo Go cannot load this app: MapLibre, SQLite and
+- A **development build**. Expo Go cannot load this app: Mapbox, SQLite and
   SecureStore are native modules that Expo Go's prebuilt binary does not
   contain, so scanning a QR code with Expo Go fails at the first native call.
 
@@ -52,6 +52,19 @@ room for the Android SDK, Gradle caches, and an emulator image.
 npx expo run:android
 ```
 
+### Mapbox credentials
+
+The Mapbox migration is configured without committing credentials. A native
+build needs both variables shown in `.env.example`:
+
+- `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` — public runtime token (`pk.…`).
+- `RNMAPBOX_MAPS_DOWNLOAD_TOKEN` — secret token with `DOWNLOADS:READ`, supplied
+  through EAS secrets or the local shell. Never prefix this one with
+  `EXPO_PUBLIC_`.
+
+Changing Mapbox/native font configuration requires rebuilding the development
+client once; subsequent JavaScript changes still reload over Metro.
+
 ### API base URL
 
 Resolved at runtime by `src/api/client.ts`, in this order:
@@ -87,11 +100,13 @@ bundles the app without needing a device.
 
 The first vertical slice, proving the whole architecture end to end:
 
-- App shell, dual-script theming, and the design tokens from `DESIGN.md`
+- App shell, dual-script theming, build-time Geist/Noto fonts, and the design
+  tokens from `DESIGN.md`
 - Typed API client over the OpenAPI contract, with structured error handling
 - SQLite catalog cache with `updated_since` sync, ETags, and tombstones
 - Email sign-up / sign-in with the bearer token in SecureStore
-- Explore: MapLibre map with seal pins, list view, bilingual search, filters
+- Explore: Mapbox Standard map with SVG seal pins, list view, bilingual search,
+  filters, and a token-safe fallback
 - Shop detail with landmark-first directions and opt-in photo loading
 - Idempotent GPS check-in with all four rejection codes, an offline queue, and
   the stamp ceremony
@@ -108,10 +123,10 @@ The first vertical slice, proving the whole architecture end to end:
 user before a doomed round-trip. The client never decides the outcome, and
 never learns that a check-in was flagged.
 
-**Fonts are imported per weight.** Importing from a `@expo-google-fonts`
-package root pulls every weight and italic into the APK. Ethiopic faces are
-bundled rather than assumed, because Android's system coverage of fidel is
-inconsistent.
+**Fonts are embedded at native build time.** Geist Regular/Medium/SemiBold/Bold
+handles Latin. Noto Sans/Serif Ethiopic remains bundled and `fontFor()` selects
+it per text node, because Geist has no Ethiopic coverage and Android's system
+fallback is inconsistent.
 
 **A keystroke must not cost a network request.** `useCatalog` syncs once per
 mount; searching and filtering read only from SQLite.
@@ -120,12 +135,11 @@ mount; searching and filtering read only from SQLite.
 
 Tracked in `../docs/DESIGN.md` §11. The one that affects code today:
 
-**Production map tiles are unresolved.** `src/features/explore/mapStyle.ts`
-uses OpenStreetMap's public raster tiles, which cover Addis well enough to
-build against but whose usage policy forbids shipping. A production tile
-source (self-hosted, or a vector provider) has to be chosen before release,
-and the warm map styling in `DESIGN.md` §2.2 can only be fully realised once
-it is.
+**Mapbox offline policy is unresolved.** The provider and visual style are now
+implemented, but launch still needs credentials, billing ownership, and an
+Addis offline-region/zoom budget. Until an offline pack is implemented and
+tested, the cached list works offline but the map does not satisfy the full
+offline requirement.
 
 Also unshipped from the slice: contribution flows (add shop, suggest edit,
 photos, reports), badges, and the duplicate-candidate interstitial.

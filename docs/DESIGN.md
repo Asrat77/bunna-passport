@@ -1,12 +1,13 @@
 # Bunna Passport — Mobile Design Spec
 
-**Status:** Draft for review. Companion to `docs/SPEC.md` (product source of truth).
+**Status:** Redesign implemented locally; Android device QA and Mapbox credentials pending.
+Companion to `docs/SPEC.md` (product source of truth).
 This document defines the visual system, onboarding, gamification presentation,
 and screen-level UX for the mobile client. It is framework-agnostic but
 Android-first: units are dp, the interaction baseline is Material 3, and every
 flow is designed for a mid-range Android phone on expensive, patchy data.
 
-**Last updated:** 2026-07-31
+**Last updated:** 2026-08-01
 
 ---
 
@@ -40,15 +41,21 @@ Five principles, in priority order. When two conflict, the higher one wins.
 
 A contemporary take on Ethiopian coffee culture. Think: specialty-café menu
 design, not airline loyalty app. The passport/stamp metaphor is expressed
-through **ink-stamp motifs, circular seals, and paper-warm surfaces** — flat
-and graphic, never 3D or textured-skeuomorphic.
+through **ink-stamp motifs, circular seals, clipped paper geometry, and
+paper-warm surfaces** — graphic and tactile, never fake leather or generic
+glassmorphism. The system should feel designed in Addis rather than reskinned
+from a global loyalty template.
 
 Signature elements:
 
-- **The stamp** — each shop gets a generated circular seal (two-ring border,
-  shop initial(s) in both scripts, neighborhood, date earned). Unstamped shops
-  appear as dashed-outline placeholders — visible absence is the completion
-  hook.
+- **The stamp** — each shop gets a generated SVG seal: twin rings, dotted ink
+  rhythm, small coffee-leaf cuts, and script-aware initials. A deterministic
+  0–2° rotation keeps a passport page feeling printed without random layout
+  movement. Unstamped shops appear as dashed-outline placeholders — visible
+  absence is the completion hook.
+- **The mark** — an interim SVG jebena-and-coffee-bean mark carries onboarding,
+  authentication, placeholders, and empty states. It is an implemented product
+  mark, not yet the final store-listing brand identity.
 - **Paper-warm surfaces** — backgrounds lean cream/latte in light mode, deep
   roast in dark mode. Never pure white, never pure black (except AMOLED
   option, §9).
@@ -61,21 +68,22 @@ Light mode (default):
 
 | Token | Hex | Use |
 |---|---|---|
-| `surface` | `#FAF6F0` | App background (warm paper) |
-| `surface-raised` | `#FFFFFF` | Cards, sheets |
-| `ink` | `#2B1B12` | Primary text (espresso, 13.5:1 on surface) |
-| `ink-muted` | `#6B5647` | Secondary text (5.4:1) |
-| `primary` | `#7B3F1D` | Brand brown — buttons, active nav, seals |
-| `on-primary` | `#FFF8EF` | Text/icons on primary |
-| `accent` | `#E8A33D` | Amber — progress fills, highlights, streak flame |
-| `positive` | `#3E7C4F` | Verified, success, open-now |
-| `caution` | `#B3701A` | Stale data, weak GPS |
-| `negative` | `#A83C3C` | Rejections, closed, errors |
+| `surface` | `#F6F0E6` | App background (warm paper) |
+| `surface-raised` | `#FFFBF5` | Cards, sheets |
+| `ink` | `#22140F` | Primary text (espresso) |
+| `ink-muted` | `#665047` | Secondary text |
+| `primary` | `#872F1D` | Clay-red ink — buttons, active nav, seals |
+| `on-primary` | `#FFF8ED` | Text/icons on primary |
+| `accent` | `#D99A24` | Saffron — progress and high-attention moments |
+| `accent-soft` | `#F7E8BF` | Illustration fields and quiet emphasis |
+| `positive` | `#2F684F` | Verified, success, open-now |
+| `caution` | `#8D520B` | Stale data, weak GPS |
+| `negative` | `#A22C2C` | Rejections, closed, errors |
 | `map-water/land` | desaturated warm greys | Map style must recede behind pins |
 
-Dark mode (“Dark Roast”) mirrors the same roles: `surface #1A120D`,
-`surface-raised #241A13`, `ink #F3EAE0`, `primary #D98E4A` (amber-shifted so it
-passes 4.5:1 on dark), `accent #E8A33D`. Every pairing in both modes must pass
+Dark mode (“Dark Roast”) mirrors the same roles: `surface #17100C`,
+`surface-raised #211812`, `ink #F7EBDD`, `primary #F0A05D` (amber-shifted so it
+passes 4.5:1 on dark), `accent #F3B542`. Every pairing in both modes must pass
 WCAG AA 4.5:1 for text and 3:1 for large text/icons — verify with tooling, not
 by eye.
 
@@ -92,8 +100,8 @@ Two type roles, each with a Latin + Ethiopic pairing that ships in the app
 
 | Role | Latin | Ethiopic | Notes |
 |---|---|---|---|
-| Display / passport | **Fraunces** (SemiBold, soft optical) | **Noto Serif Ethiopic** (SemiBold) | Warm editorial serif for passport pages, stamp seals, celebration moments, big numerals |
-| UI / body | **Plus Jakarta Sans** | **Noto Sans Ethiopic** | Everything else |
+| Display / passport | **Geist** (SemiBold/Bold) | **Noto Serif Ethiopic** (SemiBold) | Sharp modern Latin display paired with a serif fidel voice for seals and ceremonies |
+| UI / body | **Geist** (Regular/Medium/Bold) | **Noto Sans Ethiopic** (Regular/Medium/Bold) | Everything else |
 
 Rules:
 - **Ethiopic sets the vertical rhythm.** Line-height 1.6 minimum for any line
@@ -109,8 +117,8 @@ Rules:
 
 ### 2.4 Iconography, imagery, and shape
 
-- Single icon set (Material Symbols Rounded or Lucide — pick one, never mix),
-  2px-equivalent stroke, filled variant for active nav states. No emoji as UI.
+- Single icon set: **Material Community Icons**, outline by default and filled
+  for active navigation. No emoji as interface icons.
 - Photography is the hero: shop photos edge-to-edge in cards with a subtle
   warm-tone overlay for text legibility. Never stretch, never letterbox; crop
   center-weighted.
@@ -123,19 +131,19 @@ Rules:
 
 ## 3. Information architecture
 
-Four tabs + one hero action. Material 3 bottom navigation, active tab shows
-filled icon + label (labels always visible — discoverability beats minimalism).
+Four tabs + one hero action. A single raised paper dock replaces the stock
+Material bar plus disconnected floating pill. The action grows out of the
+center notch on Explore and Passport; active tabs use a clay-soft capsule.
+Labels always remain visible — discoverability still beats minimalism.
 
 ```
 ┌──────────────────────────────────────────────┐
 │                 (screen content)             │
 │                                              │
-│              ┌──────────────┐                │
-│              │   CHECK IN   │  ← pill FAB,   │
-│              └──────────────┘    primary     │
 │  ┌────────┬─────────┬─────────┬───────────┐  │
-│  │Explore │ Passport│ Boards  │  Profile  │  │
-│  └────────┴─────────┴─────────┴───────────┘  │
+│  │Explore │ Passport│CHECK IN │ Boards │Profile│
+│  └────────┴─────────┴────┬────┴───────────┘  │
+│                          └ hero action         │
 └──────────────────────────────────────────────┘
 ```
 
@@ -143,9 +151,9 @@ filled icon + label (labels always visible — discoverability beats minimalism)
 - **Passport** — stamps, neighborhood completion, cups, streak
 - **Boards** — leaderboards (works signed-out; own rank requires account)
 - **Profile** — stats, badges, contributions, trust standing, settings
-- **Check In** — floating pill above the nav bar, visible on Explore and
-  Passport. The single most important action in the app gets the single most
-  prominent affordance.
+- **Check In** — a 62dp clay-red control integrated into the dock, visible on
+  Explore and Passport. The single most important action gets the single most
+  prominent affordance without reading as a second navigation system.
 
 Contribution actions (add shop, suggest edit, add photo, report) live in
 context — on shop detail and map — not as a tab. Contributors are 2–5% of
@@ -173,7 +181,9 @@ Time-to-value budgets (mid-range Android, 3G):
 
 1. **Splash → language.** One screen, first launch only: “ቋንቋ ይምረጡ / Choose
    your language” — አማርኛ / English, two large cards, changeable later.
-   This doubles as the brand moment (logo + one-line tagline). No “Next”.
+   A full clay-red hero, interim jebena mark, bilingual wordmark, and offset
+   seal make this the brand moment. The choices sit in a raised paper sheet.
+   No “Next”.
 2. **Straight into Explore.** The map opens on Bole (highest density) with the
    bundled catalog already rendered — pins, real shop names in both scripts.
    A single dismissible overlay chip: “**112 coffee shops in Addis — built by
@@ -221,7 +231,7 @@ completion ring). No interstitials, ever.
 
 - **Map and list are one tab**, toggled by a persistent segmented control;
   state (region, filters, scroll) survives the toggle. Default view: map.
-- Pins: circular mini-seals. Stamped shops render filled (espresso ink);
+- Pins: circular SVG mini-seals. Stamped shops render filled (clay ink);
   unstamped render outlined. The map itself shows your progress — the
   “fill in the map” loop made literal. Clustered at low zoom with counts.
 - Tapping a pin → **peek card** (bottom-anchored): photo thumb, bilingual
@@ -231,6 +241,9 @@ completion ring). No interstitials, ever.
 - List rows: 72dp min height — thumb (opt-in on metered), bilingual name
   lockup, neighborhood • landmark, distance, price band in birr glyphs
   (፞ብር-based band indicator, not “$$”), stamp seal if earned.
+- The top surface pairs a compact `BUNNA PASSPORT / Explore` lockup with a
+  persistent map/list segmented control. Search and filters remain below it,
+  preventing view state from disappearing into an icon-only toggle.
 - **Search** matches both scripts and loose transliteration (server-backed;
   client normalizes locally over the cached catalog when offline). One search
   field, no script toggle — typing “tomoka”, “To.Mo.Ca”, or “ቶሞካ” all hit
@@ -430,6 +443,9 @@ hobby, not a slot machine.
 
 - Haptics: light tick (selection), medium (check-in submit), strong single
   “thunk” (stamp lands), double-tick (badge). Never vibrate for errors.
+- Reanimated 4 runs the radar, skeleton pulse, and stamp ceremony on the UI
+  thread. Expo SDK 57 configures its Worklets Babel plugin automatically; no
+  hand-maintained `babel.config.js` is required.
 - All ceremony-tier motion honors `reduced-motion` with static reveals.
 - Animate only transform/opacity; 60fps on a mid-range device is a release
   gate, not an aspiration.
@@ -456,10 +472,11 @@ hobby, not a slot machine.
 
 ## 10. Component inventory (build-order reference)
 
-Foundation: color tokens (light/dark) · type scale (dual-script) · spacing
-(4dp grid) · radius scale · icon set · haptic map.
+Foundation: color tokens (light/dark) · build-time Geist/Noto type scale
+(dual-script) · spacing (4dp grid) · radius scale · icon set · haptic map.
 
-Components: bilingual name lockup · seal (earned/dashed/mini-pin variants) ·
+Components: bilingual name lockup · jebena brand mark · SVG seal
+(earned/dashed/mini-pin variants) ·
 completion ring · shop card (row + peek + grid) · chip set (filter, drink,
 attribute) · bottom sheet · check-in pill FAB · stat counter (tabular,
 tick-up) · leaderboard row (+ pinned self) · badge tile · progress track
@@ -474,14 +491,20 @@ Each component ships with: both scripts, both themes, RTL-safe layout
 
 ## 11. Open design decisions (need user input)
 
-1. **Brand mark** — none exists. Needed before store listing; the seal system
-   above can carry the app until then. Commission or generate?
+1. **Brand mark** — an interim vector jebena/bean mark now exists in the app.
+   Decide whether to commission/refine it before the store listing.
 2. **Trust-level vocabulary** (SPEC open item 3) — affects Profile copy.
-3. **Map provider & offline tiles** — Mapbox / MapLibre+OSM / Google. OSM
-   coverage of Addis is comparatively strong and MapLibre allows offline tile
-   packs + full custom styling (the warm map style in §2.2); Google Maps SDK
-   restricts offline and styling. Design assumes MapLibre-class styling
-   control — flag if provider decision lands elsewhere.
+3. **Mapbox offline launch policy** — provider is decided and the client now
+   uses `@rnmapbox/maps` with Mapbox Standard in a faded dawn/night treatment.
+   Production still needs two uncommitted credentials: a public runtime token
+   (`EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN`) and a secret native-SDK download token
+   (`RNMAPBOX_MAPS_DOWNLOAD_TOKEN`, supplied through EAS/local environment).
+   Current Maps SDK pricing is MAU-based after its free tier, so this adds a
+   recurring cost to a product with no decided revenue model. Mapbox supports
+   offline regions but caps cumulative unique tile packs at 750; define and
+   test the Addis pack region/zoom budget over Wi-Fi before release. Until that
+   policy is implemented, the SQLite list remains offline-capable but the map
+   is not a complete offline experience.
 4. **Share card branding** — needs the handle/domain decision from SPEC §2
    (locked social handle) before we print it on shareable images.
 5. **Amharic copy voice** — needs a native-speaker review pass; machine-drafted
