@@ -58,6 +58,18 @@ The builder is remote and points at the deployment host, so images build
 natively on amd64 instead of under emulation. Kamal builds from a git clone of
 `HEAD`, so commit any change that must appear in the image before deploying.
 
+A remote builder still runs `docker buildx` locally against a remote endpoint,
+so the push reads the *workstation's* registry credentials rather than the
+host's. A local Docker daemon and a local registry login are both required, and
+logging in on the deployment host alone is not enough:
+
+```sh
+gh auth token | docker login ghcr.io -u <username> --password-stdin
+```
+
+Pushing to `ghcr.io` needs a token with `write:packages`. Without the local
+login the build succeeds and the push fails with `denied`.
+
 ## Database initialization
 
 Prepare the schema, then explicitly install only the reference records required
