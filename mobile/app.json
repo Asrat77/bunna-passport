@@ -32,7 +32,7 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
-      "@maplibre/maplibre-react-native",
+      "@rnmapbox/maps",
       [
         "expo-font",
         {
