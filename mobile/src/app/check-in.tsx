@@ -2,10 +2,20 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { RejectionCode } from "@/api/types";
 import { useAuth } from "@/auth/context";
 import { BilingualName } from "@/design/components/BilingualName";
+import { BunnaMark } from "@/design/components/BunnaMark";
 import { Button } from "@/design/components/Button";
 import { Chip } from "@/design/components/Chip";
 import { EmptyState } from "@/design/components/EmptyState";
@@ -28,6 +38,68 @@ const REJECTION_STRINGS: Record<RejectionCode, Parameters<ReturnType<typeof useI
   cooldown: "checkin.error.cooldown",
   daily_limit: "checkin.error.daily_limit",
 };
+
+function RadarArt({ submitting = false }: { submitting?: boolean }) {
+  const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
+  const turn = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    turn.set(withRepeat(withTiming(1, { duration: 1_800, easing: Easing.linear }), -1, false));
+    return () => cancelAnimation(turn);
+  }, [reduceMotion, turn]);
+
+  const sweepStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${turn.get() * 360}deg` }],
+  }));
+
+  return (
+    <View style={{ width: 210, height: 210, alignItems: "center", justifyContent: "center" }}>
+      {[190, 138, 84].map((size) => (
+        <View
+          key={size}
+          style={{
+            position: "absolute",
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: 1,
+            borderStyle: size === 190 ? "dashed" : "solid",
+            borderColor: colors.primary,
+            opacity: size === 190 ? 0.4 : 0.18,
+          }}
+        />
+      ))}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            width: 178,
+            height: 178,
+            alignItems: "center",
+          },
+          sweepStyle,
+        ]}
+      >
+        <View
+          style={{
+            width: 2,
+            height: 82,
+            borderRadius: 1,
+            backgroundColor: colors.accent,
+            opacity: 0.84,
+          }}
+        />
+      </Animated.View>
+      {submitting ? (
+        <ActivityIndicator size="large" color={colors.primary} />
+      ) : (
+        <BunnaMark size={72} />
+      )}
+    </View>
+  );
+}
 
 export default function CheckInScreen() {
   const { shopId } = useLocalSearchParams<{ shopId?: string }>();
@@ -75,12 +147,19 @@ export default function CheckInScreen() {
   const close = () => router.back();
 
   const header = (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", paddingHorizontal: space.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", paddingHorizontal: space.sm }}>
       <Pressable
         onPress={close}
         accessibilityRole="button"
         accessibilityLabel={t("common.close")}
-        style={{ width: touchTarget, height: touchTarget, alignItems: "center", justifyContent: "center" }}
+        style={{
+          width: touchTarget,
+          height: touchTarget,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: radius.full,
+          backgroundColor: colors.surfaceRaised,
+        }}
       >
         <MaterialCommunityIcons name="close" size={24} color={colors.ink} />
       </Pressable>
@@ -90,11 +169,14 @@ export default function CheckInScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
       {header}
-      <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg, flexGrow: 1 }}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: space.lg, gap: space.lg, flexGrow: 1 }}
+      >
         {phase.name === "locating" ? (
-          <View style={{ alignItems: "center", gap: space.lg, paddingVertical: space.xxxl }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text role="heading">{t("checkin.locating")}</Text>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.lg, paddingVertical: space.xxl }}>
+            <RadarArt />
+            <Text role="title">{t("checkin.locating")}</Text>
           </View>
         ) : null}
 
@@ -125,9 +207,9 @@ export default function CheckInScreen() {
         ) : null}
 
         {phase.name === "submitting" ? (
-          <View style={{ alignItems: "center", gap: space.lg, paddingVertical: space.xxxl }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text role="heading">{t("checkin.submitting")}</Text>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.lg, paddingVertical: space.xxl }}>
+            <RadarArt submitting />
+            <Text role="title">{t("checkin.submitting")}</Text>
             {phase.slow ? (
               <>
                 <Text role="body" color="inkMuted" align="center">
@@ -158,8 +240,21 @@ export default function CheckInScreen() {
               onDone={close}
             />
           ) : (
-            <View style={{ alignItems: "center", gap: space.lg, paddingVertical: space.xxl }}>
-              <MaterialCommunityIcons name="coffee" size={56} color={colors.accent} />
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.lg, paddingVertical: space.xxl }}>
+              <View
+                style={{
+                  width: 128,
+                  height: 128,
+                  borderRadius: 46,
+                  borderCurve: "continuous",
+                  backgroundColor: colors.accentSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: [{ rotate: "-4deg" }],
+                }}
+              >
+                <MaterialCommunityIcons name="coffee-outline" size={62} color={colors.primary} />
+              </View>
               <Text role="display">{t("checkin.cupAdded")}</Text>
               <Text role="body" color="inkMuted" align="center">
                 {phase.shop.name}
@@ -223,7 +318,10 @@ function ChoosingView(props: {
           gap: space.sm,
           padding: space.md,
           borderRadius: radius.md,
-          backgroundColor: weakSignal ? colors.primarySoft : "transparent",
+          borderCurve: "continuous",
+          backgroundColor: weakSignal ? colors.primarySoft : colors.surfaceRaised,
+          borderWidth: 1,
+          borderColor: weakSignal ? colors.caution : colors.border,
         }}
       >
         <MaterialCommunityIcons
@@ -254,11 +352,13 @@ function ChoosingView(props: {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: space.md,
-                padding: space.md,
+                padding: space.lg,
                 borderRadius: radius.lg,
+                borderCurve: "continuous",
                 backgroundColor: active ? colors.primarySoft : colors.surfaceRaised,
                 borderWidth: active ? 2 : 1,
                 borderColor: active ? colors.primary : colors.border,
+                boxShadow: active ? `0 7px 18px ${colors.shadow}` : undefined,
               }}
             >
               <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="sm" />
@@ -277,10 +377,25 @@ function ChoosingView(props: {
       </View>
 
       {/* Optional extras stay collapsed: zero required fields beyond the tap */}
-      <Pressable onPress={onToggleExtras} accessibilityRole="button" style={{ paddingVertical: space.sm }}>
-        <Text role="label" color="primary">
-          {t("checkin.extras")}
-        </Text>
+      <Pressable
+        onPress={onToggleExtras}
+        accessibilityRole="button"
+        style={{
+          minHeight: touchTarget,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: space.md,
+          borderRadius: radius.md,
+          backgroundColor: colors.surfaceRaised,
+        }}
+      >
+        <Text role="label" color="primary">{t("checkin.extras")}</Text>
+        <MaterialCommunityIcons
+          name={showExtras ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={colors.primary}
+        />
       </Pressable>
 
       {showExtras ? (
