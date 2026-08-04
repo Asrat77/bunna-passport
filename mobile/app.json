@@ -6,14 +6,14 @@
     "orientation": "portrait",
     "scheme": "bunnapassport",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#FAF6F0",
+    "backgroundColor": "#F6F0E6",
     "icon": "./assets/icon.png",
     "android": {
       "package": "et.bunnapassport.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FAF6F0"
+        "backgroundColor": "#F6F0E6"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
@@ -60,9 +60,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-logo.png",
-          "backgroundColor": "#FAF6F0",
+          "backgroundColor": "#F6F0E6",
           "dark": {
-            "backgroundColor": "#1A120D"
+            "backgroundColor": "#17100C"
           },
           "imageWidth": 160
         }

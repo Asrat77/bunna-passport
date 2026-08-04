@@ -16,12 +16,14 @@ export type Palette = {
   onPrimary: string;
   primarySoft: string;
   accent: string;
+  accentSoft: string;
   onAccent: string;
   positive: string;
   caution: string;
   negative: string;
   border: string;
   borderStrong: string;
+  shadow: string;
   scrim: string;
   mapLand: string;
   mapWater: string;
@@ -29,48 +31,52 @@ export type Palette = {
 
 /** Warm paper. Never pure white. */
 const light: Palette = {
-  surface: "#FAF6F0",
-  surfaceRaised: "#FFFFFF",
-  surfaceSunken: "#F0E9DF",
-  ink: "#2B1B12", // 13.6:1 on surface
-  inkMuted: "#6B5647", // 5.4:1 on surface
-  inkFaint: "#8C7767", // 3.4:1 — decorative and large text only
-  primary: "#7B3F1D", // 7.4:1 on surface
-  onPrimary: "#FFF8EF",
-  primarySoft: "#F2E3D6",
-  accent: "#E8A33D",
-  onAccent: "#2B1B12",
-  positive: "#2F6B41",
-  caution: "#8A5510",
-  negative: "#9B3232",
-  border: "#E4D9CC",
-  borderStrong: "#CBB9A6",
-  scrim: "rgba(43, 27, 18, 0.48)",
-  mapLand: "#F3EDE4",
-  mapWater: "#DCE4E2",
+  surface: "#F6F0E6",
+  surfaceRaised: "#FFFBF5",
+  surfaceSunken: "#EDE2D3",
+  ink: "#22140F",
+  inkMuted: "#665047",
+  inkFaint: "#806C61",
+  primary: "#872F1D",
+  onPrimary: "#FFF8ED",
+  primarySoft: "#F3DCCF",
+  accent: "#D99A24",
+  accentSoft: "#F7E8BF",
+  onAccent: "#24150F",
+  positive: "#2F684F",
+  caution: "#8D520B",
+  negative: "#A22C2C",
+  border: "#DED0BF",
+  borderStrong: "#BCA995",
+  shadow: "rgba(52, 27, 17, 0.16)",
+  scrim: "rgba(34, 20, 15, 0.58)",
+  mapLand: "#EFE7DA",
+  mapWater: "#D8E2DF",
 };
 
 /** Dark Roast. Never pure black — see AMOLED note in DESIGN.md §9. */
 const dark: Palette = {
-  surface: "#1A120D",
-  surfaceRaised: "#241A13",
-  surfaceSunken: "#120C08",
-  ink: "#F3EAE0", // 14.1:1 on surface
-  inkMuted: "#BCA895", // 7.3:1 on surface
-  inkFaint: "#8E7A69", // 3.7:1 — decorative and large text only
-  primary: "#D98E4A", // 7.8:1 on surface
-  onPrimary: "#241108",
-  primarySoft: "#3A281C",
-  accent: "#E8A33D",
-  onAccent: "#241108",
-  positive: "#6FBE86",
-  caution: "#D9A05B",
-  negative: "#E08585",
-  border: "#38291E",
-  borderStrong: "#4E3B2C",
+  surface: "#17100C",
+  surfaceRaised: "#211812",
+  surfaceSunken: "#100B08",
+  ink: "#F7EBDD",
+  inkMuted: "#CBB5A2",
+  inkFaint: "#9E8875",
+  primary: "#F0A05D",
+  onPrimary: "#25130A",
+  primarySoft: "#3C2419",
+  accent: "#F3B542",
+  accentSoft: "#3E2F18",
+  onAccent: "#24150F",
+  positive: "#78C69A",
+  caution: "#E6AC62",
+  negative: "#F0928D",
+  border: "#3C2C22",
+  borderStrong: "#604638",
+  shadow: "rgba(0, 0, 0, 0.46)",
   scrim: "rgba(0, 0, 0, 0.62)",
-  mapLand: "#241A13",
-  mapWater: "#1B2422",
+  mapLand: "#201913",
+  mapWater: "#172221",
 };
 
 export const palettes: Record<ColorScheme, Palette> = { light, dark };
@@ -87,10 +93,10 @@ export const space = {
 } as const;
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 28,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 30,
   full: 999,
 } as const;
 
