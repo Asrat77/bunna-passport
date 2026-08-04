@@ -34,6 +34,21 @@
       "expo-secure-store",
       "@maplibre/maplibre-react-native",
       [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Geist-Regular.ttf",
+            "./assets/fonts/Geist-Medium.ttf",
+            "./assets/fonts/Geist-SemiBold.ttf",
+            "./assets/fonts/Geist-Bold.ttf",
+            "node_modules/@expo-google-fonts/noto-sans-ethiopic/400Regular/NotoSansEthiopic_400Regular.ttf",
+            "node_modules/@expo-google-fonts/noto-sans-ethiopic/500Medium/NotoSansEthiopic_500Medium.ttf",
+            "node_modules/@expo-google-fonts/noto-sans-ethiopic/700Bold/NotoSansEthiopic_700Bold.ttf",
+            "node_modules/@expo-google-fonts/noto-serif-ethiopic/600SemiBold/NotoSerifEthiopic_600SemiBold.ttf"
+          ]
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Bunna Passport uses your location to sort coffee shops by distance and to verify check-ins. It never tracks you in the background.",

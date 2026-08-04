@@ -7,11 +7,11 @@
  */
 
 export const fonts = {
-  displayLatin: "Fraunces_600SemiBold",
+  displayLatin: "Geist-SemiBold",
   displayEthiopic: "NotoSerifEthiopic_600SemiBold",
-  bodyLatin: "PlusJakartaSans_400Regular",
-  bodyLatinMedium: "PlusJakartaSans_500Medium",
-  bodyLatinBold: "PlusJakartaSans_700Bold",
+  bodyLatin: "Geist-Regular",
+  bodyLatinMedium: "Geist-Medium",
+  bodyLatinBold: "Geist-Bold",
   bodyEthiopic: "NotoSansEthiopic_400Regular",
   bodyEthiopicMedium: "NotoSansEthiopic_500Medium",
   bodyEthiopicBold: "NotoSansEthiopic_700Bold",
@@ -38,14 +38,14 @@ export type TypeSpec = {
  * below 1.4 anywhere. Body floor is 16sp (DESIGN.md §2.3).
  */
 export const typeScale: Record<TypeRole, TypeSpec> = {
-  display: { fontSize: 32, lineHeight: 44, letterSpacing: -0.4 },
-  title: { fontSize: 24, lineHeight: 34, letterSpacing: -0.2 },
+  display: { fontSize: 36, lineHeight: 48, letterSpacing: -1.1 },
+  title: { fontSize: 26, lineHeight: 38, letterSpacing: -0.55 },
   heading: { fontSize: 19, lineHeight: 28 },
   body: { fontSize: 16, lineHeight: 26 },
   bodyStrong: { fontSize: 16, lineHeight: 26 },
   label: { fontSize: 14, lineHeight: 22 },
   caption: { fontSize: 12, lineHeight: 18 },
-  numeral: { fontSize: 28, lineHeight: 34, letterSpacing: -0.5 },
+  numeral: { fontSize: 32, lineHeight: 38, letterSpacing: -1.1 },
 };
 
 /** Ethiopic script range (U+1200–U+137F) plus the supplement blocks. */
