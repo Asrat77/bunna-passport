@@ -1,10 +1,11 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/context";
-import { Button } from "@/design/components/Button";
 import { EmptyState } from "@/design/components/EmptyState";
+import { ProgressRing } from "@/design/components/ProgressRing";
 import { Seal } from "@/design/components/Seal";
 import { ShopCard } from "@/design/components/ShopCard";
 import { Text } from "@/design/components/Text";
@@ -20,8 +21,8 @@ function ProgressRow({ area }: { area: NeighborhoodProgress }) {
 
   return (
     <View style={{ gap: space.sm }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text role="label" weight="medium">
+      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: space.md }}>
+        <Text role="label" weight="medium" numberOfLines={1} style={{ flex: 1 }}>
           {language === "am" ? area.name_am : area.name}
         </Text>
         <Text role="label" color="inkMuted">
@@ -30,8 +31,8 @@ function ProgressRow({ area }: { area: NeighborhoodProgress }) {
       </View>
       <View
         style={{
-          height: 6,
-          borderRadius: 3,
+          height: 8,
+          borderRadius: 4,
           backgroundColor: colors.surfaceSunken,
           overflow: "hidden",
         }}
@@ -73,7 +74,7 @@ export default function PassportScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
         <EmptyState
-          icon="book-outline"
+          icon="book-open-page-variant-outline"
           title={t("auth.gateTitle")}
           body={t("auth.gateBody")}
           actionLabel={t("auth.createAccount")}
@@ -83,55 +84,96 @@ export default function PassportScreen() {
     );
   }
 
+  const totalShops = stamped.length + unstamped.length;
+  const stampCount = user?.stamps_count ?? stamped.length;
   const largestArea = areas.slice().sort((a, b) => b.total - a.total)[0];
+  const allSeals = [...stamped, ...unstamped.slice(0, stamped.length > 0 ? 8 : 12)];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <ScrollView
-        contentContainerStyle={{
-          padding: space.lg,
-          gap: space.xl,
-          paddingBottom: touchTarget * 3,
-        }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: touchTarget }}
       >
-        <View style={{ flexDirection: "row", gap: space.lg }}>
+        <View>
+          <Text role="caption" color="primary" weight="bold">
+            BUNNA PASSPORT
+          </Text>
+          <Text role="display">{t("passport.title")}</Text>
+        </View>
+
+        <View
+          style={{
+            overflow: "hidden",
+            minHeight: 190,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: space.lg,
+            padding: space.xl,
+            borderRadius: radius.xl,
+            borderCurve: "continuous",
+            backgroundColor: colors.surfaceRaised,
+            borderWidth: 1,
+            borderColor: colors.border,
+            boxShadow: `0 10px 24px ${colors.shadow}`,
+          }}
+        >
           <View
             style={{
-              flex: 1,
-              padding: space.lg,
-              borderRadius: radius.lg,
-              backgroundColor: colors.surfaceRaised,
-              borderWidth: 1,
-              borderColor: colors.border,
+              position: "absolute",
+              width: 150,
+              height: 150,
+              borderRadius: 75,
+              right: -60,
+              top: -58,
+              backgroundColor: colors.accentSoft,
+              opacity: 0.8,
             }}
-          >
-            <Text role="numeral">{String(user?.stamps_count ?? stamped.length)}</Text>
-            <Text role="label" color="inkMuted">
-              {t("passport.stamps")}
-            </Text>
-          </View>
-          <View
-            style={{
-              flex: 1,
-              padding: space.lg,
-              borderRadius: radius.lg,
-              backgroundColor: colors.surfaceRaised,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <Text role="numeral">{String(user?.verified_check_ins_count ?? 0)}</Text>
-            <Text role="label" color="inkMuted">
-              {t("passport.cups")}
-            </Text>
+          />
+          <ProgressRing value={stampCount} total={totalShops} label={t("boards.city")} />
+          <View style={{ flex: 1, gap: space.md }}>
+            <View>
+              <Text role="numeral">{String(stampCount)}</Text>
+              <Text role="label" color="inkMuted">
+                {t("passport.stamps")}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: space.sm,
+                paddingTop: space.md,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+              }}
+            >
+              <MaterialCommunityIcons name="coffee-outline" size={24} color={colors.accent} />
+              <View>
+                <Text role="heading" weight="bold">
+                  {String(user?.verified_check_ins_count ?? 0)}
+                </Text>
+                <Text role="caption" color="inkMuted">
+                  {t("passport.cups")}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
         {areas.length > 0 ? (
-          <View style={{ gap: space.lg }}>
-            {areas.map((area) => (
-              <ProgressRow key={area.id} area={area} />
-            ))}
+          <View
+            style={{
+              gap: space.lg,
+              padding: space.lg,
+              borderRadius: radius.lg,
+              borderCurve: "continuous",
+              backgroundColor: colors.surfaceRaised,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            {areas.map((area) => <ProgressRow key={area.id} area={area} />)}
           </View>
         ) : null}
 
@@ -157,15 +199,31 @@ export default function PassportScreen() {
           </>
         ) : (
           <View style={{ gap: space.md }}>
-            <Text role="heading">{t("passport.stamps")}</Text>
-            {/* Earned seals sit next to dashed placeholders — visible absence
-                is the completion hook (docs/DESIGN.md §6.3). */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.lg }}>
-              {stamped.map((shop) => (
-                <Seal key={shop.id} name={shop.name} nameAm={shop.name_am} earned size="md" />
-              ))}
-              {unstamped.slice(0, 6).map((shop) => (
-                <Seal key={shop.id} name={shop.name} nameAm={shop.name_am} earned={false} size="md" />
+            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+              <Text role="heading">{t("passport.stamps")}</Text>
+              <Text role="caption" color="inkMuted">
+                {`${stampCount}/${totalShops}`}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.md }}>
+              {allSeals.map((shop) => (
+                <Pressable
+                  key={shop.id}
+                  onPress={() => router.push(`/shop/${shop.id}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={shop.name}
+                  style={({ pressed }) => ({
+                    width: 94,
+                    alignItems: "center",
+                    gap: space.xs,
+                    opacity: pressed ? 0.72 : 1,
+                  })}
+                >
+                  <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="md" />
+                  <Text role="caption" color={shop.stamped ? "ink" : "inkFaint"} numberOfLines={1} align="center">
+                    {language === "am" ? shop.name_am : shop.name}
+                  </Text>
+                </Pressable>
               ))}
             </View>
           </View>
