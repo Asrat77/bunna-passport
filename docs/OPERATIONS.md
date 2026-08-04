@@ -14,6 +14,7 @@ Required deployment values:
 
 - `BUNNA_DEPLOY_IMAGE`
 - `BUNNA_DEPLOY_HOST`
+- `BUNNA_DEPLOY_SSH_USER`
 - `BUNNA_REGISTRY_SERVER`
 - `BUNNA_REGISTRY_USERNAME`
 - `KAMAL_REGISTRY_PASSWORD`
@@ -22,6 +23,40 @@ Required deployment values:
 
 Do not run `bin/kamal deploy` until the host, registry, DNS, TLS termination,
 and backup destination have been chosen explicitly.
+
+## Chosen infrastructure
+
+The single host is an Azure virtual machine. `southafricanorth` is the closest
+Azure region to Addis Ababa, so it is the latency choice for an Addis-first
+product.
+
+| Value | Setting |
+| --- | --- |
+| Resource group | `bunna-passport-rg` |
+| Virtual machine | `bunna-passport-vm`, `Standard_B2als_v2`, 2 vCPU, 4 GB |
+| Image | Ubuntu 24.04 LTS, 64 GB StandardSSD |
+| Host | `bunna-passport.southafricanorth.cloudapp.azure.com` |
+| Registry | `ghcr.io/asrat77/bunna-passport` |
+
+`Standard_B2s` does not exist in `southafricanorth`; only the v2 B-series is
+offered there. Inbound 22, 80, and 443 are open on `bunna-passport-vmNSG`.
+
+SQLite requires a real local filesystem. The Docker volume sits on the virtual
+machine's own disk for that reason, which is also why this deployment is a
+virtual machine rather than Azure Container Apps backed by Azure Files.
+
+Deployment values live in the gitignored `.env.deploy`. The registry password is
+never stored there:
+
+```sh
+set -a; source .env.deploy; set +a
+export KAMAL_REGISTRY_PASSWORD=<github token with write:packages>
+bin/kamal deploy
+```
+
+The builder is remote and points at the deployment host, so images build
+natively on amd64 instead of under emulation. Kamal builds from a git clone of
+`HEAD`, so commit any change that must appear in the image before deploying.
 
 ## Database initialization
 

@@ -14,16 +14,12 @@ servers:
   #     - 192.168.0.1
   #   cmd: bin/jobs
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+# Terminate TLS at the Kamal proxy with a Let's Encrypt certificate. This is a
+# single web server, so the certificate lives on the host rather than at a load
+# balancer. production.rb sets assume_ssl and force_ssl to match.
+proxy:
+  ssl: true
+  host: <%= ENV.fetch("BUNNA_APP_HOST") %>
 
 # Where you keep your container images.
 registry:
@@ -42,6 +38,10 @@ env:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
+
+    # Canonical external host. Mailer links and host authorization both read it.
+    BUNNA_APP_HOST: <%= ENV.fetch("BUNNA_APP_HOST") %>
+    BUNNA_APP_PROTOCOL: https
 
     # Set number of processes dedicated to Solid Queue (default: 1)
     # JOB_CONCURRENCY: 3
@@ -78,9 +78,11 @@ asset_path: /rails/public/assets
 builder:
   arch: amd64
 
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://docker@docker-builder-server
-  #
+  # Build on the deployment host itself. It is already amd64, so this avoids
+  # slow QEMU emulation on arm64 workstations and keeps build layers off the
+  # developer's disk.
+  remote: ssh://<%= ENV.fetch("BUNNA_DEPLOY_SSH_USER") %>@<%= ENV.fetch("BUNNA_DEPLOY_HOST") %>
+
   # # Pass arguments and secrets to the Docker build process
   # args:
   #   RUBY_VERSION: 3.4.2
@@ -88,9 +90,9 @@ builder:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
+# Cloud images disable root login, so Kamal connects as the provisioned user.
+ssh:
+  user: <%= ENV.fetch("BUNNA_DEPLOY_SSH_USER") %>
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:
