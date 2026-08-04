@@ -6,11 +6,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ApiRequestError } from "@/api/errors";
 import { useAuth } from "@/auth/context";
 import { Button } from "@/design/components/Button";
-import { Seal } from "@/design/components/Seal";
+import { BunnaMark } from "@/design/components/BunnaMark";
 import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
-import { fonts } from "@/design/typography";
+import { fontFor } from "@/design/typography";
 import { useI18n } from "@/i18n/context";
 
 type Mode = "signIn" | "signUp";
@@ -27,6 +27,7 @@ function Field(props: {
   const { colors } = useTheme();
   const { t } = useI18n();
   const [reveal, setReveal] = useState(false);
+  const [focused, setFocused] = useState(false);
   const { label, value, onChange, hint, secure = false, autoCapitalize = "none", keyboardType = "default" } = props;
 
   return (
@@ -41,9 +42,10 @@ function Field(props: {
           minHeight: touchTarget,
           paddingHorizontal: space.lg,
           borderRadius: radius.md,
+          borderCurve: "continuous",
           backgroundColor: colors.surfaceRaised,
-          borderWidth: 1,
-          borderColor: colors.border,
+          borderWidth: focused ? 2 : 1,
+          borderColor: focused ? colors.primary : colors.border,
         }}
       >
         <TextInput
@@ -54,10 +56,12 @@ function Field(props: {
           autoCorrect={false}
           keyboardType={keyboardType}
           accessibilityLabel={label}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           style={{
             flex: 1,
             color: colors.ink,
-            fontFamily: fonts.bodyEthiopic,
+            fontFamily: fontFor("body", value),
             fontSize: 16,
             paddingVertical: space.md,
           }}
@@ -139,9 +143,55 @@ export default function SignInScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView contentContainerStyle={{ padding: space.xl, gap: space.lg }}>
-          <View style={{ alignItems: "center", gap: space.md, marginBottom: space.md }}>
-            <Seal name="Bunna Passport" nameAm="ቡና ፓስፖርት" earned size="md" />
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: space.lg, gap: space.lg }}
+        >
+          <View style={{ alignItems: "flex-end" }}>
+            <Pressable
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              style={{
+                width: touchTarget,
+                height: touchTarget,
+                borderRadius: radius.full,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.surfaceRaised,
+              }}
+            >
+              <MaterialCommunityIcons name="close" size={22} color={colors.ink} />
+            </Pressable>
+          </View>
+
+          <View
+            style={{
+              alignItems: "center",
+              gap: space.md,
+              padding: space.xl,
+              marginBottom: space.sm,
+              borderRadius: radius.xl,
+              borderCurve: "continuous",
+              backgroundColor: colors.primarySoft,
+              overflow: "hidden",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                right: -55,
+                top: -60,
+                borderWidth: 20,
+                borderColor: colors.accent,
+                opacity: 0.3,
+              }}
+            />
+            <BunnaMark size={96} />
             <Text role="title" align="center">
               {t("auth.gateTitle")}
             </Text>
@@ -150,31 +200,43 @@ export default function SignInScreen() {
             </Text>
           </View>
 
-          <Field
-            label={t("auth.email")}
-            value={email}
-            onChange={setEmail}
-            keyboardType="email-address"
-          />
+          <View
+            style={{
+              gap: space.lg,
+              padding: space.lg,
+              borderRadius: radius.lg,
+              borderCurve: "continuous",
+              backgroundColor: colors.surfaceRaised,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Field
+              label={t("auth.email")}
+              value={email}
+              onChange={setEmail}
+              keyboardType="email-address"
+            />
 
-          {mode === "signUp" ? (
-            <>
-              <Field
-                label={t("auth.handle")}
-                value={handle}
-                onChange={setHandle}
-                hint={t("auth.handleHint")}
-              />
-              <Field
-                label={t("auth.displayName")}
-                value={displayName}
-                onChange={setDisplayName}
-                autoCapitalize="words"
-              />
-            </>
-          ) : null}
+            {mode === "signUp" ? (
+              <>
+                <Field
+                  label={t("auth.handle")}
+                  value={handle}
+                  onChange={setHandle}
+                  hint={t("auth.handleHint")}
+                />
+                <Field
+                  label={t("auth.displayName")}
+                  value={displayName}
+                  onChange={setDisplayName}
+                  autoCapitalize="words"
+                />
+              </>
+            ) : null}
 
-          <Field label={t("auth.password")} value={password} onChange={setPassword} secure />
+            <Field label={t("auth.password")} value={password} onChange={setPassword} secure />
+          </View>
 
           {error ? (
             <View
