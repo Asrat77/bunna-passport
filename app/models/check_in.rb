@@ -112,6 +112,7 @@ class CheckIn < ApplicationRecord
       user.increment!(:verified_check_ins_count)
       shop.increment!(:check_ins_count)
       earn_stamp!
+      count_toward_stamp_level!
       update!(verified_at: Time.current, counted_at: Time.current)
     end
 
@@ -130,6 +131,12 @@ class CheckIn < ApplicationRecord
     shop.increment!(:stamps_count)
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => error
     raise error unless user.stamps.exists?(shop: shop)
+  end
+
+  # Every counted visit raises the stamp's level, including the first. Guarded
+  # by counted_at in the caller, so a replay cannot inflate it.
+  def count_toward_stamp_level!
+    user.stamps.find_by(shop: shop)&.increment!(:check_ins_count)
   end
 
   def public_status

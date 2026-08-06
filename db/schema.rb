@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_180700) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_06_013016) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -283,6 +283,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_180700) do
   end
 
   create_table "stamps", force: :cascade do |t|
+    t.integer "check_ins_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "earned_at", null: false
     t.integer "first_check_in_id", null: false
@@ -294,6 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_180700) do
     t.index ["shop_id"], name: "index_stamps_on_shop_id"
     t.index ["user_id", "shop_id"], name: "index_stamps_on_user_id_and_shop_id", unique: true
     t.index ["user_id"], name: "index_stamps_on_user_id"
+    t.check_constraint "check_ins_count >= 0", name: "stamps_non_negative_check_ins"
   end
 
   create_table "users", force: :cascade do |t|

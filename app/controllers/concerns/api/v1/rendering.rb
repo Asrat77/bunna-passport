@@ -52,8 +52,22 @@ module Api::V1::Rendering
         stamps_count: shop.stamps_count,
         hours: hours_json(shop.hours),
         photos: shop.photos.map { |photo| photo_json(photo) },
-        merged_into_id: shop.merged_into_id
+        merged_into_id: shop.merged_into_id,
+        stamp: viewer_stamp_json(shop)
       )
+    end
+
+    # The signed-in viewer's own standing at this shop, or nil for a stranger.
+    def viewer_stamp_json(shop)
+      stamp = Current.user&.stamps&.find_by(shop_id: shop.id)
+      return nil unless stamp
+
+      {
+        level: stamp.level,
+        earned_at: stamp.earned_at.iso8601,
+        check_ins_count: stamp.check_ins_count,
+        visits_to_next_level: stamp.visits_to_next_level
+      }
     end
 
     def hours_json(hours)

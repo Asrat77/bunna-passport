@@ -8,7 +8,10 @@ class Api::V1::PassportsController < Api::V1::BaseController
           {
             id: stamp.id,
             shop: { id: stamp.shop_id, name: stamp.shop.name, name_am: stamp.shop.name_am },
-            earned_at: stamp.earned_at.iso8601
+            earned_at: stamp.earned_at.iso8601,
+            level: stamp.level,
+            check_ins_count: stamp.check_ins_count,
+            visits_to_next_level: stamp.visits_to_next_level
           }
         end,
         stamped_count: stamps.size,
