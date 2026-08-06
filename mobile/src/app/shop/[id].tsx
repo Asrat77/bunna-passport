@@ -30,6 +30,26 @@ const AMENITY_ICONS: Record<
   parking: "parking",
 };
 
+/**
+ * Quiet contribution link. These read as text on purpose — they should invite,
+ * not compete with checking in — but they still need a real touch target.
+ */
+function ContributionAction({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={space.md}
+      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: space.xs })}
+    >
+      <Text role="label" color="primary">
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export default function ShopDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
@@ -287,15 +307,16 @@ export default function ShopDetailScreen() {
             {t("shop.wrongInfo")}
           </Text>
           <View style={{ flexDirection: "row", gap: space.lg, flexWrap: "wrap" }}>
-            <Text role="label" color="primary">
-              {t("shop.suggestEdit")}
-            </Text>
-            <Text role="label" color="primary">
-              {t("shop.addPhoto")}
-            </Text>
-            <Text role="label" color="primary">
-              {t("shop.report")}
-            </Text>
+            <ContributionAction
+              label={t("shop.suggestEdit")}
+              onPress={() =>
+                router.push({ pathname: "/suggest-edit", params: { shopId: String(shopId) } })
+              }
+            />
+            <ContributionAction
+              label={t("shop.report")}
+              onPress={() => router.push({ pathname: "/report", params: { shopId: String(shopId) } })}
+            />
           </View>
         </View>
       </ScrollView>

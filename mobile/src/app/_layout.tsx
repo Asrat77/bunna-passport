@@ -33,6 +33,14 @@ function Navigator() {
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
+          name="suggest-edit"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
+          name="report"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
           name="sign-in"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
