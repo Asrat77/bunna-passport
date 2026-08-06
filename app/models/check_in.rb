@@ -28,6 +28,20 @@ class CheckIn < ApplicationRecord
   validate :acceptable_photo
 
   scope :reverse_chronologically, -> { order(occurred_at: :desc, id: :desc) }
+  scope :rated, -> { verified.where.not(rating: nil) }
+
+  # What a visitor chose to say about a visit we verified. A rating alone is a
+  # review; so is a note. Flagged and rejected visits say nothing in public.
+  scope :reviews, lambda {
+    verified
+      .where("rating IS NOT NULL OR (note IS NOT NULL AND TRIM(note) != '')")
+      .reverse_chronologically
+  }
+
+  def self.rating_average
+    average = rated.average(:rating)
+    average && average.to_f.round(2)
+  end
 
   def self.record!(user:, shop:, idempotency_key:, latitude:, longitude:, accuracy_meters:, mock_location: false, drink: nil, rating: nil, note: nil, photo: nil)
     return user.check_ins.find_by(idempotency_key: idempotency_key) if user.check_ins.exists?(idempotency_key: idempotency_key)

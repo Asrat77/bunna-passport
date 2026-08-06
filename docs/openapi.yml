@@ -272,6 +272,44 @@ paths:
         "422":
           $ref: "#/components/responses/Unprocessable"
 
+  /shops/{shop_id}/reviews:
+    get:
+      tags: [Catalog]
+      operationId: listShopReviews
+      summary: What visitors said about a shop
+      description: >
+        Reviews are not a separate record. Each one is the rating or note left
+        on a check-in the server verified, so only people who were physically
+        at the shop can appear here. Rejected and flagged visits never surface.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      responses:
+        "200":
+          description: Verified visits that carried a rating or a note
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Review"
+                  meta:
+                    type: object
+                    required: [rating_average, rating_count, total]
+                    properties:
+                      rating_average:
+                        type: number
+                        format: float
+                        nullable: true
+                      rating_count: { type: integer }
+                      total: { type: integer }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /shops/{shop_id}/photos:
     post:
       tags: [Community]
@@ -797,6 +835,27 @@ components:
           required: [name, name_am, neighborhood_id, landmark, latitude, longitude]
           properties:
             duplicate_override: { type: boolean, default: false }
+      unevaluatedProperties: false
+    Review:
+      type: object
+      required: [id, user, rating, note, drink, occurred_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        user:
+          type: object
+          required: [id, handle, display_name]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            handle: { type: string }
+            display_name: { type: string }
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        note: { type: string, nullable: true }
+        drink: { type: string, nullable: true }
+        occurred_at: { type: string, format: date-time }
       unevaluatedProperties: false
     Contribution:
       type: object

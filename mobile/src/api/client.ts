@@ -12,6 +12,7 @@ import type {
   LeaderboardScope,
   OpaqueId,
   Passport,
+  Review,
   Shop,
   ShopDetail,
   SignupInput,
@@ -280,6 +281,11 @@ export const api = {
 
   submitShop(shop: Record<string, unknown>) {
     return request<Contribution>("/shops", { method: "POST", body: { shop } });
+  },
+
+  /** What people said on visits the server verified. */
+  listReviews(shopId: OpaqueId) {
+    return request<Review[]>(`/shops/${shopId}/reviews`);
   },
 
   suggestEdit(shopId: OpaqueId, proposed_changes: Record<string, unknown>) {

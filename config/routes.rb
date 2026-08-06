@@ -13,6 +13,7 @@ Rails.application.routes.draw do
       resources :shops, only: %i[ index show create ] do
         resources :edits, controller: :shop_edits, only: :create
         resources :photos, controller: :shop_photos, only: :create
+        resources :reviews, controller: :shop_reviews, only: :index
       end
 
       get "contributions/pending", to: "pending_contributions#show", as: :pending_contributions

@@ -59,6 +59,11 @@ const en = {
   "shop.loadPhotos": "Load photos (≈{size})",
   "shop.hoursStale": "Hours may be out of date",
 
+  "reviews.title": "What people said",
+  "reviews.empty": "No notes yet — be the first to say something",
+  "reviews.summary": "{average} from {count} ratings",
+  "reviews.unrated": "Visited, no rating",
+
   "stamp.level.bronze": "Bronze stamp",
   "stamp.level.silver": "Silver stamp",
   "stamp.level.gold": "Gold stamp",
@@ -223,6 +228,11 @@ const am: Record<StringKey, string> = {
   "shop.suggestEdit": "እርማት ጠቁም",
   "shop.addPhoto": "ፎቶ ጨምር",
   "shop.report": "ሪፖርት አድርግ",
+
+  "reviews.title": "ሰዎች ያሉት",
+  "reviews.empty": "ገና አስተያየት የለም — መጀመሪያ ይሁኑ",
+  "reviews.summary": "ከ{count} ደረጃዎች {average}",
+  "reviews.unrated": "ጎብኝቷል፣ ደረጃ የለም",
 
   "stamp.level.bronze": "የነሐስ ማህተም",
   "stamp.level.silver": "የብር ማህተም",

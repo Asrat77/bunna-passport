@@ -157,6 +157,21 @@ export type CheckIn = {
   stamp_level: StampLevel | null;
 };
 
+export type Review = {
+  id: OpaqueId;
+  user: { id: OpaqueId; handle: string; display_name: string };
+  rating: number | null;
+  note: string | null;
+  drink: string | null;
+  occurred_at: Timestamp;
+};
+
+export type ReviewSummary = {
+  rating_average: number | null;
+  rating_count: number;
+  total: number;
+};
+
 export type PassportStamp = {
   id: OpaqueId;
   shop: { id: OpaqueId; name: string; name_am: string };

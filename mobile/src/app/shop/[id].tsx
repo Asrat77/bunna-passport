@@ -16,6 +16,7 @@ import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
 import { findShop, type CachedShop } from "@/db/shops";
+import { ShopReviews } from "@/features/shop/ShopReviews";
 import { useI18n } from "@/i18n/context";
 
 const AMENITY_ICONS: Record<
@@ -308,6 +309,8 @@ export default function ShopDetailScreen() {
             onPress={() => router.push({ pathname: "/check-in", params: { shopId: String(shopId) } })}
           />
         </View>
+
+        <ShopReviews shopId={shopId} />
 
         {/* Contribution actions stay quiet — contextual, not competing */}
         <View style={{ gap: space.sm, paddingTop: space.md, borderTopWidth: 1, borderTopColor: colors.border }}>
