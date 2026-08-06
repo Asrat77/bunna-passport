@@ -116,6 +116,47 @@ The command uses SQLite's online backup operation for each production database,
 archives Active Storage, writes checksums, and prints the new backup directory.
 Copy that directory off the application host and test restores regularly.
 
+## Off-host backup
+
+`script/backup` leaves its output beside the database, which survives nothing
+that matters. `script/backup_offsite` takes that backup, encrypts it, and sends
+it out of the cloud account running the application.
+
+The destination is deliberately not Azure. This subscription is Azure for
+Students: if the credit runs out, a backup living in the same subscription
+disappears on the same day as the machine it was protecting.
+
+Installed on the application host as `/usr/local/bin/bunna-backup-offsite`,
+scheduled nightly at 00:15 UTC, and configured from `/etc/bunna-backup.env`.
+Retention keeps every run for 14 days, then Mondays only for 12 weeks — about
+two dozen copies.
+
+Two values have to be supplied before the schedule does anything:
+
+1. **A destination.** Create a bucket with any S3-compatible provider outside
+   Azure — Cloudflare R2 and Backblaze B2 both have free tiers far larger than
+   this data — then configure it on the host with `rclone config` and set
+   `BUNNA_BACKUP_REMOTE` to `remote:bucket`.
+
+2. **A recipient key.** Generate it on a machine that is not the server:
+
+   ```sh
+   age-keygen -o bunna-backup.key
+   age-keygen -y bunna-backup.key   # the public half
+   ```
+
+   Put the public half in `BUNNA_BACKUP_RECIPIENT`. Keep the private half in a
+   password manager and nowhere else. The server encrypts to the public key and
+   cannot read its own backups, which is the point: whoever holds the bucket
+   never holds the email addresses, password digests, or the record of where
+   people drink coffee.
+
+   Losing the private key loses every backup. There is no recovery path, by
+   design.
+
+Check the schedule with `crontab -l` and the last run in
+`/var/log/bunna/backup.log`.
+
 ## Restore drill
 
 1. Stop web and job processes so nothing writes to `storage`.

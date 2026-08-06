@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+#
+# Takes a backup on the application host and sends it somewhere the host cannot
+# reach back into.
+#
+# A copy sitting beside the database survives nothing that matters: not a lost
+# disk, not a deleted virtual machine, not a subscription that stops paying.
+# The destination is deliberately outside the cloud account running the app, so
+# losing that account does not lose the backups with it.
+#
+# The archive is encrypted before it leaves, to a public key whose private half
+# never touches this machine. Whoever holds the bucket cannot read the email
+# addresses, password digests, or the record of where people drink coffee.
+#
+# Usage: script/backup_offsite
+#
+# Required environment (see /etc/bunna-backup.env):
+#   BUNNA_BACKUP_REMOTE     rclone destination, e.g. r2:bunna-backups
+#   BUNNA_BACKUP_RECIPIENT  age public key (age1... or an ssh-ed25519 line)
+#
+# Optional:
+#   BUNNA_BACKUP_IMAGE      container image (default: the deployed one)
+#   BUNNA_BACKUP_VOLUME     docker volume holding storage/
+#   BUNNA_BACKUP_ENV_FILE   env file supplying RAILS_MASTER_KEY
+#   BUNNA_BACKUP_STAGING    where archives are built
+#   BUNNA_KEEP_DAILY        days of every-run backups to keep (default 14)
+#   BUNNA_KEEP_WEEKLY       weeks of one-per-week backups to keep (default 12)
+set -euo pipefail
+
+: "${BUNNA_BACKUP_REMOTE:?Set BUNNA_BACKUP_REMOTE to an rclone destination}"
+: "${BUNNA_BACKUP_RECIPIENT:?Set BUNNA_BACKUP_RECIPIENT to an age public key}"
+
+image="${BUNNA_BACKUP_IMAGE:-ghcr.io/asrat77/bunna-passport:latest}"
+volume="${BUNNA_BACKUP_VOLUME:-bunna_passport_storage}"
+env_file="${BUNNA_BACKUP_ENV_FILE:-$HOME/.kamal/apps/bunna_passport/env/roles/web.env}"
+staging="${BUNNA_BACKUP_STAGING:-/var/backups/bunna}"
+keep_daily="${BUNNA_KEEP_DAILY:-14}"
+keep_weekly="${BUNNA_KEEP_WEEKLY:-12}"
+
+mkdir -p "$staging"
+
+# 1. Let the application take the backup. SQLite's own online backup is the
+#    only safe way to copy a database that is being written to.
+destination="$(docker run --rm \
+  --env-file "$env_file" \
+  -v "$volume:/rails/storage" \
+  -v "$staging:/backups" \
+  "$image" \
+  script/backup /backups | tail -1)"
+
+name="$(basename "$destination")"
+archive="$staging/$name.tar.age"
+
+# 2. One encrypted archive per run. The recipient's private key is not here, so
+#    this machine can write backups but never read them back.
+tar -czf - -C "$staging" "$name" | age -r "$BUNNA_BACKUP_RECIPIENT" -o "$archive"
+
+# 3. Off the host.
+rclone copy "$archive" "$BUNNA_BACKUP_REMOTE/" --checksum
+
+# 4. Prune, remotely and locally. Keep every recent run, then one per week for
+#    longer, so a corruption noticed late still has an older copy behind it.
+keep_after="$(date -u -d "$keep_daily days ago" +%Y%m%d)"
+oldest="$(date -u -d "$keep_weekly weeks ago" +%Y%m%d)"
+
+should_keep() {
+  local day="${1:0:8}"
+  [[ "$day" > "$keep_after" || "$day" == "$keep_after" ]] && return 0
+  [[ "$day" < "$oldest" ]] && return 1
+  # Beyond the daily window, keep Mondays only.
+  [[ "$(date -u -d "$day" +%u)" == "1" ]]
+}
+
+while read -r candidate; do
+  [[ -n "$candidate" ]] || continue
+  stamp="${candidate#bunna-passport-}"
+  should_keep "$stamp" || rclone deletefile "$BUNNA_BACKUP_REMOTE/$candidate"
+done < <(rclone lsf "$BUNNA_BACKUP_REMOTE/" --include 'bunna-passport-*.tar.age' | sort)
+
+# Local copies are only a staging area; the remote is the backup.
+find "$staging" -maxdepth 1 -name 'bunna-passport-*' -mtime "+$keep_daily" -exec rm -rf {} +
+
+echo "$archive -> $BUNNA_BACKUP_REMOTE/$(basename "$archive")"
