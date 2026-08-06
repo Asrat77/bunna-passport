@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, View } from "react-native";
 import Animated, {
   Easing,
   cancelAnimation,
@@ -28,7 +28,7 @@ import { StampCeremony } from "@/features/checkin/StampCeremony";
 import { useCheckIn } from "@/features/checkin/useCheckIn";
 import { useI18n } from "@/i18n/context";
 import { formatDistance } from "@/location/distance";
-import { ACCURACY_LIMIT_METERS, type Fix } from "@/location/useLocation";
+import { ACCURACY_LIMIT_METERS, hasPreciseLocation, type Fix } from "@/location/useLocation";
 
 const DRINKS = ["macchiato", "buna", "espresso", "spris", "latte"];
 
@@ -115,6 +115,18 @@ export default function CheckInScreen() {
   const [drink, setDrink] = useState<string | null>(null);
   const [showExtras, setShowExtras] = useState(false);
   const [progress, setProgress] = useState<{ stamped: number; total: number; area: string } | null>(null);
+  // Drives the difference between "go outside" and "turn on precise location".
+  const [precise, setPrecise] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void hasPreciseLocation().then((value) => {
+      if (active) setPrecise(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Check-in is the account gate; browsing never is (docs/DESIGN.md §4.2).
   useEffect(() => {
@@ -270,15 +282,21 @@ export default function CheckInScreen() {
             <EmptyState
               icon="alert-circle-outline"
               title={
-                phase.code
-                  ? t(REJECTION_STRINGS[phase.code], { shop: phase.shop.name })
-                  : t("checkin.error.generic")
+                phase.code === "weak_gps" && !precise
+                  ? t("checkin.error.coarse_location")
+                  : phase.code
+                    ? t(REJECTION_STRINGS[phase.code], { shop: phase.shop.name })
+                    : t("checkin.error.generic")
               }
               body={phase.code ? undefined : phase.message}
             />
+            {phase.code === "weak_gps" && !precise ? (
+              <Button label={t("checkin.openSettings")} onPress={() => void Linking.openSettings()} />
+            ) : null}
             <Button
               label={phase.code === "too_far" ? t("checkin.error.too_far_action") : t("checkin.retry")}
               onPress={retry}
+              variant={phase.code === "weak_gps" && !precise ? "quiet" : "primary"}
             />
             <Button label={t("common.close")} onPress={close} variant="quiet" />
           </View>
@@ -304,6 +322,9 @@ function ChoosingView(props: {
   const { fix, candidates, selected, onSelect, drink, onDrink, showExtras, onToggleExtras, onSubmit } = props;
 
   const weakSignal = fix.accuracyMeters > ACCURACY_LIMIT_METERS;
+  // A coarse fix never sharpens by moving, so say so instead of sending the
+  // user outside to watch the same number come back.
+  const coarseGrant = weakSignal && !fix.precise;
 
   if (candidates.length === 0) {
     return <EmptyState icon="map-marker-off-outline" title={t("checkin.noneNearby")} body={t("checkin.noneNearbyHint")} />;
@@ -330,11 +351,27 @@ function ChoosingView(props: {
           size={16}
           color={weakSignal ? colors.caution : colors.positive}
         />
-        <Text role="caption" color={weakSignal ? "caution" : "inkMuted"} style={{ flex: 1 }}>
-          {weakSignal
-            ? t("checkin.accuracyPoor", { meters: fix.accuracyMeters })
-            : t("checkin.accuracyGood", { meters: fix.accuracyMeters })}
-        </Text>
+        <View style={{ flex: 1, gap: space.xs }}>
+          <Text role="caption" color={weakSignal ? "caution" : "inkMuted"}>
+            {coarseGrant
+              ? t("checkin.accuracyCoarse", { meters: fix.accuracyMeters })
+              : weakSignal
+                ? t("checkin.accuracyPoor", { meters: fix.accuracyMeters })
+                : t("checkin.accuracyGood", { meters: fix.accuracyMeters })}
+          </Text>
+          {coarseGrant ? (
+            <Pressable
+              onPress={() => void Linking.openSettings()}
+              accessibilityRole="button"
+              hitSlop={space.sm}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text role="label" color="primary">
+                {t("checkin.openSettings")}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       <Text role="title">{t("checkin.pickShop")}</Text>

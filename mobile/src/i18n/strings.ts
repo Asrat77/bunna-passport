@@ -98,6 +98,8 @@ const en = {
   "checkin.locating": "Finding you…",
   "checkin.accuracyGood": "Accuracy ±{meters}m",
   "checkin.accuracyPoor": "Accuracy ±{meters}m — step outside or near a window",
+  "checkin.accuracyCoarse": "Accuracy ±{meters}m — precise location is off, so this cannot improve",
+  "checkin.openSettings": "Turn on precise location",
   "checkin.pickShop": "Where are you?",
   "checkin.stampIt": "Stamp it",
   "checkin.addCup": "+1 cup",
@@ -123,6 +125,7 @@ const en = {
   "checkin.neighborhoodProgress": "{stamped} of {total} in {area}",
 
   "checkin.error.weak_gps": "Weak GPS signal — try again outside",
+  "checkin.error.coarse_location": "Precise location is off, so we can't confirm you're here",
   "checkin.error.too_far": "You're too far from {shop}",
   "checkin.error.too_far_action": "At a different café?",
   "checkin.error.cooldown": "You already checked in here recently",
@@ -270,6 +273,8 @@ const am: Record<StringKey, string> = {
   "checkin.locating": "አካባቢዎን በመፈለግ ላይ…",
   "checkin.accuracyGood": "ትክክለኛነት ±{meters}ሜ",
   "checkin.accuracyPoor": "ትክክለኛነት ±{meters}ሜ — ወደ ውጭ ይውጡ ወይም ወደ መስኮት ይጠጉ",
+  "checkin.accuracyCoarse": "ትክክለኛነት ±{meters}ሜ — ትክክለኛ ቦታ ጠፍቷል፣ ስለዚህ አይሻሻልም",
+  "checkin.openSettings": "ትክክለኛ ቦታን አብራ",
   "checkin.pickShop": "የት ነዎት?",
   "checkin.stampIt": "አትም",
   "checkin.addCup": "+1 ስኒ",
@@ -295,6 +300,7 @@ const am: Record<StringKey, string> = {
   "checkin.neighborhoodProgress": "በ{area} ከ{total} ውስጥ {stamped}",
 
   "checkin.error.weak_gps": "ደካማ ጂፒኤስ — ወደ ውጭ ወጥተው ይሞክሩ",
+  "checkin.error.coarse_location": "ትክክለኛ ቦታ ጠፍቷል፣ ስለዚህ እዚህ መሆንዎን ማረጋገጥ አልቻልንም",
   "checkin.error.too_far": "ከ{shop} በጣም ርቀዋል",
   "checkin.error.too_far_action": "በሌላ ካፌ ነዎት?",
   "checkin.error.cooldown": "ከቅርብ ጊዜ በፊት እዚህ ቼክ-ኢን አድርገዋል",

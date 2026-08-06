@@ -17,7 +17,29 @@ export type LocationPermission = "unknown" | "granted" | "denied";
 export type Fix = Coordinate & {
   accuracyMeters: number;
   mocked: boolean;
+  /**
+   * False when the OS granted only approximate location. Requesting high
+   * accuracy cannot override that, so every fix comes back coarse and no
+   * amount of standing outside will improve it — a different problem from a
+   * weak signal, and it needs different advice.
+   */
+  precise: boolean;
 };
+
+/**
+ * Android reports whether it granted a fine or coarse fix. iOS exposes no
+ * equivalent through the permission scope, so anything that is not a known
+ * coarse grant counts as precise — a false "your settings are wrong" is worse
+ * than missing the case.
+ */
+function isPrecise(permission: Location.LocationPermissionResponse): boolean {
+  return permission.android?.accuracy !== "coarse";
+}
+
+/** Whether the OS is currently willing to give a GPS-grade fix. */
+export async function hasPreciseLocation(): Promise<boolean> {
+  return isPrecise(await Location.getForegroundPermissionsAsync());
+}
 
 export function useLocationPermission() {
   const [permission, setPermission] = useState<LocationPermission>("unknown");
@@ -47,9 +69,10 @@ export function useLocationPermission() {
 
 /** One-shot high-accuracy fix. Used by Explore for sorting and by check-in. */
 export async function readFix(): Promise<Fix> {
-  const position = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.High,
-  });
+  const [position, precise] = await Promise.all([
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
+    hasPreciseLocation(),
+  ]);
 
   return {
     latitude: position.coords.latitude,
@@ -58,5 +81,6 @@ export async function readFix(): Promise<Fix> {
     // perfect, so the user is warned instead of silently rejected.
     accuracyMeters: Math.round(position.coords.accuracy ?? 999),
     mocked: position.mocked ?? false,
+    precise,
   };
 }
