@@ -16,9 +16,18 @@ if [[ ! -f "$source_directory/SHA256SUMS" || ! -f "$source_directory/active-stor
   exit 66
 fi
 
+# Same tool split as script/backup: a restore runs wherever the volume is.
+verify_checksums() {
+  if command -v sha256sum > /dev/null 2>&1; then
+    sha256sum -c SHA256SUMS
+  else
+    shasum -a 256 -c SHA256SUMS
+  fi
+}
+
 (
   cd "$source_directory"
-  shasum -a 256 -c SHA256SUMS
+  verify_checksums
 )
 
 mkdir -p storage

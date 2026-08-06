@@ -34,9 +34,19 @@ tar \
   -czf "$destination/active-storage.tar.gz" \
   -C storage .
 
+# The production image ships coreutils, not perl's shasum, so a backup taken on
+# the server has to reach for whichever one exists.
+checksum() {
+  if command -v sha256sum > /dev/null 2>&1; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
+
 (
   cd "$destination"
-  shasum -a 256 databases/* active-storage.tar.gz > SHA256SUMS
+  checksum databases/* active-storage.tar.gz > SHA256SUMS
 )
 
 echo "$destination"
