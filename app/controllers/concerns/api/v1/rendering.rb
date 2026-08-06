@@ -115,6 +115,7 @@ module Api::V1::Rendering
         status: check_in.public_status,
         rejection_code: check_in.rejected? ? check_in.flag_reason : nil,
         stamp_earned: check_in.earned_stamp?,
+        stamp_level: check_in.user.stamps.find_by(shop_id: check_in.shop_id)&.level,
         distance_meters: check_in.distance_meters,
         drink: check_in.drink,
         rating: check_in.rating,

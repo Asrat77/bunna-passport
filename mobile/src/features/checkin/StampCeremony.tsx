@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Button } from "@/design/components/Button";
 import { ProgressRing } from "@/design/components/ProgressRing";
-import { Seal } from "@/design/components/Seal";
+import { Seal, type StampLevel } from "@/design/components/Seal";
 import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { motion, radius, space } from "@/design/tokens";
@@ -22,12 +22,13 @@ import { useI18n } from "@/i18n/context";
 type Props = {
   name: string;
   nameAm: string;
+  level: StampLevel;
   progress: { stamped: number; total: number; area: string } | null;
   onDone: () => void;
 };
 
 /** The signature ink-press moment, kept entirely on transform and opacity. */
-export function StampCeremony({ name, nameAm, progress, onDone }: Props) {
+export function StampCeremony({ name, nameAm, level, progress, onDone }: Props) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const reduceMotion = useReducedMotion();
@@ -103,7 +104,7 @@ export function StampCeremony({ name, nameAm, progress, onDone }: Props) {
           }}
         />
         <Animated.View style={sealStyle}>
-          <Seal name={name} nameAm={nameAm} earned size="lg" />
+          <Seal name={name} nameAm={nameAm} level={level} size="lg" />
         </Animated.View>
       </View>
 

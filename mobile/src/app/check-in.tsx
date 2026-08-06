@@ -236,6 +236,7 @@ export default function CheckInScreen() {
             <StampCeremony
               name={phase.shop.name}
               nameAm={phase.shop.name_am}
+              level={phase.result.stamp_level ?? "bronze"}
               progress={progress}
               onDone={close}
             />
@@ -361,7 +362,7 @@ function ChoosingView(props: {
                 boxShadow: active ? `0 7px 18px ${colors.shadow}` : undefined,
               }}
             >
-              <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="sm" />
+              <Seal name={shop.name} nameAm={shop.name_am} level={shop.stamp_level} size="sm" />
               <View style={{ flex: 1 }}>
                 <BilingualName name={shop.name} nameAm={shop.name_am} role="heading" />
                 <Text role="caption" color="inkMuted" style={{ marginTop: space.xs }}>

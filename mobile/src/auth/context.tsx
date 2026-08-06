@@ -89,6 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data.stamps.map((stamp) => ({
         shopId: stamp.shop.id,
         earnedAt: stamp.earned_at,
+        level: stamp.level,
+        checkInsCount: stamp.check_ins_count,
       })),
     );
   }, []);

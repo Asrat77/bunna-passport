@@ -71,6 +71,12 @@ const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS idx_shops_neighborhood ON shops (neighborhood_id);
   CREATE INDEX IF NOT EXISTS idx_shops_search ON shops (search_key);
   `,
+  // A stamp now carries how well you know the shop, not just that you went.
+  // Existing rows default to the level the first visit earns.
+  `
+  ALTER TABLE stamps ADD COLUMN level TEXT NOT NULL DEFAULT 'bronze';
+  ALTER TABLE stamps ADD COLUMN check_ins_count INTEGER NOT NULL DEFAULT 1;
+  `,
 ];
 
 export function openDatabase(): Promise<SQLite.SQLiteDatabase> {

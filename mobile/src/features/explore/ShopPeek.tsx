@@ -55,7 +55,7 @@ export function ShopPeek({ shop, onClose, onOpen }: Props) {
           boxShadow: `0 12px 28px ${colors.shadow}`,
         }}
       >
-        <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="sm" />
+        <Seal name={shop.name} nameAm={shop.name_am} level={shop.stamp_level} size="sm" />
 
         <View style={{ flex: 1 }}>
           <BilingualName name={shop.name} nameAm={shop.name_am} role="heading" />

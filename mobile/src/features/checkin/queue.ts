@@ -95,7 +95,7 @@ export async function flushQueue(): Promise<FlushResult> {
       await remove(row.idempotency_key);
       sent += 1;
       if (data.stamp_earned) {
-        await recordStamp(row.shop_id, data.occurred_at);
+        await recordStamp(row.shop_id, data.occurred_at, data.stamp_level ?? "bronze");
         stamps.push(data);
       }
     } catch (error) {

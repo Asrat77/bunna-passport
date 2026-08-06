@@ -90,6 +90,7 @@ export default function ShopDetailScreen() {
   const nameAm = detail?.name_am ?? cached?.name_am ?? "";
   const landmark = detail?.landmark ?? cached?.landmark ?? "";
   const stamped = cached?.stamped ?? false;
+  const stampLevel = detail?.stamp?.level ?? cached?.stamp_level ?? null;
   const latitude = detail?.latitude ?? cached?.latitude ?? 0;
   const longitude = detail?.longitude ?? cached?.longitude ?? 0;
   const neighborhood =
@@ -208,11 +209,18 @@ export default function ShopDetailScreen() {
             boxShadow: `0 6px 16px ${colors.shadow}`,
           }}
         >
-          <Seal name={name} nameAm={nameAm} earned={stamped} size="md" />
+          <Seal name={name} nameAm={nameAm} level={stampLevel} size="md" />
           <View style={{ flex: 1 }}>
             {stamped ? (
               <>
-                <Text role="heading">{t("checkin.stampEarned")}</Text>
+                <Text role="heading">
+                  {stampLevel ? t(`stamp.level.${stampLevel}`) : t("checkin.stampEarned")}
+                </Text>
+                {detail?.stamp?.visits_to_next_level ? (
+                  <Text role="caption" color="primary" style={{ marginTop: space.xs }}>
+                    {t("stamp.toNextLevel", { count: detail.stamp.visits_to_next_level })}
+                  </Text>
+                ) : null}
                 {detail ? (
                   <Text role="caption" color="inkMuted" style={{ marginTop: space.xs }}>
                     {t("shop.visits", { count: detail.check_ins_count })}

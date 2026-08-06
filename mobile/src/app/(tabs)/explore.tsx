@@ -257,7 +257,7 @@ export default function ExploreScreen() {
                     <Seal
                       name={shop.name}
                       nameAm={shop.name_am}
-                      earned={shop.stamped}
+                      level={shop.stamp_level}
                       size="pin"
                     />
                   </Pressable>

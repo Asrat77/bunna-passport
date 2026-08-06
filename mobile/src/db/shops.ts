@@ -1,5 +1,6 @@
 import type { Shop, ShopTombstone } from "@/api/types";
 import { distanceMeters } from "@/location/distance";
+import type { StampLevel } from "@/design/components/Seal";
 import { openDatabase } from "./index";
 import { buildSearchKey, normalizeName } from "./searchKey";
 
@@ -17,13 +18,16 @@ export type CachedShop = {
   price_band: string | null;
   attributes: Record<string, boolean>;
   stamped: boolean;
+  /** null when unstamped; otherwise how well the visitor knows the shop. */
+  stamp_level: StampLevel | null;
   /** Metres from the reference point, when one was supplied. */
   distance: number | null;
 };
 
-type ShopRow = Omit<CachedShop, "attributes" | "stamped" | "distance"> & {
+type ShopRow = Omit<CachedShop, "attributes" | "stamped" | "stamp_level" | "distance"> & {
   attributes: string;
   stamped: number;
+  stamp_level: string | null;
 };
 
 const SELECT_SHOP = `
@@ -31,7 +35,8 @@ const SELECT_SHOP = `
          s.price_band, s.attributes, s.neighborhood_id,
          COALESCE(n.name, '') AS neighborhood_name,
          COALESCE(n.name_am, '') AS neighborhood_name_am,
-         CASE WHEN st.shop_id IS NULL THEN 0 ELSE 1 END AS stamped
+         CASE WHEN st.shop_id IS NULL THEN 0 ELSE 1 END AS stamped,
+         st.level AS stamp_level
   FROM shops s
   LEFT JOIN neighborhoods n ON n.id = s.neighborhood_id
   LEFT JOIN stamps st ON st.shop_id = s.id
@@ -43,6 +48,7 @@ function hydrate(row: ShopRow): CachedShop {
     ...row,
     attributes: JSON.parse(row.attributes) as Record<string, boolean>,
     stamped: row.stamped === 1,
+    stamp_level: (row.stamp_level as StampLevel | null) ?? null,
     distance: null,
   };
 }
@@ -177,27 +183,42 @@ export async function findShop(id: number): Promise<CachedShop | null> {
 
 /** Replaces the local stamp mirror with the server's authoritative set. */
 export async function replaceStamps(
-  stamps: { shopId: number; earnedAt: string }[],
+  stamps: { shopId: number; earnedAt: string; level: StampLevel; checkInsCount: number }[],
 ): Promise<void> {
   const db = await openDatabase();
   await db.withTransactionAsync(async () => {
     await db.runAsync("DELETE FROM stamps");
     for (const stamp of stamps) {
       await db.runAsync(
-        "INSERT OR REPLACE INTO stamps (shop_id, earned_at) VALUES (?, ?)",
+        "INSERT OR REPLACE INTO stamps (shop_id, earned_at, level, check_ins_count) VALUES (?, ?, ?, ?)",
         stamp.shopId,
         stamp.earnedAt,
+        stamp.level,
+        stamp.checkInsCount,
       );
     }
   });
 }
 
-export async function recordStamp(shopId: number, earnedAt: string): Promise<void> {
+/**
+ * Records a stamp, or raises an existing one. A repeat visit does not create a
+ * stamp but does move its level, so the write has to update as well as insert.
+ */
+export async function recordStamp(
+  shopId: number,
+  earnedAt: string,
+  level: StampLevel = "bronze",
+  checkInsCount = 1,
+): Promise<void> {
   const db = await openDatabase();
   await db.runAsync(
-    "INSERT OR IGNORE INTO stamps (shop_id, earned_at) VALUES (?, ?)",
+    `INSERT INTO stamps (shop_id, earned_at, level, check_ins_count) VALUES (?, ?, ?, ?)
+     ON CONFLICT(shop_id) DO UPDATE SET level = excluded.level,
+                                        check_ins_count = excluded.check_ins_count`,
     shopId,
     earnedAt,
+    level,
+    checkInsCount,
   );
 }
 

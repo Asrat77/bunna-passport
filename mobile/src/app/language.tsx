@@ -73,7 +73,7 @@ export default function LanguageScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <BunnaMark size={112} inverted />
             <View style={{ transform: [{ rotate: "8deg" }], opacity: 0.55 }}>
-              <Seal name="Addis" nameAm="አዲስ" earned size="sm" />
+              <Seal name="Addis" nameAm="አዲስ" level="bronze" size="sm" />
             </View>
           </View>
 

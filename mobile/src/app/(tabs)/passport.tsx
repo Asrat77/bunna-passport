@@ -225,7 +225,7 @@ export default function PassportScreen() {
                     opacity: pressed ? 0.72 : 1,
                   })}
                 >
-                  <Seal name={shop.name} nameAm={shop.name_am} earned={shop.stamped} size="md" />
+                  <Seal name={shop.name} nameAm={shop.name_am} level={shop.stamp_level} size="md" />
                   <Text role="caption" color={shop.stamped ? "ink" : "inkFaint"} numberOfLines={1} align="center">
                     {language === "am" ? shop.name_am : shop.name}
                   </Text>

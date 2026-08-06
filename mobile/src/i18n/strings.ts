@@ -59,6 +59,12 @@ const en = {
   "shop.loadPhotos": "Load photos (≈{size})",
   "shop.hoursStale": "Hours may be out of date",
 
+  "stamp.level.bronze": "Bronze stamp",
+  "stamp.level.silver": "Silver stamp",
+  "stamp.level.gold": "Gold stamp",
+  "stamp.level.diamond": "Diamond stamp",
+  "stamp.toNextLevel": "{count} more visits to the next level",
+
   "report.title": "Report this shop",
   "report.subtitle": "A moderator reviews every report.",
   "report.reason.closed": "Permanently closed",
@@ -217,6 +223,12 @@ const am: Record<StringKey, string> = {
   "shop.suggestEdit": "እርማት ጠቁም",
   "shop.addPhoto": "ፎቶ ጨምር",
   "shop.report": "ሪፖርት አድርግ",
+
+  "stamp.level.bronze": "የነሐስ ማህተም",
+  "stamp.level.silver": "የብር ማህተም",
+  "stamp.level.gold": "የወርቅ ማህተም",
+  "stamp.level.diamond": "የአልማዝ ማህተም",
+  "stamp.toNextLevel": "ወደ ቀጣዩ ደረጃ {count} ጉብኝቶች ይቀራሉ",
 
   "report.title": "ይህን ሱቅ ሪፖርት አድርግ",
   "report.subtitle": "እያንዳንዱን ሪፖርት ተቆጣጣሪ ይመረምራል።",

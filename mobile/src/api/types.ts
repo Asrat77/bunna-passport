@@ -6,6 +6,8 @@
  * wins and this file is wrong.
  */
 
+import type { StampLevel } from "@/design/components/Seal";
+
 export type OpaqueId = number;
 export type Timestamp = string;
 
@@ -76,6 +78,13 @@ export type Photo = {
 export type ShopDetail = Shop & {
   check_ins_count: number;
   stamps_count: number;
+  /** The signed-in viewer's own standing here, null for a stranger. */
+  stamp: {
+    level: StampLevel;
+    earned_at: Timestamp;
+    check_ins_count: number;
+    visits_to_next_level: number | null;
+  } | null;
   merged_into_id: OpaqueId | null;
   hours: {
     schedule: WeeklyHours;
@@ -145,12 +154,16 @@ export type CheckIn = {
   occurred_at: Timestamp;
   /** True when this visit created the user's first stamp at this shop. */
   stamp_earned: boolean;
+  stamp_level: StampLevel | null;
 };
 
 export type PassportStamp = {
   id: OpaqueId;
   shop: { id: OpaqueId; name: string; name_am: string };
   earned_at: Timestamp;
+  level: StampLevel;
+  check_ins_count: number;
+  visits_to_next_level: number | null;
 };
 
 export type Passport = {
