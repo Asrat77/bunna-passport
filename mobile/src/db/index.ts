@@ -2,7 +2,13 @@ import * as SQLite from "expo-sqlite";
 
 const DATABASE_NAME = "bunna.db";
 
-let handle: SQLite.SQLiteDatabase | null = null;
+/**
+ * The in-flight open, not the opened database. Memoising the promise is what
+ * makes concurrent callers share one connection: the root layout opens the
+ * database while screens are already querying it, and opening `bunna.db` twice
+ * leaves a handle whose native pointer is null, so the next prepare throws.
+ */
+let handle: Promise<SQLite.SQLiteDatabase> | null = null;
 
 /**
  * The local Addis catalog. Mobile data in Ethiopia is expensive and patchy
@@ -67,9 +73,16 @@ const MIGRATIONS: string[] = [
   `,
 ];
 
-export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (handle) return handle;
+export function openDatabase(): Promise<SQLite.SQLiteDatabase> {
+  handle ??= openAndMigrate().catch((error: unknown) => {
+    // A failed open must not poison every later call, so let the next one retry.
+    handle = null;
+    throw error;
+  });
+  return handle;
+}
 
+async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
   await db.execAsync("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
 
@@ -83,7 +96,6 @@ export async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
     await db.execAsync(`PRAGMA user_version = ${MIGRATIONS.length}`);
   }
 
-  handle = db;
   return db;
 }
 
