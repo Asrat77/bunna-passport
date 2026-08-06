@@ -30,12 +30,17 @@ function PriceBand({ band }: { band: string | null }) {
 
 type Props = {
   shop: CachedShop;
-  onPress: () => void;
+  /**
+   * Receives the shop so the list can hoist one handler instead of building a
+   * closure per row. A new closure per item defeats memoisation on long lists.
+   */
+  onPress: (shop: CachedShop) => void;
 };
 
 export function ShopCard({ shop, onPress }: Props) {
   const { colors } = useTheme();
   const { language, t } = useI18n();
+  const handlePress = () => onPress(shop);
 
   const distance = formatDistance(shop.distance);
   const neighborhood =
@@ -45,7 +50,7 @@ export function ShopCard({ shop, onPress }: Props) {
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole="button"
       style={({ pressed }) => ({
         flexDirection: "row",

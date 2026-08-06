@@ -333,7 +333,7 @@ export default function ExploreScreen() {
         <FlatList
           data={shops}
           keyExtractor={(shop) => String(shop.id)}
-          renderItem={({ item }) => <ShopCard shop={item} onPress={() => openShop(item)} />}
+          renderItem={({ item }) => <ShopCard shop={item} onPress={openShop} />}
           contentContainerStyle={{
             paddingHorizontal: space.lg,
             gap: space.sm,

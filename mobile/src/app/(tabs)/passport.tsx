@@ -53,6 +53,12 @@ export default function PassportScreen() {
   const [unstamped, setUnstamped] = useState<CachedShop[]>([]);
   const [areas, setAreas] = useState<NeighborhoodProgress[]>([]);
 
+  // One handler for every card and seal, rather than a closure per row.
+  const openShop = useCallback(
+    (shop: CachedShop) => router.push(`/shop/${shop.id}`),
+    [router],
+  );
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -193,7 +199,7 @@ export default function PassportScreen() {
             <Text role="heading">{t("passport.nearby")}</Text>
             <View style={{ gap: space.sm }}>
               {unstamped.slice(0, 3).map((shop) => (
-                <ShopCard key={shop.id} shop={shop} onPress={() => router.push(`/shop/${shop.id}`)} />
+                <ShopCard key={shop.id} shop={shop} onPress={openShop} />
               ))}
             </View>
           </>
