@@ -138,21 +138,32 @@ Two values have to be supplied before the schedule does anything:
    this data — then configure it on the host with `rclone config` and set
    `BUNNA_BACKUP_REMOTE` to `remote:bucket`.
 
-2. **A recipient key.** Generate it on a machine that is not the server:
+2. **A recipient key.** `age` accepts SSH keys, so `BUNNA_BACKUP_RECIPIENT` is
+   currently the operator's `ssh-ed25519` public key — the same one that opens
+   the server. Nothing new to generate, and the private half already lives only
+   on the operator's machine.
+
+   The server encrypts to the public key and cannot read its own backups, which
+   is the point: whoever holds the bucket never holds the email addresses,
+   password digests, or the record of where people drink coffee.
+
+   Restore with the matching private key:
 
    ```sh
-   age-keygen -o bunna-backup.key
-   age-keygen -y bunna-backup.key   # the public half
+   age -d -i ~/.ssh/id_ed25519 bunna-passport-<stamp>.tar.age | tar -xz
    ```
 
-   Put the public half in `BUNNA_BACKUP_RECIPIENT`. Keep the private half in a
-   password manager and nowhere else. The server encrypts to the public key and
-   cannot read its own backups, which is the point: whoever holds the bucket
-   never holds the email addresses, password digests, or the record of where
-   people drink coffee.
+   This ties the backups to that SSH key. Rotating it without re-encrypting
+   makes every existing archive unreadable, so swap in a dedicated key when the
+   SSH key is due to change:
 
-   Losing the private key loses every backup. There is no recovery path, by
-   design.
+   ```sh
+   age-keygen -o bunna-backup.key   # private half to a password manager
+   age-keygen -y bunna-backup.key   # public half into BUNNA_BACKUP_RECIPIENT
+   ```
+
+   Either way, losing the private key loses every backup. There is no recovery
+   path, by design.
 
 Check the schedule with `crontab -l` and the last run in
 `/var/log/bunna/backup.log`.
