@@ -222,6 +222,19 @@ export async function recordStamp(
   );
 }
 
+export type CachedNeighborhood = { id: number; name: string; name_am: string };
+
+/**
+ * Every neighborhood, including the ones with no shops yet. Progress joins
+ * through shops and so hides exactly the areas a submission would fill.
+ */
+export async function listNeighborhoods(): Promise<CachedNeighborhood[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<CachedNeighborhood>(
+    "SELECT id, name, name_am FROM neighborhoods ORDER BY name",
+  );
+}
+
 export type NeighborhoodProgress = {
   id: number;
   name: string;

@@ -29,6 +29,10 @@ function Navigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="shop/[id]" />
         <Stack.Screen
+          name="shop/new"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
           name="check-in"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
