@@ -4,7 +4,7 @@ import { BilingualName } from "@/design/components/BilingualName";
 import { Seal } from "@/design/components/Seal";
 import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
-import { radius, space, touchTarget } from "@/design/tokens";
+import { radius, space } from "@/design/tokens";
 import type { CachedShop } from "@/db/shops";
 import { useI18n } from "@/i18n/context";
 import { formatDistance } from "@/location/distance";

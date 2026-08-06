@@ -18,7 +18,6 @@ const PRICE_BANDS: Record<string, number> = {
 
 /** Price in birr glyphs, never "$$" — money here is ETB (docs/SPEC.md §6). */
 function PriceBand({ band }: { band: string | null }) {
-  const { colors } = useTheme();
   if (!band || !(band in PRICE_BANDS)) return null;
 
   return (
