@@ -59,6 +59,10 @@ const en = {
   "shop.loadPhotos": "Load photos (≈{size})",
   "shop.hoursStale": "Hours may be out of date",
 
+  "photo.uploading": "Sending photo…",
+  "photo.sent": "Photo sent for review. Thank you.",
+  "photo.failed": "That photo didn't send",
+
   "newShop.title": "Add a shop",
   "newShop.subtitle": "You have to be standing at it — that's what makes the map trustworthy.",
   "newShop.usingLocation": "Using where you are now (±{meters}m)",
@@ -244,6 +248,10 @@ const am: Record<StringKey, string> = {
   "shop.suggestEdit": "እርማት ጠቁም",
   "shop.addPhoto": "ፎቶ ጨምር",
   "shop.report": "ሪፖርት አድርግ",
+
+  "photo.uploading": "ፎቶ በመላክ ላይ…",
+  "photo.sent": "ፎቶው ለግምገማ ተልኳል። እናመሰግናለን።",
+  "photo.failed": "ፎቶው አልተላከም",
 
   "newShop.title": "ሱቅ ጨምር",
   "newShop.subtitle": "እዚያው መገኘት አለብዎት — ካርታውን የሚያስተማምነው ያ ነው።",

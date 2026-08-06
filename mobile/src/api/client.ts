@@ -111,7 +111,10 @@ async function request<T>(
     Accept: "application/json",
     ...headers,
   };
-  if (body !== undefined) requestHeaders["Content-Type"] = "application/json";
+  const multipart = body instanceof FormData;
+  // Let fetch set multipart/form-data itself — naming it here drops the
+  // boundary and the server sees an unparseable body.
+  if (body !== undefined && !multipart) requestHeaders["Content-Type"] = "application/json";
 
   const token = anonymous ? null : readToken();
   if (token) requestHeaders.Authorization = `Bearer ${token}`;
@@ -121,7 +124,7 @@ async function request<T>(
     response = await fetch(buildUrl(path, query), {
       method,
       headers: requestHeaders,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : multipart ? (body as FormData) : JSON.stringify(body),
       signal: controller.signal,
     });
   } catch (cause) {
@@ -281,6 +284,28 @@ export const api = {
 
   submitShop(shop: Record<string, unknown>) {
     return request<Contribution>("/shops", { method: "POST", body: { shop } });
+  },
+
+  /**
+   * Uploads a shop photo as multipart. Photos are large and connections here
+   * are not, so this gets its own generous timeout rather than the default.
+   */
+  submitPhoto(shopId: OpaqueId, uri: string, caption?: string) {
+    const form = new FormData();
+    const name = uri.split("/").pop() ?? "photo.jpg";
+    const extension = name.split(".").pop()?.toLowerCase();
+    form.append("shop_photo[image]", {
+      uri,
+      name,
+      type: extension === "png" ? "image/png" : extension === "webp" ? "image/webp" : "image/jpeg",
+    } as unknown as Blob);
+    if (caption) form.append("shop_photo[caption]", caption);
+
+    return request<Contribution>(`/shops/${shopId}/photos`, {
+      method: "POST",
+      body: form,
+      timeoutMs: 60_000,
+    });
   },
 
   /** What people said on visits the server verified. */

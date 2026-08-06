@@ -17,6 +17,7 @@ import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
 import { findShop, type CachedShop } from "@/db/shops";
 import { ShopReviews } from "@/features/shop/ShopReviews";
+import { useAddPhoto } from "@/features/shop/useAddPhoto";
 import { useI18n } from "@/i18n/context";
 
 const AMENITY_ICONS: Record<
@@ -60,6 +61,7 @@ export default function ShopDetailScreen() {
   const [cached, setCached] = useState<CachedShop | null>(null);
   const [detail, setDetail] = useState<ShopDetail | null>(null);
   const [photosRequested, setPhotosRequested] = useState(false);
+  const photoUpload = useAddPhoto(Number(id));
 
   const shopId = Number(id);
 
@@ -323,6 +325,18 @@ export default function ShopDetailScreen() {
               onPress={() =>
                 router.push({ pathname: "/suggest-edit", params: { shopId: String(shopId) } })
               }
+            />
+            <ContributionAction
+              label={
+                photoUpload.state === "uploading"
+                  ? t("photo.uploading")
+                  : photoUpload.state === "sent"
+                    ? t("photo.sent")
+                    : photoUpload.state === "failed"
+                      ? t("photo.failed")
+                      : t("shop.addPhoto")
+              }
+              onPress={() => void photoUpload.addPhoto()}
             />
             <ContributionAction
               label={t("shop.report")}

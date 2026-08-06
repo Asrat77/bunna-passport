@@ -66,6 +66,12 @@
           },
           "imageWidth": 160
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bunna Passport uses your photos so you can add a picture of a coffee shop."
+        }
       ]
     ],
     "experiments": {
