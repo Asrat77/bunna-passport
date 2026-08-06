@@ -31,7 +31,10 @@ yarn-error.*
 *.pem
 
 # local env files
+# .env holds the secret Mapbox download token, so it must never be committed.
+.env
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
