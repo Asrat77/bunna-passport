@@ -46,4 +46,50 @@ namespace :bunna do
 
     puts "Local catalog ready: #{result.shops_count} shops, #{result.photos_count} new photos"
   end
+
+  desc "Report how real check-in attempts land against the verification thresholds"
+  task checkin_report: :environment do
+    attempts = CheckIn.order(:occurred_at)
+    total = attempts.count
+    if total.zero?
+      puts "No check-in attempts recorded yet."
+      next
+    end
+
+    def percentiles(values)
+      return "n/a" if values.empty?
+      sorted = values.compact.sort
+      pick = ->(fraction) { sorted[[ (sorted.length * fraction).floor, sorted.length - 1 ].min] }
+      "min #{sorted.first} / p50 #{pick.call(0.5)} / p90 #{pick.call(0.9)} / max #{sorted.last}"
+    end
+
+    puts "attempts: #{total}"
+    attempts.group(:status).count.each { |status, count| puts "  #{status}: #{count}" }
+    attempts.where.not(flag_reason: nil).group(:flag_reason).count.each do |reason, count|
+      puts "  reason #{reason}: #{count}"
+    end
+
+    puts
+    puts "accuracy metres (limit #{CheckIn::ACCURACY_LIMIT_METERS}): #{percentiles(attempts.pluck(:accuracy_meters))}"
+    puts "distance metres (limit #{CheckIn::DISTANCE_LIMIT_METERS}): #{percentiles(attempts.pluck(:distance_meters))}"
+
+    # What a different accuracy limit would have changed. Only attempts that
+    # were also inside the radius could have succeeded, so a looser limit buys
+    # nothing for someone who was simply somewhere else.
+    puts
+    puts "if the accuracy limit moved:"
+    [ 100, 150, 200, 300 ].each do |limit|
+      rescued = attempts.where(flag_reason: "weak_gps")
+        .where(accuracy_meters: ..limit)
+        .where(distance_meters: ..CheckIn::DISTANCE_LIMIT_METERS)
+        .count
+      puts "  #{limit}m: #{rescued} of the weak_gps rejections were also inside the radius"
+    end
+
+    genuinely_far = attempts.where(flag_reason: "weak_gps")
+      .where("distance_meters > ?", CheckIn::DISTANCE_LIMIT_METERS).count
+    puts
+    puts "#{genuinely_far} weak_gps rejections were outside the radius anyway — loosening accuracy would not have helped them."
+    puts "Treat anything under a few hundred attempts as anecdote, not evidence."
+  end
 end
