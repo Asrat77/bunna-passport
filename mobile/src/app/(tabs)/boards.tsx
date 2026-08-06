@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { FlatList, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api/client";
 import type { LeaderboardMetric, LeaderboardPeriod } from "@/api/types";
@@ -98,6 +98,70 @@ function Podium({ entries, metric }: { entries: Entry[]; metric: LeaderboardMetr
   );
 }
 
+/**
+ * Takes primitives rather than the entry object so the row compares cheaply and
+ * skips re-rendering when the board refreshes with unchanged ranks.
+ */
+function BoardRow({
+  rank,
+  displayName,
+  handle,
+  value,
+  isOwn,
+}: {
+  rank: number;
+  displayName: string;
+  handle: string;
+  value: number;
+  isOwn: boolean;
+}) {
+  const { colors } = useTheme();
+
+  return (
+    <View
+      style={{
+        minHeight: 64,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: space.md,
+        paddingHorizontal: space.lg,
+        paddingVertical: space.md,
+        borderRadius: radius.lg,
+        borderCurve: "continuous",
+        backgroundColor: isOwn ? colors.primarySoft : colors.surfaceRaised,
+        borderWidth: 1,
+        borderColor: isOwn ? colors.primary : colors.border,
+      }}
+    >
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 13,
+          backgroundColor: colors.surfaceSunken,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text role="label" weight="bold" color="primary">
+          {String(rank)}
+        </Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text role="body" weight="medium" numberOfLines={1}>
+          {displayName}
+        </Text>
+        <Text role="caption" color="inkMuted" numberOfLines={1}>
+          {`@${handle}`}
+        </Text>
+      </View>
+      <Text role="heading" weight="bold">
+        {String(value)}
+      </Text>
+    </View>
+  );
+}
+
 export default function BoardsScreen() {
   const { colors } = useTheme();
   const { t } = useI18n();
@@ -139,125 +203,94 @@ export default function BoardsScreen() {
     all_time: t("boards.allTime"),
   };
 
+  // The board returns up to 100 entries, so the ranks below the podium are the
+  // list itself: FlatList owns the scroll and everything above it is the header.
+  const ranked = loading || entries.length === 0 ? [] : entries.slice(3);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: touchTarget }}
-      >
-        <View>
-          <Text role="caption" color="primary" weight="bold">
-            {t("boards.city").toUpperCase()}
-          </Text>
-          <Text role="display">{t("boards.title")}</Text>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm }}>
-          {PERIODS.map((option) => (
-            <Chip
-              key={option}
-              label={periodLabel[option]}
-              selected={period === option}
-              onPress={() => setPeriod(option)}
-            />
-          ))}
-        </ScrollView>
-
-        <View style={{ flexDirection: "row", gap: space.sm }}>
-          {METRICS.map((option) => (
-            <Chip
-              key={option}
-              label={option === "cups" ? t("boards.cups") : t("boards.shops")}
-              selected={metric === option}
-              onPress={() => setMetric(option)}
-              style={{ flex: 1, justifyContent: "center" }}
-            />
-          ))}
-        </View>
-
-        {loading ? (
-          <View style={{ gap: space.md }}>
-            <SkeletonBlock height={190} cornerRadius={radius.xl} />
-            <SkeletonBlock height={64} cornerRadius={radius.lg} />
-            <SkeletonBlock height={64} cornerRadius={radius.lg} />
-          </View>
-        ) : entries.length === 0 ? (
-          <EmptyState
-            icon={failed ? "cloud-off-outline" : "trophy-outline"}
-            title={failed ? t("offline.needsConnection") : t("boards.freshBoard")}
+      <FlatList
+        data={ranked}
+        keyExtractor={(entry) => String(entry.user.id)}
+        renderItem={({ item }) => (
+          <BoardRow
+            rank={item.rank}
+            displayName={item.user.display_name}
+            handle={item.user.handle}
+            value={item.value}
+            isOwn={item.user.id === user?.id}
           />
-        ) : (
-          <>
-            <Podium entries={entries.slice(0, 3)} metric={metric} />
-            <View style={{ gap: space.sm }}>
-              {entries.slice(3).map((entry) => {
-                const isOwn = entry.user.id === user?.id;
-                return (
-                  <View
-                    key={entry.user.id}
-                    style={{
-                      minHeight: 64,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: space.md,
-                      paddingHorizontal: space.lg,
-                      paddingVertical: space.md,
-                      borderRadius: radius.lg,
-                      borderCurve: "continuous",
-                      backgroundColor: isOwn ? colors.primarySoft : colors.surfaceRaised,
-                      borderWidth: 1,
-                      borderColor: isOwn ? colors.primary : colors.border,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 13,
-                        backgroundColor: colors.surfaceSunken,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text role="label" weight="bold" color="primary">
-                        {String(entry.rank)}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text role="body" weight="medium" numberOfLines={1}>
-                        {entry.user.display_name}
-                      </Text>
-                      <Text role="caption" color="inkMuted" numberOfLines={1}>
-                        {`@${entry.user.handle}`}
-                      </Text>
-                    </View>
-                    <Text role="heading" weight="bold">
-                      {String(entry.value)}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </>
         )}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: space.lg, gap: space.sm, paddingBottom: touchTarget }}
+        ListHeaderComponent={
+          <View style={{ gap: space.lg, marginBottom: space.lg }}>
+            <View>
+              <Text role="caption" color="primary" weight="bold">
+                {t("boards.city").toUpperCase()}
+              </Text>
+              <Text role="display">{t("boards.title")}</Text>
+            </View>
 
-        {user && !ownRank && entries.length > 0 ? (
-          <View
-            style={{
-              padding: space.lg,
-              borderRadius: radius.lg,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.surfaceRaised,
-            }}
-          >
-            <Text role="label" color="inkMuted" align="center">
-              {t("boards.unranked")}
-            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm }}>
+              {PERIODS.map((option) => (
+                <Chip
+                  key={option}
+                  label={periodLabel[option]}
+                  selected={period === option}
+                  onPress={() => setPeriod(option)}
+                />
+              ))}
+            </ScrollView>
+
+            <View style={{ flexDirection: "row", gap: space.sm }}>
+              {METRICS.map((option) => (
+                <Chip
+                  key={option}
+                  label={option === "cups" ? t("boards.cups") : t("boards.shops")}
+                  selected={metric === option}
+                  onPress={() => setMetric(option)}
+                  style={{ flex: 1, justifyContent: "center" }}
+                />
+              ))}
+            </View>
+
+            {loading ? (
+              <View style={{ gap: space.md }}>
+                <SkeletonBlock height={190} cornerRadius={radius.xl} />
+                <SkeletonBlock height={64} cornerRadius={radius.lg} />
+                <SkeletonBlock height={64} cornerRadius={radius.lg} />
+              </View>
+            ) : entries.length === 0 ? (
+              <EmptyState
+                icon={failed ? "cloud-off-outline" : "trophy-outline"}
+                title={failed ? t("offline.needsConnection") : t("boards.freshBoard")}
+              />
+            ) : (
+              <Podium entries={entries.slice(0, 3)} metric={metric} />
+            )}
           </View>
-        ) : null}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          user && !ownRank && entries.length > 0 ? (
+            <View
+              style={{
+                marginTop: space.lg,
+                padding: space.lg,
+                borderRadius: radius.lg,
+                borderWidth: 1,
+                borderStyle: "dashed",
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.surfaceRaised,
+              }}
+            >
+              <Text role="label" color="inkMuted" align="center">
+                {t("boards.unranked")}
+              </Text>
+            </View>
+          ) : null
+        }
+      />
     </SafeAreaView>
   );
 }
