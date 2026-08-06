@@ -766,6 +766,11 @@ components:
           properties:
             check_ins_count: { type: integer, minimum: 0 }
             stamps_count: { type: integer, minimum: 0 }
+            stamp:
+              oneOf:
+                - $ref: "#/components/schemas/ViewerStamp"
+                - type: "null"
+              description: The requesting user's standing here, null when signed out.
             merged_into_id:
               oneOf:
                 - $ref: "#/components/schemas/OpaqueId"
@@ -836,6 +841,25 @@ components:
           properties:
             duplicate_override: { type: boolean, default: false }
       unevaluatedProperties: false
+    StampLevel:
+      type: string
+      enum: [bronze, silver, gold, diamond]
+      description: >
+        Rises with counted visits to that one shop: bronze at 1, silver at 5,
+        gold at 15, diamond at 30.
+    ViewerStamp:
+      type: object
+      required: [level, earned_at, check_ins_count, visits_to_next_level]
+      properties:
+        level: { $ref: "#/components/schemas/StampLevel" }
+        earned_at: { type: string, format: date-time }
+        check_ins_count: { type: integer, minimum: 1 }
+        visits_to_next_level:
+          oneOf:
+            - type: integer
+              minimum: 1
+            - type: "null"
+      unevaluatedProperties: false
     Review:
       type: object
       required: [id, user, rating, note, drink, occurred_at]
@@ -903,7 +927,7 @@ components:
           format: binary
     CheckIn:
       type: object
-      required: [id, shop, status, stamp_earned, distance_meters, occurred_at]
+      required: [id, shop, status, stamp_earned, stamp_level, distance_meters, occurred_at]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         shop:
@@ -925,6 +949,11 @@ components:
             True only for the visit that created the permanent stamp at this
             shop. Repeat visits and idempotent replays of the original request
             both report the value belonging to that first visit.
+        stamp_level:
+          oneOf:
+            - $ref: "#/components/schemas/StampLevel"
+            - type: "null"
+          description: The level the stamp stands at after this visit.
         distance_meters: { type: integer, minimum: 0 }
         drink:
           oneOf:
