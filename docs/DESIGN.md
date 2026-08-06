@@ -510,6 +510,14 @@ Each component ships with: both scripts, both themes, RTL-safe layout
 5. **Amharic copy voice** — needs a native-speaker review pass; machine-drafted
    Amharic UI strings are a launch blocker, not a nice-to-have.
 
+   `mobile/scripts/i18n-review.mjs` carries the round trip. `npm run i18n
+   export` writes a spreadsheet a reviewer can open anywhere and fill in;
+   `npm run i18n import` writes their answers back and records which keys a
+   human has approved. `npm run i18n status` reports how many are left, so the
+   blocker is a number rather than a warning comment. A string counts as
+   approved only when a person put it in that column — never because it looked
+   plausible.
+
 ---
 
 ## 12. What this spec deliberately excludes
