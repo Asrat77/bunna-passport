@@ -181,6 +181,13 @@ const en = {
   "profile.dataSaver": "Data saver",
   "profile.dataSaverHint": "Only load photos when you ask.",
   "profile.language": "Language",
+  "profile.aboutData": "About the data",
+  "aboutData.title": "About the data",
+  "aboutData.openStreetMap": "Some shops in Bunna Passport were imported from OpenStreetMap, a map of the world built by volunteers.",
+  "aboutData.licence": "© OpenStreetMap contributors, available under the Open Database License (ODbL).",
+  "aboutData.community": "Everything else here was added by people who drink this coffee — corrections, photos and new shops all come from them.",
+  "aboutData.readLicence": "Read the licence",
+
   "profile.trustProgress": "{current} — {have}/{need} check-ins to {next}",
 
   "auth.gateTitle": "Start your passport",
@@ -381,6 +388,13 @@ const am: Record<StringKey, string> = {
   "profile.dataSaver": "ዳታ ቆጣቢ",
   "profile.dataSaverHint": "ፎቶዎችን የሚጭነው ሲጠይቁ ብቻ ነው።",
   "profile.language": "ቋንቋ",
+  "profile.aboutData": "ስለ መረጃው",
+  "aboutData.title": "ስለ መረጃው",
+  "aboutData.openStreetMap": "በቡና ፓስፖርት ውስጥ ያሉ አንዳንድ ሱቆች ከOpenStreetMap የተወሰዱ ናቸው — በበጎ ፈቃደኞች የተሰራ የዓለም ካርታ።",
+  "aboutData.licence": "© የOpenStreetMap አበርካቾች፣ በOpen Database License (ODbL) ስር።",
+  "aboutData.community": "የቀረው ሁሉ ይህን ቡና በሚጠጡ ሰዎች ተጨምሯል — እርማቶች፣ ፎቶዎችና አዳዲስ ሱቆች ከእነሱ ናቸው።",
+  "aboutData.readLicence": "ፈቃዱን አንብብ",
+
   "profile.trustProgress": "{current} — ወደ {next} ለመድረስ {have}/{need} ቼክ-ኢን",
 
   "auth.gateTitle": "ፓስፖርትዎን ይጀምሩ",

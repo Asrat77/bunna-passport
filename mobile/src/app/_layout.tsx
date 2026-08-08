@@ -45,6 +45,10 @@ function Navigator() {
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
+          name="about-data"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
           name="sign-in"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />

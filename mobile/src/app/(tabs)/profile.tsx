@@ -248,6 +248,12 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <Button
+          label={t("profile.aboutData")}
+          onPress={() => router.push("/about-data")}
+          variant="quiet"
+        />
+
         <Button label={t("profile.signOut")} onPress={() => void signOut()} variant="secondary" />
       </ScrollView>
     </SafeAreaView>
