@@ -276,12 +276,19 @@ export default function ShopDetailScreen() {
             </View>
             <Button label={t("shop.directions")} onPress={openDirections} variant="secondary" />
             {stampLevel ? (
-              <Button
-                label={t("checkin.share")}
-                onPress={() => void shareStamp()}
-                busy={sharing === "rendering"}
-                variant="secondary"
-              />
+              <>
+                <Button
+                  label={t("checkin.share")}
+                  onPress={() => void shareStamp()}
+                  busy={sharing === "rendering"}
+                  variant="secondary"
+                />
+                {sharing === "failed" || sharing === "unavailable" ? (
+                  <Text role="caption" color="caution" align="center">
+                    {t(sharing === "unavailable" ? "checkin.shareUnavailable" : "checkin.shareFailed")}
+                  </Text>
+                ) : null}
+              </>
             ) : null}
           </View>
         ) : null}

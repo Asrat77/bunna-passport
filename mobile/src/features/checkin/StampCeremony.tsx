@@ -154,6 +154,11 @@ export function StampCeremony({ name, nameAm, level, ordinal, progress, onDone }
           busy={sharing === "rendering"}
           style={{ marginTop: space.md }}
         />
+        {sharing === "failed" || sharing === "unavailable" ? (
+          <Text role="caption" color="caution" align="center">
+            {t(sharing === "unavailable" ? "checkin.shareUnavailable" : "checkin.shareFailed")}
+          </Text>
+        ) : null}
         <Button label={t("checkin.done")} onPress={onDone} variant="quiet" />
 
         {/*
