@@ -56,7 +56,19 @@ archive="$staging/$name.tar.age"
 tar -czf - -C "$staging" "$name" | age -r "$BUNNA_BACKUP_RECIPIENT" -o "$archive"
 
 # 3. Off the host.
-rclone copy "$archive" "$BUNNA_BACKUP_REMOTE/" --checksum
+#
+#    R2 does not implement the read-back rclone performs to confirm an upload,
+#    and rclone treats that as a failed transfer and retries a file it already
+#    stored. Skip its check and make our own: the object has to be there
+#    afterwards, at the size we sent.
+rclone copy "$archive" "$BUNNA_BACKUP_REMOTE/" --s3-no-head
+
+expected="$(stat -c%s "$archive")"
+stored="$(rclone lsl "$BUNNA_BACKUP_REMOTE/$(basename "$archive")" | awk '{print $1}')"
+if [[ "$stored" != "$expected" ]]; then
+  echo "Upload did not land: expected $expected bytes, found '${stored:-nothing}'" >&2
+  exit 1
+fi
 
 # 4. Prune, remotely and locally. Keep every recent run, then one per week for
 #    longer, so a corruption noticed late still has an older copy behind it.
