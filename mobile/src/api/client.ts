@@ -308,6 +308,17 @@ export const api = {
     });
   },
 
+  /**
+   * Fills in what someone chose to say about a visit already recorded. Allowed
+   * for a day afterwards; cannot revise where or when the visit happened.
+   */
+  updateCheckIn(id: OpaqueId, saying: { rating?: number; note?: string; drink?: string }) {
+    return request<CheckIn>(`/check_ins/${id}`, {
+      method: "PATCH",
+      body: { check_in: saying },
+    });
+  },
+
   /** What people said on visits the server verified. */
   listReviews(shopId: OpaqueId) {
     return request<Review[]>(`/shops/${shopId}/reviews`);

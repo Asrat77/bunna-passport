@@ -135,6 +135,11 @@ const en = {
   "checkin.queued": "Saved — we'll keep trying",
   "checkin.queuedHint": "This check-in will send when you're back online.",
 
+  "saying.howWasIt": "How was it?",
+  "saying.notePlaceholder": "Anything worth remembering?",
+  "saying.thanks": "Saved. Thank you.",
+  "saying.rateStars": "Rate {count} out of 5",
+
   "checkin.stampEarned": "Stamp earned",
   "checkin.cupAdded": "+1 cup",
   "checkin.cupTotal": "{count} cups",
@@ -329,6 +334,11 @@ const am: Record<StringKey, string> = {
   "checkin.noneNearbyHint": "ቼክ-ኢን ለማድረግ ቡና ቤት ውስጥ መሆን አለብዎት።",
   "checkin.queued": "ተቀምጧል — መሞከራችንን እንቀጥላለን",
   "checkin.queuedHint": "ይህ ቼክ-ኢን ኦንላይን ሲመለሱ ይላካል።",
+
+  "saying.howWasIt": "እንዴት ነበር?",
+  "saying.notePlaceholder": "የሚታወስ ነገር አለ?",
+  "saying.thanks": "ተቀምጧል። እናመሰግናለን።",
+  "saying.rateStars": "ከ5 {count} ስጥ",
 
   "checkin.stampEarned": "ማህተም ተገኘ",
   "checkin.cupAdded": "+1 ስኒ",

@@ -25,6 +25,7 @@ import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
 import { neighborhoodProgress, type CachedShop } from "@/db/shops";
 import { StampCeremony } from "@/features/checkin/StampCeremony";
+import { SayingPrompt } from "@/features/checkin/SayingPrompt";
 import { useCheckIn } from "@/features/checkin/useCheckIn";
 import { useI18n } from "@/i18n/context";
 import { formatDistance } from "@/location/distance";
@@ -245,13 +246,17 @@ export default function CheckInScreen() {
 
         {phase.name === "success" ? (
           phase.result.stamp_earned ? (
-            <StampCeremony
-              name={phase.shop.name}
-              nameAm={phase.shop.name_am}
-              level={phase.result.stamp_level ?? "bronze"}
-              progress={progress}
-              onDone={close}
-            />
+            <>
+              <StampCeremony
+                name={phase.shop.name}
+                nameAm={phase.shop.name_am}
+                level={phase.result.stamp_level ?? "bronze"}
+                progress={progress}
+                onDone={close}
+              />
+              {/* Below the fold on purpose: scrolling past it is an answer. */}
+              <SayingPrompt checkInId={phase.result.id} />
+            </>
           ) : (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: space.lg, paddingVertical: space.xxl }}>
               <View
@@ -272,6 +277,7 @@ export default function CheckInScreen() {
               <Text role="body" color="inkMuted" align="center">
                 {phase.shop.name}
               </Text>
+              <SayingPrompt checkInId={phase.result.id} />
               <Button label={t("checkin.done")} onPress={close} />
             </View>
           )
