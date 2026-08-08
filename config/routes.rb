@@ -22,6 +22,9 @@ Rails.application.routes.draw do
       end
 
       resources :check_ins, only: %i[ index create ]
+      # A bare verb rather than :update, which would also route PUT and oblige
+      # the contract to document a method nothing calls.
+      patch "check_ins/:id", to: "check_ins#update", as: :check_in
       resource :passport, only: :show
       resource :profile, only: :show
       resources :badges, only: :index

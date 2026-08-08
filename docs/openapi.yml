@@ -487,6 +487,52 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /check_ins/{id}:
+    patch:
+      tags: [Activity]
+      operationId: updateCheckIn
+      summary: Say something about a visit already recorded
+      description: >
+        Fills in the rating, note and drink for a check-in the caller made.
+        This finishes a check-in rather than editing a review: it is allowed
+        for 24 hours after the visit, refused on a rejected one, and cannot
+        revise where or when the visit happened. Someone else's check-in is
+        not found.
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [check_in]
+              properties:
+                check_in:
+                  type: object
+                  properties:
+                    rating: { type: integer, minimum: 1, maximum: 5 }
+                    note: { type: string, maxLength: 280 }
+                    drink: { type: string }
+      responses:
+        "200":
+          description: The visit, with what was said about it
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CheckIn" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   /passport:
     get:
       tags: [Activity]
