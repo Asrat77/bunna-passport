@@ -13,8 +13,11 @@ export type ShareCardProps = {
   name: string;
   nameAm: string;
   level: StampLevel;
-  /** Which stamp this is in the collection, counting from one. */
-  ordinal: number;
+  /**
+   * Which stamp this is in the collection, when that is known. Only the
+   * ceremony knows it for certain — a card made later would be guessing.
+   */
+  ordinal?: number;
   earnedAt: Date;
 };
 
@@ -35,6 +38,9 @@ export type ShareCardProps = {
 export function ShareCard({ name, nameAm, level, ordinal, earnedAt }: ShareCardProps) {
   const colors = palettes.light;
   const date = earnedAt.toISOString().slice(0, 10);
+  const banner = ordinal
+    ? `Stamp №${ordinal} · Addis Ababa`
+    : `${level[0].toUpperCase()}${level.slice(1)} stamp · Addis Ababa`;
 
   return (
     <View
@@ -79,7 +85,7 @@ export function ShareCard({ name, nameAm, level, ordinal, earnedAt }: ShareCardP
           }}
         >
           <Text role="heading" color="primary" weight="bold">
-            {`Stamp №${ordinal} · Addis Ababa`}
+            {banner}
           </Text>
         </View>
         <Text role="body" color="inkMuted">

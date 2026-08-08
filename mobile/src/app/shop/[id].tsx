@@ -16,6 +16,8 @@ import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
 import { findShop, type CachedShop } from "@/db/shops";
+import { CARD_WIDTH, ShareCard } from "@/features/checkin/ShareCard";
+import { useShareStamp } from "@/features/checkin/useShareStamp";
 import { ShopReviews } from "@/features/shop/ShopReviews";
 import { useAddPhoto } from "@/features/shop/useAddPhoto";
 import { useI18n } from "@/i18n/context";
@@ -62,6 +64,7 @@ export default function ShopDetailScreen() {
   const [detail, setDetail] = useState<ShopDetail | null>(null);
   const [photosRequested, setPhotosRequested] = useState(false);
   const photoUpload = useAddPhoto(Number(id));
+  const { cardRef: stampCardRef, state: sharing, share: shareStamp } = useShareStamp();
 
   const shopId = Number(id);
 
@@ -272,6 +275,14 @@ export default function ShopDetailScreen() {
               </View>
             </View>
             <Button label={t("shop.directions")} onPress={openDirections} variant="secondary" />
+            {stampLevel ? (
+              <Button
+                label={t("checkin.share")}
+                onPress={() => void shareStamp()}
+                busy={sharing === "rendering"}
+                variant="secondary"
+              />
+            ) : null}
           </View>
         ) : null}
 
@@ -311,6 +322,19 @@ export default function ShopDetailScreen() {
             onPress={() => router.push({ pathname: "/check-in", params: { shopId: String(shopId) } })}
           />
         </View>
+
+        {stampLevel ? (
+          <View style={{ position: "absolute", left: -CARD_WIDTH * 4, top: 0 }} pointerEvents="none">
+            <View ref={stampCardRef} collapsable={false}>
+              <ShareCard
+                name={name}
+                nameAm={nameAm}
+                level={stampLevel}
+                earnedAt={detail?.stamp ? new Date(detail.stamp.earned_at) : new Date()}
+              />
+            </View>
+          </View>
+        ) : null}
 
         <ShopReviews shopId={shopId} />
 
