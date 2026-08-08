@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/auth/context";
 import { EmptyState } from "@/design/components/EmptyState";
 import { ProgressRing } from "@/design/components/ProgressRing";
-import { Seal } from "@/design/components/Seal";
+import { Seal, visitsToNextLevel } from "@/design/components/Seal";
 import { ShopCard } from "@/design/components/ShopCard";
 import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
@@ -40,6 +40,52 @@ function ProgressRow({ area }: { area: NeighborhoodProgress }) {
         <View style={{ height: "100%", width: `${percent}%`, backgroundColor: colors.accent }} />
       </View>
     </View>
+  );
+}
+
+/**
+ * A shop you keep going back to. The passport leads with these because most
+ * people have two or three cafés in their life, not forty-seven — a diary is
+ * honest at that size where a completion meter is only discouraging.
+ */
+function PlaceRow({ shop, onPress }: { shop: CachedShop; onPress: (shop: CachedShop) => void }) {
+  const { colors } = useTheme();
+  const { language, t } = useI18n();
+  const owed = visitsToNextLevel(shop.stamp_visits);
+
+  return (
+    <Pressable
+      onPress={() => onPress(shop)}
+      accessibilityRole="button"
+      accessibilityLabel={language === "am" ? shop.name_am : shop.name}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: space.md,
+        padding: space.md,
+        borderRadius: radius.lg,
+        borderCurve: "continuous",
+        backgroundColor: colors.surfaceRaised,
+        borderWidth: 1,
+        borderColor: colors.border,
+        opacity: pressed ? 0.93 : 1,
+      })}
+    >
+      <Seal name={shop.name} nameAm={shop.name_am} level={shop.stamp_level} size="sm" />
+      <View style={{ flex: 1, gap: space.xs }}>
+        <Text role="label" weight="medium" numberOfLines={1}>
+          {language === "am" ? shop.name_am : shop.name}
+        </Text>
+        <Text role="caption" color="inkMuted">
+          {t("passport.cupsHere", { count: shop.stamp_visits })}
+        </Text>
+      </View>
+      {owed ? (
+        <Text role="caption" color="primary" align="right" style={{ maxWidth: 96 }}>
+          {t("stamp.toNextLevel", { count: owed })}
+        </Text>
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -93,7 +139,9 @@ export default function PassportScreen() {
   const totalShops = stamped.length + unstamped.length;
   const stampCount = user?.stamps_count ?? stamped.length;
   const largestArea = areas.slice().sort((a, b) => b.total - a.total)[0];
-  const allSeals = [...stamped, ...unstamped.slice(0, stamped.length > 0 ? 8 : 12)];
+  const byVisits = stamped.slice().sort((a, b) => b.stamp_visits - a.stamp_visits);
+  const yourPlaces = byVisits.slice(0, 3);
+  const allSeals = [...byVisits, ...unstamped.slice(0, stamped.length > 0 ? 8 : 12)];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
@@ -107,6 +155,17 @@ export default function PassportScreen() {
           </Text>
           <Text role="display">{t("passport.title")}</Text>
         </View>
+
+        {yourPlaces.length > 0 ? (
+          <View style={{ gap: space.md }}>
+            <Text role="heading">{t("passport.yourPlaces")}</Text>
+            <View style={{ gap: space.sm }}>
+              {yourPlaces.map((shop) => (
+                <PlaceRow key={shop.id} shop={shop} onPress={openShop} />
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         <View
           style={{
@@ -139,9 +198,9 @@ export default function PassportScreen() {
           <ProgressRing value={stampCount} total={totalShops} label={t("boards.city")} />
           <View style={{ flex: 1, gap: space.md }}>
             <View>
-              <Text role="numeral">{String(stampCount)}</Text>
+              <Text role="numeral">{String(user?.verified_check_ins_count ?? 0)}</Text>
               <Text role="label" color="inkMuted">
-                {t("passport.stamps")}
+                {t("passport.cups")}
               </Text>
             </View>
             <View
@@ -154,13 +213,13 @@ export default function PassportScreen() {
                 borderTopColor: colors.border,
               }}
             >
-              <MaterialCommunityIcons name="coffee-outline" size={24} color={colors.accent} />
+              <MaterialCommunityIcons name="stamper" size={24} color={colors.accent} />
               <View>
                 <Text role="heading" weight="bold">
-                  {String(user?.verified_check_ins_count ?? 0)}
+                  {String(stampCount)}
                 </Text>
                 <Text role="caption" color="inkMuted">
-                  {t("passport.cups")}
+                  {t("passport.cityCaption", { stamped: stampCount, total: totalShops })}
                 </Text>
               </View>
             </View>

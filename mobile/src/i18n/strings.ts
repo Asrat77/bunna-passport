@@ -155,6 +155,9 @@ const en = {
   "passport.cups": "Cups",
   "passport.completion": "{percent}% of Addis",
   "passport.nearby": "Closest to you",
+  "passport.yourPlaces": "Your places",
+  "passport.cupsHere": "{count} cups here",
+  "passport.cityCaption": "{stamped} of {total} across Addis",
 
   "boards.title": "Boards",
   "boards.week": "This week",
@@ -347,6 +350,9 @@ const am: Record<StringKey, string> = {
   "passport.cups": "ስኒዎች",
   "passport.completion": "የአዲስ አበባ {percent}%",
   "passport.nearby": "ወደ እርስዎ ቅርብ",
+  "passport.yourPlaces": "የእርስዎ ቦታዎች",
+  "passport.cupsHere": "እዚህ {count} ስኒ",
+  "passport.cityCaption": "ከአዲስ አበባ {stamped}/{total}",
 
   "boards.title": "ደረጃ",
   "boards.week": "በዚህ ሳምንት",

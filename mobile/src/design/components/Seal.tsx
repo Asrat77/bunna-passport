@@ -10,6 +10,25 @@ export type SealSize = "pin" | "sm" | "md" | "lg";
 export type StampLevel = "bronze" | "silver" | "gold" | "diamond";
 
 /**
+ * Counted visits each level asks for, mirrored from app/models/stamp.rb.
+ *
+ * The server owns the level a stamp actually holds; this copy exists only so
+ * the passport can say how far away the next one is without a round trip.
+ */
+export const LEVEL_THRESHOLDS: [StampLevel, number][] = [
+  ["bronze", 1],
+  ["silver", 5],
+  ["gold", 15],
+  ["diamond", 30],
+];
+
+/** Visits still owed before the next level, or null at the top. */
+export function visitsToNextLevel(visits: number): number | null {
+  const next = LEVEL_THRESHOLDS.find(([, required]) => visits < required);
+  return next ? next[1] - visits : null;
+}
+
+/**
  * Metals read as metals in either theme, so these are fixed rather than themed.
  * Each paper is dark enough to carry the light ink printed on it.
  */

@@ -20,14 +20,17 @@ export type CachedShop = {
   stamped: boolean;
   /** null when unstamped; otherwise how well the visitor knows the shop. */
   stamp_level: StampLevel | null;
+  /** The viewer's counted visits to this shop; 0 when unstamped. */
+  stamp_visits: number;
   /** Metres from the reference point, when one was supplied. */
   distance: number | null;
 };
 
-type ShopRow = Omit<CachedShop, "attributes" | "stamped" | "stamp_level" | "distance"> & {
+type ShopRow = Omit<CachedShop, "attributes" | "stamped" | "stamp_level" | "stamp_visits" | "distance"> & {
   attributes: string;
   stamped: number;
   stamp_level: string | null;
+  stamp_visits: number | null;
 };
 
 const SELECT_SHOP = `
@@ -36,7 +39,8 @@ const SELECT_SHOP = `
          COALESCE(n.name, '') AS neighborhood_name,
          COALESCE(n.name_am, '') AS neighborhood_name_am,
          CASE WHEN st.shop_id IS NULL THEN 0 ELSE 1 END AS stamped,
-         st.level AS stamp_level
+         st.level AS stamp_level,
+         st.check_ins_count AS stamp_visits
   FROM shops s
   LEFT JOIN neighborhoods n ON n.id = s.neighborhood_id
   LEFT JOIN stamps st ON st.shop_id = s.id
@@ -49,6 +53,7 @@ function hydrate(row: ShopRow): CachedShop {
     attributes: JSON.parse(row.attributes) as Record<string, boolean>,
     stamped: row.stamped === 1,
     stamp_level: (row.stamp_level as StampLevel | null) ?? null,
+    stamp_visits: row.stamp_visits ?? 0,
     distance: null,
   };
 }
