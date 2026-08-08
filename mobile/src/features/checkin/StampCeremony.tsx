@@ -18,18 +18,23 @@ import { Text } from "@/design/components/Text";
 import { useTheme } from "@/design/theme";
 import { motion, radius, space } from "@/design/tokens";
 import { useI18n } from "@/i18n/context";
+import { CARD_WIDTH, ShareCard } from "./ShareCard";
+import { useShareStamp } from "./useShareStamp";
 
 type Props = {
   name: string;
   nameAm: string;
   level: StampLevel;
+  /** Which stamp this is in the collection, for the shareable card. */
+  ordinal: number;
   progress: { stamped: number; total: number; area: string } | null;
   onDone: () => void;
 };
 
 /** The signature ink-press moment, kept entirely on transform and opacity. */
-export function StampCeremony({ name, nameAm, level, progress, onDone }: Props) {
+export function StampCeremony({ name, nameAm, level, ordinal, progress, onDone }: Props) {
   const { colors } = useTheme();
+  const { cardRef, state: sharing, share } = useShareStamp();
   const { t } = useI18n();
   const reduceMotion = useReducedMotion();
   const entrance = useSharedValue(reduceMotion ? 1 : 0);
@@ -143,7 +148,29 @@ export function StampCeremony({ name, nameAm, level, progress, onDone }: Props) 
           </View>
         ) : null}
 
-        <Button label={t("checkin.done")} onPress={onDone} style={{ marginTop: space.md }} />
+        <Button
+          label={t("checkin.share")}
+          onPress={() => void share()}
+          busy={sharing === "rendering"}
+          style={{ marginTop: space.md }}
+        />
+        <Button label={t("checkin.done")} onPress={onDone} variant="quiet" />
+
+        {/*
+          The card is laid out for real but parked off-screen: capture needs
+          genuine layout, and a zero-sized or display:none host captures blank.
+        */}
+        <View style={{ position: "absolute", left: -CARD_WIDTH * 4, top: 0 }} pointerEvents="none">
+          <View ref={cardRef} collapsable={false}>
+            <ShareCard
+              name={name}
+              nameAm={nameAm}
+              level={level}
+              ordinal={ordinal}
+              earnedAt={new Date()}
+            />
+          </View>
+        </View>
       </Animated.View>
     </View>
   );

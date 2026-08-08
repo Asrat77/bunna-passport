@@ -107,7 +107,7 @@ export default function CheckInScreen() {
   const { colors } = useTheme();
   const { t, language } = useI18n();
   const router = useRouter();
-  const { signedIn, ready, syncPassport } = useAuth();
+  const { signedIn, ready, syncPassport, user } = useAuth();
 
   const preselected = shopId ? Number(shopId) : undefined;
   const { phase, submit, retry } = useCheckIn(preselected);
@@ -251,6 +251,7 @@ export default function CheckInScreen() {
                 name={phase.shop.name}
                 nameAm={phase.shop.name_am}
                 level={phase.result.stamp_level ?? "bronze"}
+                ordinal={user?.stamps_count ?? 1}
                 progress={progress}
                 onDone={close}
               />
