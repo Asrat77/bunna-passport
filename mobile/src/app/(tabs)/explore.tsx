@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Mapbox from "@rnmapbox/maps";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, TextInput, View } from "react-native";
@@ -20,11 +19,16 @@ import { ShopPeek } from "@/features/explore/ShopPeek";
 import { useCatalog } from "@/features/explore/useCatalog";
 import { useI18n } from "@/i18n/context";
 import type { Coordinate } from "@/location/distance";
+import { isExpoGo } from "@/platform/runtime";
 
 type ViewMode = "map" | "list";
 
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
-if (MAPBOX_TOKEN) void Mapbox.setAccessToken(MAPBOX_TOKEN);
+// Expo Go does not contain @rnmapbox/maps. Keep the native module behind a
+// runtime guard so the list/catalog experience can still be smoke-tested there.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- Expo Go must not evaluate this native module.
+const Mapbox = isExpoGo ? null : require("@rnmapbox/maps").default;
+const MAPBOX_TOKEN = isExpoGo ? undefined : process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
+if (MAPBOX_TOKEN && Mapbox) void Mapbox.setAccessToken(MAPBOX_TOKEN);
 
 function relativeTime(date: Date | null, t: ReturnType<typeof useI18n>["t"]): string | null {
   if (!date) return null;
@@ -279,7 +283,7 @@ export default function ExploreScreen() {
                 {t("explore.map")}
               </Text>
               <Text role="caption" color="inkMuted" align="center" style={{ marginTop: space.xs }}>
-                EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN
+                {isExpoGo ? t("explore.mapDevBuildOnly") : "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN"}
               </Text>
             </View>
           )}

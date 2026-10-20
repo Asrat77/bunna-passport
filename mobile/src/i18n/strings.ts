@@ -26,6 +26,7 @@ const en = {
   "tab.profile": "Profile",
 
   "explore.map": "Map",
+  "explore.mapDevBuildOnly": "The Mapbox view is available in the development build. Use List here.",
   "explore.list": "List",
   "explore.search": "Search shops or neighborhoods",
   "explore.nearMe": "Near me",
@@ -236,6 +237,7 @@ const am: Record<StringKey, string> = {
   "tab.profile": "መገለጫ",
 
   "explore.map": "ካርታ",
+  "explore.mapDevBuildOnly": "የMapbox ካርታ በdevelopment build ውስጥ ይገኛል። እዚህ ዝርዝርን ይምረጡ።",
   "explore.list": "ዝርዝር",
   "explore.search": "ሱቅ ወይም ሰፈር ይፈልጉ",
   "explore.nearMe": "በአቅራቢያዬ",

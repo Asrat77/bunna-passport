@@ -1,7 +1,7 @@
 import * as Sharing from "expo-sharing";
 import { useCallback, useRef, useState } from "react";
 import type { View } from "react-native";
-import { captureRef } from "react-native-view-shot";
+import { isExpoGo } from "@/platform/runtime";
 
 /**
  * `unavailable` means the app was built without the native pieces sharing
@@ -28,10 +28,18 @@ export function useShareStamp() {
     if (state === "rendering") return;
     setState("rendering");
     try {
+      if (isExpoGo) {
+        setState("unavailable");
+        return;
+      }
       if (!(await Sharing.isAvailableAsync())) {
         setState("unavailable");
         return;
       }
+      // Expo Go does not ship react-native-view-shot. Delay loading it until
+      // after the runtime guard so the rest of the app can run there.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- Expo Go must not evaluate this native module.
+      const { captureRef } = require("react-native-view-shot") as typeof import("react-native-view-shot");
       // Capturing on demand rather than up front: most people never share, and
       // rendering a 1080x1350 bitmap is not free on the phones this targets.
       const uri = await captureRef(cardRef, { format: "png", quality: 1 });
