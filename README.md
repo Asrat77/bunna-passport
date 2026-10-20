@@ -52,6 +52,26 @@ Working Bole and Addis data belongs under `storage/local_seed_data/`. Both Git
 and Docker exclude that directory, so its CSV files, working notes, and photos
 cannot be committed or copied into a production image.
 
+For a fresh OpenStreetMap research queue, run:
+
+```sh
+script/fetch_addis_coffee_osm
+```
+
+This writes ignored `storage/local_seed_data/osm_addis_coffee.json` with OSM
+source identifiers, coordinates, and tags. It is intentionally not accepted by
+the importer: inspect each candidate, confirm that it is a current coffee shop,
+and supply the bilingual name, neighborhood, landmark, and photo before adding
+it to `shops.csv`. Keep the visible OpenStreetMap attribution and ODbL notice in
+the app when publishing data derived from this queue.
+
+Do not copy Google Maps or Places listings into this catalog. The [Google Maps
+Platform terms](https://cloud.google.com/maps-platform/terms) prohibit bulk
+exports and saving business listings for use outside its services, and Places
+content cannot be combined with Bunna Passport's non-Google map. Google Maps
+may be consulted interactively only as a lead; do not copy its fields. Catalog
+facts must come from an allowed source or direct human verification.
+
 Create `storage/local_seed_data/shops.csv` with these required columns:
 
 ```csv

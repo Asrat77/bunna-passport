@@ -1,0 +1,139 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "json"
+require "net/http"
+require "time"
+require "uri"
+
+# A deliberately generous Greater Addis bounding box. The result is a research
+# queue, not a production import: every candidate still needs a human check.
+BBOX = {
+  south: 8.82,
+  west: 38.64,
+  north: 9.13,
+  east: 38.97
+}.freeze
+
+DEFAULT_ENDPOINTS = %w[
+  https://overpass-api.de/api/interpreter
+  https://overpass.kumi.systems/api/interpreter
+].freeze
+
+OUTPUT = ENV.fetch(
+  "BUNNA_OSM_OUTPUT",
+  File.expand_path("../storage/local_seed_data/osm_addis_coffee.json", __dir__)
+)
+
+def queries
+  bbox = BBOX.values_at(:south, :west, :north, :east).join(",")
+  selectors = {
+    "amenity_cafe" => 'nwr["amenity"="cafe"]',
+    "shop_coffee" => 'nwr["shop"="coffee"]',
+    "coffee_roaster" => 'nwr["craft"="coffee_roaster"]',
+    "coffee_cuisine" => 'nwr["cuisine"~"coffee",i]',
+    "coffee_named_amenity" => 'nwr["amenity"]["name"~"coffee|cafe|café|buna|bunna|ቡና",i]',
+    "coffee_named_shop" => 'nwr["shop"]["name"~"coffee|cafe|café|buna|bunna|ቡና",i]'
+  }
+
+  selectors.transform_values do |selector|
+    "[out:json][timeout:75];#{selector}(#{bbox});out center tags;"
+  end
+end
+
+def endpoints
+  configured = ENV["OVERPASS_URL"]&.strip
+  configured.nil? || configured.empty? ? DEFAULT_ENDPOINTS : [ configured ]
+end
+
+def fetch_overpass(overpass_query)
+  failures = []
+
+  endpoints.each do |endpoint|
+    uri = URI(endpoint)
+    uri.query = URI.encode_www_form("data" => overpass_query)
+    request = Net::HTTP::Get.new(uri)
+    request["User-Agent"] = "BunnaPassport/0.2 local-catalog-research"
+
+    response = Net::HTTP.start(
+      uri.hostname,
+      uri.port,
+      use_ssl: uri.scheme == "https",
+      open_timeout: 20,
+      read_timeout: 45
+    ) { |http| http.request(request) }
+
+    return [ endpoint, JSON.parse(response.body), failures ] if response.is_a?(Net::HTTPSuccess)
+
+    failures << "#{endpoint}: HTTP #{response.code}"
+  rescue JSON::ParserError, Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError => error
+    failures << "#{endpoint}: #{error.class}"
+  end
+
+  [ nil, { "elements" => [] }, failures ]
+end
+
+def coordinates(element)
+  point = element["center"] || element
+  [ point["lat"], point["lon"] ]
+end
+
+query_results = queries.map do |label, overpass_query|
+  endpoint, payload, failures = fetch_overpass(overpass_query)
+  warn "#{label} failed: #{failures.join("; ")}" unless endpoint
+  {
+    "label" => label,
+    "query" => overpass_query,
+    "endpoint" => endpoint,
+    "failures" => failures,
+    "elements" => payload.fetch("elements", [])
+  }
+end
+
+elements = query_results.flat_map { |result| result.fetch("elements") }
+  .uniq { |element| [ element["type"], element["id"] ] }
+abort "Every Overpass query failed; no output was written." if elements.empty?
+
+candidates = elements.filter_map do |element|
+  latitude, longitude = coordinates(element)
+  next unless latitude && longitude
+
+  tags = element.fetch("tags", {})
+  {
+    "osm_type" => element.fetch("type"),
+    "osm_id" => element.fetch("id"),
+    "osm_url" => "https://www.openstreetmap.org/#{element.fetch("type")}/#{element.fetch("id")}",
+    "name" => tags["name"],
+    "name_am" => tags["name:am"],
+    "latitude" => latitude,
+    "longitude" => longitude,
+    "tags" => tags
+  }
+end.sort_by { |candidate| [ candidate["name"].to_s.downcase, candidate["osm_type"], candidate["osm_id"] ] }
+
+document = {
+  "schema_version" => 1,
+  "generated_at" => Time.now.utc.iso8601,
+  "purpose" => "Human-review queue for Bunna Passport; not an automatically verified catalog",
+  "source" => {
+    "name" => "OpenStreetMap",
+    "endpoints" => query_results.filter_map { |result| result["endpoint"] }.uniq,
+    "copyright" => "© OpenStreetMap contributors",
+    "license" => "ODbL 1.0",
+    "license_url" => "https://www.openstreetmap.org/copyright"
+  },
+  "bounds" => BBOX.transform_keys(&:to_s),
+  "queries" => query_results.map { |result| result.except("elements") },
+  "candidate_count" => candidates.length,
+  "candidates" => candidates
+}
+
+FileUtils.mkdir_p(File.dirname(OUTPUT))
+File.write(OUTPUT, JSON.pretty_generate(document) + "\n")
+
+named = candidates.count { |candidate| candidate["name"]&.strip&.length&.positive? }
+amharic = candidates.count { |candidate| candidate["name_am"]&.strip&.length&.positive? }
+puts "Wrote #{OUTPUT}"
+puts "Candidates: #{candidates.length} (#{named} named, #{amharic} with name:am)"
+puts "Review every row before converting it to storage/local_seed_data/shops.csv."

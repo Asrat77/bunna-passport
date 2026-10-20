@@ -11,9 +11,10 @@ mid-range Android phone on expensive, patchy data.
 ## Requirements
 
 - Node 20.19.4+ (React Native 0.86 warns below this)
-- A **development build**. Expo Go cannot load this app: Mapbox, SQLite and
-  SecureStore are native modules that Expo Go's prebuilt binary does not
-  contain, so scanning a QR code with Expo Go fails at the first native call.
+- A **development build** for the full experience. Expo Go can load a limited
+  compatibility mode for catalog, list, auth and check-in smoke tests, but its
+  prebuilt binary does not contain Mapbox or View Shot: the map falls back to a
+  notice and image sharing is unavailable there.
 
 Once a development build is installed on the device, the QR-code workflow works
 exactly like Expo Go — the APK is a one-time install, and JS reloads over Wi-Fi.

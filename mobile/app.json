@@ -32,6 +32,7 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
+      "expo-image",
       "@rnmapbox/maps",
       [
         "expo-font",
@@ -70,7 +71,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Bunna Passport uses your photos so you can add a picture of a coffee shop."
+          "photosPermission": "Bunna Passport uses your photos so you can add a picture of a coffee shop.",
+          "microphonePermission": false
         }
       ],
       "expo-sharing"
