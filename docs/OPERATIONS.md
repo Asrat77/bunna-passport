@@ -7,7 +7,8 @@ does not authorize or perform a production deployment.
 
 The Kamal configuration mounts `bunna_passport_storage` at `/rails/storage`.
 That one volume contains the primary SQLite database, Solid Queue, Solid Cache,
-Solid Cable, and local Active Storage files. The `/up` endpoint is the container
+Solid Cable, and any Active Storage files stored before the move to R2 (see
+Photo storage below). The `/up` endpoint is the container
 health check.
 
 Required deployment values:
@@ -167,6 +168,50 @@ Two values have to be supplied before the schedule does anything:
 
 Check the schedule with `crontab -l` and the last run in
 `/var/log/bunna/backup.log`.
+
+## Photo storage (Cloudflare R2)
+
+Production stores Active Storage files (shop photos, check-in photos, avatars)
+in a Cloudflare R2 bucket through the S3 API, not on the storage volume. It is
+a separate bucket from the backups, with its own token: the app should never be
+able to read or delete the backups, and the backup job should not see photos.
+
+Blobs record which service holds them, so files uploaded to `local` before the
+switch keep being served from the volume. New uploads go to R2.
+
+One-time setup in the Cloudflare dashboard (same account as the backup bucket):
+
+1. **R2 Object Storage → Create bucket.** Name it `bunna-photos`. Location
+   automatic, Standard storage class. Leave public access off: the app hands
+   out short-lived signed URLs.
+2. **R2 Object Storage → Manage API tokens → Create API token.** Permission
+   *Object Read & Write*, applied to `bunna-photos` only, no expiry (or one you
+   will remember to rotate). Copy the Access Key ID and Secret Access Key; the
+   secret is shown once.
+3. Note the **Account ID** from the R2 overview page.
+
+Then add these to `.kamal/secrets` (gitignored) so Kamal passes them to the
+container:
+
+```sh
+R2_ACCOUNT_ID=<account id>
+R2_ACCESS_KEY_ID=<access key id>
+R2_SECRET_ACCESS_KEY=<secret access key>
+R2_BUCKET=bunna-photos
+```
+
+A deploy without them fails at the secrets step rather than starting an app
+that cannot store photos. To deploy before R2 is ready, set
+`ACTIVE_STORAGE_SERVICE=local` in the deploy env and drop the four `R2_*`
+entries from `config/deploy.yml`.
+
+Development stays on local disk. To try R2 from a laptop, create a second
+bucket (`bunna-photos-dev`) and token the same way, export the four variables
+with that bucket, and start the server with `ACTIVE_STORAGE_SERVICE=r2`.
+
+`script/backup` archives only the local volume, so photos in R2 are not in the
+nightly backup. Scraped catalog photos can be re-imported; user uploads cannot,
+so revisit this before photo uploads open to the public.
 
 ## Restore drill
 
