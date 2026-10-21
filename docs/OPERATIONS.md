@@ -193,3 +193,41 @@ The confirmation flag is intentionally required.
   hours, and backup age.
 - Run `RefreshLeaderboardsJob.perform_now("week")` as a post-deploy job smoke
   check; it is safe and idempotent.
+
+## Telegram Mini App
+
+The Mini App lives in `web/` and signs people in with Telegram's signed
+`initData` through `POST /api/v1/telegram_sessions`. The server checks the
+signature with the bot's token, so the API container needs
+`TELEGRAM_BOT_TOKEN` (listed under `env.secret` in `config/deploy.yml`, and
+supplied the same way as the other Kamal secrets). Without it every Telegram
+sign-in answers `401 invalid_init_data`; email sign-in keeps working.
+
+The app calls `/api/v1` on its own origin unless `VITE_API_BASE_URL` is set
+at build time. Serve the built `web/dist` from the same host as the API (or
+behind the same proxy). A different origin would need CORS, which the API does
+not enable.
+
+Local development, with Rails on port 3000:
+
+```sh
+cd web
+npm install
+npm run dev        # proxies /api to API_ORIGIN, default http://localhost:3000
+```
+
+Telegram only opens HTTPS URLs, so point one tunnel at port 5173 and set it as
+the bot's Mini App URL in BotFather. The proxy carries the API through the
+same tunnel. Outside Telegram the same page works as a plain website with
+email sign-in.
+
+Build-time settings (`web/.env.example`):
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_BASE_URL` | API root when it isn't same-origin `/api/v1` |
+| `VITE_MAP_STYLE_URL` | MapLibre style for the self-hosted Addis PMTiles; unset hides the map |
+| `VITE_SHARE_URL` | Link a shared stamp points to, such as `https://t.me/<bot>/<app>` |
+
+Checks before a release: `npm run build` (type-checks, then bundles) and
+`npm test` in `web/`.
