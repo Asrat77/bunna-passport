@@ -34,6 +34,25 @@ export function Radar({ fix, candidates, selectedId }: { fix: Fix; candidates: C
     };
   });
 
+  // Label the selected shop first, then any others that still fit; a crowded
+  // corner keeps its dots and the list below names them.
+  const labels = new Map<number, { x: number; y: number; text: string }>();
+  const placed: { left: number; right: number; top: number; bottom: number }[] = [
+    { left: CX - 22, right: CX + 22, top: CY + 10, bottom: CY + 26 },
+  ];
+  const order = [...pins].sort((a, b) => Number(b.candidate.shop.id === selectedId) - Number(a.candidate.shop.id === selectedId));
+  for (const { candidate, x, y } of order) {
+    const text = candidate.inRange ? candidate.shop.name : `${candidate.shop.name} · ${formatMeters(candidate.distance)}`;
+    const half = (text.length * 6.4) / 2;
+    const lx = Math.max(half + 4, Math.min(W - half - 4, x));
+    const ly = y > CY ? y + (candidate.inRange ? 24 : 20) : y - (candidate.inRange ? 15 : 12);
+    const box = { left: lx - half, right: lx + half, top: ly - 12, bottom: ly + 3 };
+    if (box.top < 0 || box.bottom > H) continue;
+    if (placed.some((o) => box.left < o.right && box.right > o.left && box.top < o.bottom && box.bottom > o.top)) continue;
+    placed.push(box);
+    labels.set(candidate.shop.id, { x: lx, y: ly, text });
+  }
+
   const description = t("checkin.radar", {
     list: candidates
       .map((c) => t("checkin.radarEntry", { shop: c.shop.name, distance: formatMeters(c.distance) }))
@@ -46,31 +65,29 @@ export function Radar({ fix, candidates, selectedId }: { fix: Fix; candidates: C
         <circle cx={CX} cy={CY} r={RANGE_R} fill="none" stroke="var(--border-strong)" strokeWidth={1.5} strokeDasharray="4 5" />
         <circle cx={CX} cy={CY} r={RANGE_R / 2} fill="none" stroke="var(--border)" strokeWidth={1.5} strokeDasharray="4 5" />
         <path className="radar__sweep" d={`M${CX} ${CY}L${CX} ${CY - RANGE_R}A${RANGE_R} ${RANGE_R} 0 0 1 ${CX + 69} ${CY - 40}Z`} fill="var(--primary)" opacity={0.16} />
-        {pins.map(({ candidate, x, y }) =>
-          candidate.inRange ? (
+        {pins.map(({ candidate, x, y }) => {
+          const label = labels.get(candidate.shop.id);
+          return candidate.inRange ? (
             <g key={candidate.shop.id}>
               <circle cx={x} cy={y} r={candidate.shop.id === selectedId ? 10 : 9} fill="var(--primary)" />
               {candidate.shop.id === selectedId ? <circle cx={x} cy={y} r={4} fill="var(--raised)" /> : null}
-              <text
-                x={x}
-                y={y > CY ? y + 24 : y - 15}
-                textAnchor="middle"
-                fontSize={11.5}
-                fontWeight={600}
-                fill="var(--ink)"
-              >
-                {candidate.shop.name}
-              </text>
+              {label ? (
+                <text x={label.x} y={label.y} textAnchor="middle" fontSize={11.5} fontWeight={600} fill="var(--ink)">
+                  {label.text}
+                </text>
+              ) : null}
             </g>
           ) : (
             <g key={candidate.shop.id}>
               <circle cx={x} cy={y} r={6} fill="var(--border-strong)" />
-              <text x={x} y={y > CY ? y + 20 : y - 12} textAnchor="middle" fontSize={11} fill="var(--faint)">
-                {candidate.shop.name} · {formatMeters(candidate.distance)}
-              </text>
+              {label ? (
+                <text x={label.x} y={label.y} textAnchor="middle" fontSize={11} fill="var(--faint)">
+                  {label.text}
+                </text>
+              ) : null}
             </g>
-          ),
-        )}
+          );
+        })}
         <circle cx={CX} cy={CY} r={halo} fill="var(--accent)" opacity={0.3} />
         <circle cx={CX} cy={CY} r={5} fill="var(--ink)" stroke="var(--raised)" strokeWidth={2} />
         <text x={CX} y={CY + 22} textAnchor="middle" fontFamily="Geist Mono, monospace" fontSize={10.5} fill="var(--muted)">
