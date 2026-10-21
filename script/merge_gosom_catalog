@@ -1,0 +1,365 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Merges a gosom/google-maps-scraper JSON run into the ignored local catalog.
+#
+#   script/merge_gosom_catalog [storage/local_seed_data/gosom/results.json]
+#
+# - drops closed / non-coffee places and anything already in shops.csv
+#   (matched by Google data_id, then by name + distance)
+# - places each shop in the nearest Neighborhood within MAX_KM, otherwise
+#   appends it to gmaps_unplaced.csv
+# - downloads one photo per shop (shops without one are listed, not imported)
+# - fills blank hours / price_band / amenities on rows already in shops.csv
+#
+# Everything it touches lives under storage/local_seed_data/ (gitignored).
+
+require "csv"
+require "fileutils"
+require "json"
+require "net/http"
+require "uri"
+
+ROOT = File.expand_path("../storage/local_seed_data", __dir__)
+RESULTS = ARGV.empty? ? %w[ results.json results_venues.json results_core.json ].map { |name| File.join(ROOT, "gosom", name) }.select { |path| File.exist?(path) } : ARGV
+CATALOG = File.join(ROOT, "shops.csv")
+UNPLACED = File.join(ROOT, "gmaps_unplaced.csv")
+SKIPPED = File.join(ROOT, "gosom/skipped_no_photo.csv")
+PHOTO_DIR = File.join(ROOT, "photos/gmaps")
+
+MAX_KM = 2.0
+DUPLICATE_KM = 0.12
+SAME_SPOT_KM = 0.025
+HEADERS = %w[
+  slug name name_am neighborhood landmark latitude longitude city status
+  photo_paths price_band amenities hours
+].freeze
+UNPLACED_HEADERS = %w[ name address latitude longitude nearest km link ].freeze
+
+NEIGHBORHOODS = File.read(File.expand_path("../app/models/neighborhood.rb", __dir__))
+  .scan(/name: "([^"]+)".*?latitude: ([\d.]+), longitude: ([\d.]+)/)
+  .map { |name, lat, lon| [ name, lat.to_f, lon.to_f ] }
+DAYS = %w[ monday tuesday wednesday thursday friday saturday sunday ].freeze
+COFFEE_CATEGORY = /coffee|cafe|café|\btea\b|roaster|bakery|breakfast/i
+COFFEE_NAME = /coffee|cafe|café|buna|bunna|ቡና|jebena|roast/i
+# Places that serve coffee without being coffee shops: hotels, restaurants,
+# juice houses, pastry shops. They have to earn their place with real reviews.
+LIGHT_VENUE_CATEGORY = /juice|pastry|dessert|ice cream|cafeteria|canteen/i
+VENUE_CATEGORY = /hotel|restaurant|lodge|resort|bistro|eatery|pizza|burger|food court|#{LIGHT_VENUE_CATEGORY.source}/i
+EXCLUDED_CATEGORY = /\bbars?\b|night ?club|\bpub\b|brothel|massage|\bspa\b|casino|hostel|apartment|rental|school|hospital|clinic|church|supermarket|grocery|butcher|gas station|car |auto /i
+MIN_REVIEWS = 10
+MIN_REVIEWS_LIGHT = 3
+MIN_RATING = 3.0
+ETHIOPIC = /\p{Ethiopic}/
+
+def haversine_km(lat1, lon1, lat2, lon2)
+  rad = Math::PI / 180
+  a = Math.sin((lat2 - lat1) * rad / 2)**2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin((lon2 - lon1) * rad / 2)**2
+  12_742 * Math.asin(Math.sqrt(a))
+end
+
+def name_key(name)
+  name.downcase.gsub(/\b(coffee|cafe|café|roasters?|roastery|and|the|ቡና)\b/, "").gsub(/[^\p{Alnum}]/, "")
+end
+
+def similar_names?(a, b)
+  ka = name_key(a)
+  kb = name_key(b)
+  return a.downcase.gsub(/\W/, "") == b.downcase.gsub(/\W/, "") if ka.empty? || kb.empty?
+
+  ka == kb || ka.include?(kb) || kb.include?(ka)
+end
+
+def data_id_from_link(link)
+  link.to_s[/1s(0x\h+:0x\h+)/, 1]
+end
+
+def nearest_neighborhood(lat, lon)
+  NEIGHBORHOODS.map { |name, nlat, nlon| [ name, haversine_km(lat, lon, nlat, nlon) ] }.min_by(&:last)
+end
+
+# Mirrors Shop::Name.normalize: both name and name_am must keep something
+# after "coffee"/"cafe"/"ቡና" are stripped, or Shop validation fails.
+def search_key(value)
+  value.to_s.unicode_normalize(:nfkc).downcase.gsub(/\b(coffee|cafe|café)\b/, "").gsub("ቡና", "").gsub(/[^[:alnum:]]/, "")
+end
+
+def split_names(title)
+  parts = title.split(/\s*[|\/]\s*/).map(&:strip).reject(&:empty?)
+  amharic = parts.find { |part| part.match?(ETHIOPIC) }
+  latin = parts.find { |part| !part.match?(ETHIOPIC) }
+
+  # "Kawo Coffee ካዎ ቡና": one part, two scripts.
+  if parts.size == 1 && amharic && title.match?(/[A-Za-z]/)
+    amharic = title[/\p{Ethiopic}[\p{Ethiopic}\s]*/].strip
+    latin = title.sub(/\p{Ethiopic}[\p{Ethiopic}\s]*/, " ").gsub(/\s+/, " ").sub(/[\s\-–,]+\z/, "").strip
+  end
+
+  name = latin.to_s.empty? ? title : latin
+  [ name, amharic || name ]
+end
+
+def slugify(name, fallback)
+  slug = name.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-|-\z/, "")
+  slug.empty? ? fallback : slug
+end
+
+def landmark_for(place, title, neighborhood)
+  address = place["address"].to_s.sub(/\A\h*\w{4}\+\w{2,3}\s*/, "")
+  address = address.sub(/\A#{Regexp.escape(title)}[,\s|]*/i, "")
+  # a leading "<Latin name> | <Amharic name>," fragment left over from the title
+  address = address.sub(/\A[^,]*\|[^,]*,\s*/, "") if address.include?("|")
+  address = address.sub(/(,\s*)?Addis Ababa(\s+\d+)?\s*\z/i, "").sub(/\s+\d{4}\z/, "").strip.sub(/\A,\s*/, "")
+  address = "" if address.match?(%r{\Ahttps?://}i) || address.match?(/\A\p{Ethiopic}[\p{Ethiopic}\s]*\z/)
+  address.empty? ? "#{neighborhood}, Addis Ababa" : address
+end
+
+# "6:30 AM", "12 AM", "8" -> [hour, minute, meridiem-or-nil]
+def parse_clock(text)
+  match = text.strip.match(/\A(\d{1,2})(?::(\d{2}))?\s*([AP]M)?\z/i) or return nil
+  [ match[1].to_i, match[2].to_i, match[3]&.upcase ]
+end
+
+def to_minutes(hour, minute, meridiem)
+  hour %= 12
+  hour += 12 if meridiem == "PM"
+  hour * 60 + minute
+end
+
+def format_minutes(total)
+  format("%02d:%02d", (total / 60) % 24, total % 60)
+end
+
+def parse_interval(text)
+  text = text.gsub(/[\u202f\u00a0]/, " ").strip
+  return [ { "opens" => "00:00", "closes" => "23:59" } ] if text.match?(/open 24 hours/i)
+  return [] if text.match?(/closed/i)
+
+  opens_text, closes_text = text.split(/\s*[–-]\s*/, 2)
+  return nil unless opens_text && closes_text
+
+  opens = parse_clock(opens_text)
+  closes = parse_clock(closes_text)
+  return nil unless opens && closes
+
+  close_minutes = to_minutes(*closes)
+  open_minutes =
+    if opens[2]
+      to_minutes(*opens)
+    else
+      # "12:30–8 AM": borrow the closing meridiem, falling back to the other
+      # half of the day when that would put opening after closing.
+      candidates = %w[ AM PM ].map { |meridiem| to_minutes(opens[0], opens[1], meridiem) }
+      preferred = to_minutes(opens[0], opens[1], closes[2])
+      preferred < close_minutes || close_minutes == 0 ? preferred : candidates.min
+    end
+  [ { "opens" => format_minutes(open_minutes), "closes" => format_minutes(close_minutes) } ]
+end
+
+def hours_for(place)
+  schedule = {}
+  place["open_hours"].to_h.each do |day, intervals|
+    key = day.downcase
+    next unless DAYS.include?(key)
+
+    parsed = Array(intervals).map { |interval| parse_interval(interval) }
+    return nil if parsed.any?(&:nil?)
+
+    schedule[key] = parsed.flatten
+  end
+  schedule.empty? ? nil : JSON.generate(schedule)
+end
+
+def amenities_for(place)
+  options = Array(place["about"]).flat_map { |group| Array(group["options"]) }
+    .select { |option| option["enabled"] }.map { |option| option["name"].to_s }
+  text = [ place["title"], place["description"], *options ].join(" ")
+  found = []
+  found << "wifi" if text.match?(/wi-?fi/i)
+  found << "outdoor_seating" if text.match?(/outdoor seating|terrace|garden seating/i)
+  found << "takeaway" if text.match?(/take-?away|takeout/i)
+  found << "parking" if text.match?(/\bparking\b|car park/i) && !text.match?(/wheelchair-accessible car park/i)
+  found << "jebena_service" if text.match?(/jebena/i)
+  found << "espresso_bar" if text.match?(/espresso/i)
+  found.uniq.join("|")
+end
+
+def price_band_for(place)
+  { "$" => "budget", "$$" => "standard", "$$$" => "premium", "$$$$" => "splurge" }[place["price_range"].to_s.strip]
+end
+
+def photo_url(place)
+  thumbnail = place["thumbnail"].to_s
+  return nil if thumbnail.empty?
+
+  thumbnail.sub(/=[wsh]\d+[^=]*\z/, "") + "=w1000-h750-k-no"
+end
+
+def download(url, limit = 4)
+  uri = URI(url)
+  response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 15, read_timeout: 30) do |http|
+    http.get(uri.request_uri, "User-Agent" => "Mozilla/5.0")
+  end
+  case response
+  when Net::HTTPSuccess
+    response.body.bytesize > 2_000 && response["content-type"].to_s.start_with?("image/") ? response.body : nil
+  when Net::HTTPRedirection
+    limit.zero? ? nil : download(response["location"], limit - 1)
+  end
+rescue StandardError
+  nil
+end
+
+# Returns :ok or the reason the place was left out.
+def screen(place)
+  return :closed if place["status"].to_s.match?(/permanently closed/i) || place["title"].to_s.match?(/permanently closed/i)
+
+  categories = Array(place["categories"]) | [ place["category"] ].compact
+  coffee = categories.any? { |c| c.match?(COFFEE_CATEGORY) } || place["title"].to_s.match?(COFFEE_NAME)
+  return :ok if coffee
+  return :excluded_category if categories.any? { |c| c.match?(EXCLUDED_CATEGORY) }
+  return :not_a_venue unless categories.any? { |c| c.match?(VENUE_CATEGORY) }
+
+  light = categories.all? { |c| !c.match?(VENUE_CATEGORY) || c.match?(LIGHT_VENUE_CATEGORY) }
+  return :too_few_reviews if place["review_count"].to_i < (light ? MIN_REVIEWS_LIGHT : MIN_REVIEWS)
+  return :low_rating if place["review_rating"].to_f.positive? && place["review_rating"].to_f < MIN_RATING
+
+  :ok
+end
+
+# --- main -------------------------------------------------------------------
+
+abort "No results file found" if RESULTS.empty?
+RESULTS.each { |path| abort "No results file at #{path}" unless File.exist?(path) }
+
+places = RESULTS.flat_map { |path| File.readlines(path, chomp: true) }.reject(&:empty?).filter_map do |line|
+  JSON.parse(line)
+rescue JSON::ParserError
+  nil
+end
+places = places.uniq { |place| place["data_id"].to_s.empty? ? place["link"] : place["data_id"] }
+
+FileUtils.mkdir_p(PHOTO_DIR)
+catalog = File.exist?(CATALOG) ? CSV.read(CATALOG, headers: true) : CSV::Table.new([], headers: HEADERS)
+rows = catalog.map { |row| HEADERS.to_h { |header| [ header, row[header] ] } }
+unplaced = File.exist?(UNPLACED) ? CSV.read(UNPLACED, headers: true).map(&:to_h) : []
+
+# Neighborhoods got finer-grained; move shops already in the catalog to the
+# nearest one so the labels stay honest.
+rows.each do |row|
+  nearest, km = nearest_neighborhood(row["latitude"].to_f, row["longitude"].to_f)
+  row["neighborhood"] = nearest if km <= MAX_KM
+end
+
+known = rows.map { |row| { lat: row["latitude"].to_f, lon: row["longitude"].to_f, name: row["name"], row: row } }
+unplaced_ids = unplaced.filter_map { |row| data_id_from_link(row["link"]) }.to_set
+slugs = rows.map { |row| row["slug"] }.to_set
+
+stats = Hash.new(0)
+added = []
+skipped = []
+
+places.each do |place|
+  title = place["title"].to_s.strip
+  lat = place["latitude"].to_f
+  lon = (place["longitude"] || place["longtitude"]).to_f
+  if title.empty? || lat.zero? || lon.zero?
+    stats[:no_coordinates] += 1
+    next
+  end
+  verdict = screen(place)
+  unless verdict == :ok
+    stats[verdict] += 1
+    next
+  end
+
+  name, name_am = split_names(title)
+  name_am = name if search_key(name_am).empty?
+  name = title if search_key(name).empty?
+  name_am = title if search_key(name_am).empty?
+  if search_key(name).empty?
+    stats[:unnamed] += 1
+    next
+  end
+  match = known.find do |candidate|
+    distance = haversine_km(lat, lon, candidate[:lat], candidate[:lon])
+    distance <= SAME_SPOT_KM && (similar_names?(name, candidate[:name]) || distance <= 0.005) ||
+      distance <= DUPLICATE_KM && similar_names?(name, candidate[:name])
+  end
+
+  hours = hours_for(place)
+  price = price_band_for(place)
+  amenities = amenities_for(place)
+
+  if match
+    row = match[:row]
+    row["hours"] ||= hours
+    row["price_band"] ||= price
+    row["amenities"] = amenities if row["amenities"].to_s.empty? && !amenities.empty?
+    stats[:already_in_catalog] += 1
+    next
+  end
+  if unplaced_ids.include?(place["data_id"])
+    stats[:already_unplaced] += 1
+    next
+  end
+
+  neighborhood, km = nearest_neighborhood(lat, lon)
+  if km > MAX_KM
+    unplaced << {
+      "name" => title, "address" => place["address"], "latitude" => lat, "longitude" => lon,
+      "nearest" => neighborhood, "km" => km.round(1), "link" => place["link"]
+    }
+    unplaced_ids << place["data_id"]
+    stats[:unplaced] += 1
+    next
+  end
+
+  fallback = "shop-#{place["cid"].to_s[-6..]}"
+  slug = base = slugify(name, fallback)
+  slug = "#{base}-#{neighborhood.downcase.gsub(/[^a-z0-9]+/, "-")}" if slugs.include?(slug)
+  slug = "#{base}-#{place["cid"].to_s[-4..]}" if slugs.include?(slug)
+
+  photo_relative = "photos/gmaps/#{slug}.jpg"
+  photo_path = File.join(ROOT, photo_relative)
+  unless File.exist?(photo_path)
+    url = photo_url(place)
+    body = url && download(url)
+    unless body
+      skipped << { "name" => title, "latitude" => lat, "longitude" => lon, "link" => place["link"] }
+      stats[:no_photo] += 1
+      next
+    end
+    File.binwrite(photo_path, body)
+  end
+
+  slugs << slug
+  row = {
+    "slug" => slug, "name" => name, "name_am" => name_am, "neighborhood" => neighborhood,
+    "landmark" => landmark_for(place, title, neighborhood), "latitude" => lat, "longitude" => lon,
+    "city" => "Addis Ababa", "status" => "live", "photo_paths" => photo_relative,
+    "price_band" => price, "amenities" => (amenities.empty? ? nil : amenities), "hours" => hours
+  }
+  rows << row
+  known << { lat: lat, lon: lon, name: name, row: row }
+  added << row
+  stats[:added] += 1
+end
+
+CSV.open(CATALOG, "w", write_headers: true, headers: HEADERS) do |csv|
+  rows.each { |row| csv << HEADERS.map { |header| row[header].to_s.empty? ? nil : row[header] } }
+end
+CSV.open(UNPLACED, "w", write_headers: true, headers: UNPLACED_HEADERS) do |csv|
+  unplaced.each { |row| csv << UNPLACED_HEADERS.map { |header| row[header] } }
+end
+unless skipped.empty?
+  CSV.open(SKIPPED, "w", write_headers: true, headers: %w[ name latitude longitude link ]) do |csv|
+    skipped.each { |row| csv << row.values }
+  end
+end
+
+puts "scraped places: #{places.size}"
+stats.each { |key, count| puts "  #{key}: #{count}" }
+puts "catalog rows: #{rows.size} (hours: #{rows.count { |r| r["hours"] }}, price_band: #{rows.count { |r| r["price_band"] }}, amenities: #{rows.count { |r| r["amenities"] }})"
+puts "unplaced rows: #{unplaced.size}"
