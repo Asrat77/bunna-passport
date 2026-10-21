@@ -1,0 +1,204 @@
+.radar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.radar__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+.radar__sweep {
+  transform-origin: 179px 96px;
+  animation: sweep 3.2s linear infinite;
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar--locating {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar__pulse {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: ping 1.4s ease-out infinite;
+}
+
+@keyframes ping {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 60px transparent;
+  }
+}
+
+.radar__accuracy {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 99px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--positive);
+}
+
+.radar__accuracy--weak {
+  color: var(--caution);
+}
+
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.candidate {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px 11px 11px;
+  border-radius: 20px;
+  background: var(--raised);
+  border: 2px solid var(--border);
+  text-align: left;
+}
+
+.candidate[aria-checked="true"] {
+  border-color: var(--primary);
+}
+
+.candidate__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.candidate__name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.candidate__meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.candidate__badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Saffron on its soft tint is too pale for text in light mode, so the label is ink. */
+.candidate__badge--cup {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.extras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.extras__prompt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.extras__optional {
+  color: var(--faint);
+}
+
+.note textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--raised);
+  padding: 12px 14px;
+  resize: none;
+  font-size: 15px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 58px;
+  padding: 0 6px 0 16px;
+  border-radius: 999px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+}
+
+.rating__label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.rating__cups {
+  display: flex;
+  flex: 1;
+}
+
+.rating__cup {
+  width: 42px;
+  height: var(--touch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+}
+
+.rating__cup--on {
+  color: var(--accent);
+}
+
+.rating__divider {
+  width: 1px;
+  height: 26px;
+  background: var(--border);
+}
+
+.rating__photo {
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.rating__photo--on {
+  color: var(--primary);
+  background: var(--primary-soft);
+}

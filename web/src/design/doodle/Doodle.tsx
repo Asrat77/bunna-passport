@@ -12,6 +12,8 @@ type Props = {
   /** "mood" draws the sleepy or awake disc and ring behind the face. */
   background?: "mood" | "none";
   label?: string;
+  /** Hidden from assistive tech when the surrounding control already says it. */
+  decorative?: boolean;
 };
 
 /**
@@ -20,7 +22,7 @@ type Props = {
  * the lines, cross-hatched hair and open mouths, and a faint offset second
  * pass. Lines thicken below 70px so a small face still reads.
  */
-export function Doodle({ seed, mood, size, background = "mood", label }: Props) {
+export function Doodle({ seed, mood, size, background = "mood", label, decorative = false }: Props) {
   const paths = useMemo(() => generateDoodle(seed, mood), [seed, mood]);
   const id = `dd${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const awake = mood === "awake";
@@ -40,8 +42,9 @@ export function Doodle({ seed, mood, size, background = "mood", label }: Props) 
       viewBox="0 0 100 100"
       width={size}
       height={size}
-      role="img"
-      aria-label={label ?? (awake ? "Your doodle, awake after coffee" : "Your doodle, sleepy before coffee")}
+      role={decorative ? undefined : "img"}
+      aria-hidden={decorative || undefined}
+      aria-label={decorative ? undefined : label ?? (awake ? "Your doodle, awake after coffee" : "Your doodle, sleepy before coffee")}
       style={{ display: "block", overflow: "visible", flexShrink: 0 }}
     >
       <defs>

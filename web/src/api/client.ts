@@ -233,12 +233,17 @@ export const api = {
     return request<ShopDetail>(`/shops/${id}`, { anonymous: true });
   },
 
-  checkIn(input: CheckInInput, signal?: AbortSignal) {
-    return request<CheckIn>("/check_ins", {
-      method: "POST",
-      body: { check_in: input },
-      signal,
-    });
+  /** A photo, when there is one, makes this a multipart request. */
+  checkIn(input: CheckInInput, photo?: File | null, signal?: AbortSignal) {
+    if (!photo) {
+      return request<CheckIn>("/check_ins", { method: "POST", body: { check_in: input }, signal });
+    }
+    const form = new FormData();
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== undefined) form.append(`check_in[${key}]`, String(value));
+    }
+    form.append("check_in[photo]", photo);
+    return request<CheckIn>("/check_ins", { method: "POST", body: form, signal, timeoutMs: 60_000 });
   },
 
   listCheckIns(cursor?: OpaqueId) {
