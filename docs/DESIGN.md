@@ -131,34 +131,34 @@ Rules:
 
 ## 3. Information architecture
 
-Four tabs + one hero action. A single raised paper dock replaces the stock
-Material bar plus disconnected floating pill. The action grows out of the
-center notch on Explore and Passport; active tabs use a clay-soft capsule.
-Labels always remain visible — discoverability still beats minimalism.
+Three tabs + one hero action (the Telegram Mini App canvas, confirmed
+2026-10-21; see `docs/telegram-mini-app-design-handoff.md`). A single raised
+paper dock holds the tabs, and Check in sits beside it as its own clay pill.
+Active tabs use a clay-soft capsule. Labels always remain visible —
+discoverability still beats minimalism.
 
 ```
 ┌──────────────────────────────────────────────┐
 │                 (screen content)             │
 │                                              │
-│  ┌────────┬─────────┬─────────┬───────────┐  │
-│  │Explore │ Passport│CHECK IN │ Boards │Profile│
-│  └────────┴─────────┴────┬────┴───────────┘  │
-│                          └ hero action         │
+│  ┌─────────┬──────────┬────────┐ ┌─────────┐ │
+│  │ Explore │ Passport │ Boards │ │CHECK IN │ │
+│  └─────────┴──────────┴────────┘ └─────────┘ │
 └──────────────────────────────────────────────┘
 ```
 
-- **Explore** — map + list of shops (the default tab, works signed-out)
-- **Passport** — stamps, neighborhood completion, cups, streak
-- **Boards** — leaderboards (works signed-out; own rank requires account)
-- **Profile** — stats, badges, contributions, trust standing, settings
-- **Check In** — a 62dp clay-red control integrated into the dock, visible on
-  Explore and Passport. The single most important action gets the single most
-  prominent affordance without reading as a second navigation system.
+- **Explore** — list and map of shops (the default tab)
+- **Passport** — profile header, stamps by neighborhood page, cups, coffee
+  weeks, and settings. There is no separate Profile tab: identity lives in the
+  Passport header and the doodle Studio.
+- **Boards** — weekly neighborhood and city leaderboards
+- **Check In** — the clay pill to the right of the dock. It shrinks to an icon
+  on Boards so the tabs keep their labels.
 
 Contribution actions (add shop, suggest edit, add photo, report) live in
 context — on shop detail and map — not as a tab. Contributors are 2–5% of
 users; their entry points are contextual, their *status* is celebrated in
-Profile.
+the Passport header.
 
 ---
 
