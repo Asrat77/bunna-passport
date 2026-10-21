@@ -63,7 +63,15 @@ class Neighborhood < ApplicationRecord
     { name: "Lafto", name_am: "ላፍቶ", city: "Addis Ababa", latitude: 8.9471, longitude: 38.7443 },
     { name: "Hana Mariam", name_am: "ሐና ማርያም", city: "Addis Ababa", latitude: 8.9346, longitude: 38.7444 },
     { name: "Saris", name_am: "ሳሪስ", city: "Addis Ababa", latitude: 8.9532, longitude: 38.7636 },
-    { name: "Kality", name_am: "ቃሊቲ", city: "Addis Ababa", latitude: 8.9380, longitude: 38.7631 }
+    { name: "Kality", name_am: "ቃሊቲ", city: "Addis Ababa", latitude: 8.9380, longitude: 38.7631 },
+    # Edge of the city, placed at the median of Google places that had no neighborhood within 2 km.
+    { name: "Bethel", name_am: "ቤቴል", city: "Addis Ababa", latitude: 9.0042, longitude: 38.6871 },
+    { name: "Addisu Gebeya", name_am: "አዲሱ ገበያ", city: "Addis Ababa", latitude: 9.0589, longitude: 38.7346 },
+    { name: "Lege Tafo", name_am: "ለገ ጣፎ", city: "Addis Ababa", latitude: 9.0653, longitude: 38.8776 },
+    { name: "Ayat 49", name_am: "አያት 49", city: "Addis Ababa", latitude: 9.0094, longitude: 38.8948 },
+    { name: "Burayu", name_am: "ቡራዩ", city: "Addis Ababa", latitude: 9.0341, longitude: 38.6694 },
+    { name: "Summit Condominium", name_am: "ሰሚት ኮንዶሚኒየም", city: "Addis Ababa", latitude: 8.9907, longitude: 38.8552 },
+    { name: "Koye Feche", name_am: "ቆይ ፈጬ", city: "Addis Ababa", latitude: 8.9057, longitude: 38.8238 }
   ].freeze
 
   has_many :shops, dependent: :restrict_with_exception
