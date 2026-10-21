@@ -5,6 +5,7 @@ import { startTelegram } from "./telegram/sdk";
 import "./styles/fonts";
 import "./styles/tokens.css";
 import "./styles/base.css";
+import "./ui/ui.css";
 
 startTelegram();
 
