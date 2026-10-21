@@ -1,0 +1,79 @@
+/*
+ * Colour tokens, copied from mobile/src/design/tokens.ts (docs/DESIGN.md §2).
+ * Light is "Modern Ceremony", dark is "Dark Roast". The theme follows
+ * Telegram's colorScheme through [data-theme] on <html>.
+ */
+:root {
+  --surface: #f6f0e6;
+  --raised: #fffbf5;
+  --sunken: #ede2d3;
+  --ink: #22140f;
+  --muted: #665047;
+  --faint: #806c61;
+  --primary: #872f1d;
+  --on-primary: #fff8ed;
+  --primary-soft: #f3dccf;
+  --accent: #d99a24;
+  --accent-soft: #f7e8bf;
+  --positive: #2f684f;
+  --caution: #8d520b;
+  --negative: #a22c2c;
+  --border: #ded0bf;
+  --border-strong: #bca995;
+  --shadow: rgba(52, 27, 17, 0.16);
+  --glow: radial-gradient(140% 52% at 50% -6%, rgba(217, 154, 36, 0.42), rgba(217, 154, 36, 0) 72%);
+
+  --font-sans: "Geist", "Noto Sans Ethiopic", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-ethiopic-display: "Noto Serif Ethiopic", serif;
+  --font-ethiopic: "Noto Sans Ethiopic", sans-serif;
+
+  --gutter: 16px;
+  --touch: 48px;
+  --radius-card: 22px;
+  --radius-tile: 17px;
+  --radius-button: 18px;
+  --shadow-float: 0 12px 30px var(--shadow);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --surface: #17100c;
+  --raised: #211812;
+  --sunken: #100b08;
+  --ink: #f7ebdd;
+  --muted: #cbb5a2;
+  --faint: #9e8875;
+  --primary: #f0a05d;
+  --on-primary: #25130a;
+  --primary-soft: #3c2419;
+  --accent: #f3b542;
+  --accent-soft: #3e2f18;
+  --positive: #78c69a;
+  --caution: #e6ac62;
+  --negative: #f0928d;
+  --border: #3c2c22;
+  --border-strong: #604638;
+  --shadow: rgba(0, 0, 0, 0.46);
+  --glow: radial-gradient(140% 55% at 50% -8%, rgba(135, 47, 29, 0.95), rgba(135, 47, 29, 0) 72%);
+
+  color-scheme: dark;
+}
+
+/*
+ * The passport page is cream paper in both themes, so it pins the light
+ * palette locally and clay ink stays #872F1D even in Dark Roast.
+ */
+.paper {
+  --surface: #f6f0e6;
+  --raised: #fffbf5;
+  --sunken: #ede2d3;
+  --ink: #22140f;
+  --muted: #665047;
+  --faint: #806c61;
+  --primary: #872f1d;
+  --border: #ded0bf;
+  --border-strong: #bca995;
+  color: var(--ink);
+}
