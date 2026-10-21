@@ -1,0 +1,263 @@
+.passport__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.passport__who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.passport__name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.passport__handle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pill-button {
+  min-height: var(--touch);
+  padding: 0 14px;
+  border-radius: 99px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.pill-button:disabled {
+  opacity: 0.4;
+}
+
+/* Stamps and cups stay visibly different things (DESIGN.md §6.1). */
+.counters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.counter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+}
+
+.counter--cups {
+  background: var(--accent-soft);
+}
+
+.counter__label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.counter__value {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+/* Saffron numerals need dark ink behind them in light mode to stay legible. */
+.counter__value--cups {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .counter__value--cups {
+  color: var(--accent);
+}
+
+.counter__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.counter__flame {
+  color: var(--accent);
+}
+
+.seal-stack {
+  display: flex;
+}
+
+.seal-stack > svg + svg {
+  margin-left: -8px;
+}
+
+.chip-count {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.area-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.area-progress__left {
+  font-size: 13px;
+}
+
+.progress {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+.passport-page {
+  position: relative;
+  width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #f6f0e6;
+  border: 1px solid #ded0bf;
+  box-shadow: 0 14px 32px var(--shadow);
+}
+
+.passport-page__inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 358px;
+  height: 318px;
+  transform-origin: 0 0;
+}
+
+.passport-page__guilloche {
+  position: absolute;
+  inset: 0;
+}
+
+.passport-page__header {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #665047;
+}
+
+.passport-page__header .ethiopic {
+  letter-spacing: 0;
+}
+
+.passport-page__slot {
+  position: absolute;
+}
+
+.passport-page__slot--missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.passport-page__today {
+  position: absolute;
+  top: 6px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: #d99a24;
+  color: #24150f;
+  font-size: 11px;
+  font-weight: 700;
+  transform: rotate(6deg);
+}
+
+.passport-page__away {
+  font-size: 10.5px;
+  color: #665047;
+}
+
+.page-turn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.settings {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings h2 {
+  margin: 0;
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch);
+  font-size: 15px;
+}
+
+.settings__text {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.settings__text .muted {
+  font-size: 12.5px;
+}
+
+.settings__toggle input {
+  width: 46px;
+  height: 28px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.segment {
+  display: flex;
+  padding: 4px;
+  border-radius: 99px;
+  background: var(--sunken);
+}
+
+.segment button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 99px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.segment button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}

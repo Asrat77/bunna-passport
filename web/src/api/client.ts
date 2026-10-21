@@ -258,7 +258,7 @@ export const api = {
     return request<User>("/profile");
   },
 
-  updateProfile(profile: { avatar_seed?: string | null; share_cup_status?: boolean }) {
+  updateProfile(profile: { avatar_seed?: string | null; shares_cup_status?: boolean }) {
     return request<User>("/profile", { method: "PATCH", body: { profile } });
   },
 
