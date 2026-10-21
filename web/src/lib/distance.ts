@@ -27,3 +27,9 @@ export function formatDistance(meters: number | null): string | null {
   if (meters < 1000) return `${meters}m`;
   return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)}km`;
 }
+
+/** "96 m" or "1.2 km", the spaced form the Mini App's mono figures use. */
+export function formatMeters(meters: number): string {
+  if (meters < 1000) return `${meters} m`;
+  return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)} km`;
+}
