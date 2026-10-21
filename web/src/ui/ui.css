@@ -374,3 +374,34 @@
     opacity: 0.55;
   }
 }
+
+/* Map */
+.map-screen__map {
+  flex: 1;
+  min-height: 420px;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.map-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--raised);
+  border: 2px dashed var(--border-strong);
+}
+
+.map-pin--stamped {
+  background: var(--primary);
+  border: 2px solid var(--raised);
+}
+
+.map-you {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--raised);
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent);
+}

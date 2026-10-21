@@ -19,6 +19,8 @@
     "@mdi/js": "^7.4.47",
     "@tanstack/react-query": "^5.90.2",
     "@telegram-apps/sdk-react": "^3.3.9",
+    "maplibre-gl": "^6.15.0",
+    "pmtiles": "^4.5.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
