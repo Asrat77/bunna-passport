@@ -28,9 +28,11 @@ import type {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
-/** Where the Rails API lives; set VITE_API_BASE_URL for anything but local. */
-export const API_BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
+/**
+ * Where the Rails API lives. Same origin by default: the dev server proxies
+ * /api to Rails, so one HTTPS tunnel serves Telegram both.
+ */
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
 type TokenSource = () => string | null;
 
@@ -61,7 +63,7 @@ export type ApiResponse<T> = {
 };
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== "") url.searchParams.set(key, String(value));

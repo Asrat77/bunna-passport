@@ -11,6 +11,8 @@ export default defineConfig({
     // Telegram loads the Mini App over HTTPS from a tunnel, so listen beyond localhost.
     host: true,
     port: 5173,
+    // Rails only answers its own host in development, hence changeOrigin.
+    proxy: { "/api": { target: process.env.API_ORIGIN ?? "http://localhost:3000", changeOrigin: true } },
   },
   test: {
     environment: "node",
