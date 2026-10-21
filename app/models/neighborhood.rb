@@ -16,7 +16,7 @@ class Neighborhood < ApplicationRecord
     # Added from OpenStreetMap place=suburb/neighbourhood nodes (ODbL, credited in the app).
     { name: "5 Kilo", name_am: "አምስት ኪሎ", city: "Addis Ababa", latitude: 9.0377, longitude: 38.7627 },
     { name: "Shiromeda", name_am: "ሽሮሜዳ", city: "Addis Ababa", latitude: 9.0605, longitude: 38.7614 },
-    { name: "Shola", name_am: "ሾላ", city: "Addis Ababa", latitude: 9.0483, longitude: 38.7464 },
+    { name: "Shola", name_am: "ሾላ", city: "Addis Ababa", latitude: 9.0207, longitude: 38.7950 },
     { name: "Kebena", name_am: "ቀበና", city: "Addis Ababa", latitude: 9.0349, longitude: 38.7786 },
     { name: "Aware", name_am: "አዋሬ", city: "Addis Ababa", latitude: 9.0271, longitude: 38.7755 },
     { name: "Merkato", name_am: "መርካቶ", city: "Addis Ababa", latitude: 9.0313, longitude: 38.7376 },
