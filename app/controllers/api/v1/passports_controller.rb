@@ -16,7 +16,8 @@ class Api::V1::PassportsController < Api::V1::BaseController
         end,
         stamped_count: stamps.size,
         total_shops: total,
-        completion_percentage: total.zero? ? 0 : (stamps.size.fdiv(total) * 100).round(1)
+        completion_percentage: total.zero? ? 0 : (stamps.size.fdiv(total) * 100).round(1),
+        had_cup_today: Current.user.had_cup_today?
       }
     )
   end

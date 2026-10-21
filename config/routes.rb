@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       resources :users, only: :create
       resources :sessions, only: :create
       delete "sessions/current", to: "sessions#destroy", as: :current_session
+      resources :telegram_sessions, only: :create
       resources :password_resets, only: :create
       patch "password_reset", to: "password_resets#update", as: :password_reset
 
@@ -27,6 +28,8 @@ Rails.application.routes.draw do
       patch "check_ins/:id", to: "check_ins#update", as: :check_in
       resource :passport, only: :show
       resource :profile, only: :show
+      # PATCH only, for the same reason as check_ins above.
+      patch "profile", to: "profiles#update"
       resources :badges, only: :index
       resources :leaderboards, only: :index
       resources :reports, only: :create

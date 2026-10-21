@@ -22,7 +22,11 @@ module Api::V1::Rendering
         trust_level: user.trust_level,
         verified_check_ins_count: user.verified_check_ins_count,
         stamps_count: user.stamps_count,
-        home_neighborhood_id: user.home_neighborhood_id
+        home_neighborhood_id: user.home_neighborhood_id,
+        avatar_seed: user.avatar_seed,
+        had_cup_today: user.had_cup_today?,
+        shares_cup_status: user.shares_cup_status,
+        joined_at: user.created_at.iso8601
       }
     end
 
@@ -43,6 +47,8 @@ module Api::V1::Rendering
         status: shop.status,
         price_band: shop.price_band,
         attributes: shop.api_attributes,
+        # In the catalog too, so a list can say "Open" without a request per shop.
+        hours: hours_json(shop.hours),
         updated_at: shop.updated_at.iso8601(6)
       }
       return data unless detailed
@@ -50,7 +56,6 @@ module Api::V1::Rendering
       data.merge(
         check_ins_count: shop.check_ins_count,
         stamps_count: shop.stamps_count,
-        hours: hours_json(shop.hours),
         photos: shop.photos.map { |photo| photo_json(photo) },
         merged_into_id: shop.merged_into_id,
         stamp: viewer_stamp_json(shop)

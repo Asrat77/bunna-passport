@@ -1,5 +1,12 @@
 class User < ApplicationRecord
-  has_secure_password
+  # The doodle wakes with the first cup of a "coffee day", which starts at
+  # 04:00 in Addis so a late night still counts toward the evening before.
+  COFFEE_DAY_ZONE = "Africa/Addis_Ababa"
+  COFFEE_DAY_STARTS_AT = 4
+
+  # Validations are declared below so a Telegram account can exist without a
+  # password; an email account still needs one.
+  has_secure_password validations: false
 
   has_many :sessions, dependent: :destroy
   has_many :submitted_shops, class_name: "Shop", foreign_key: :submitted_by_id, inverse_of: :submitted_by
@@ -23,13 +30,70 @@ class User < ApplicationRecord
     moderator: "moderator"
   }, default: :newcomer, validate: true
 
-  validates :email_address, presence: true, uniqueness: { case_sensitive: false }
+  validates :email_address, presence: true, unless: :telegram_user_id?
+  validates :email_address, uniqueness: { case_sensitive: false }, allow_nil: true
+  validates :password, presence: true, on: :create, if: :email_address?
+  validates :password, confirmation: true, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_nil: true
+  validates :telegram_user_id, uniqueness: true, allow_nil: true
+  validates :avatar_seed, length: { maximum: 64 }
   validates :handle,
     presence: true,
     uniqueness: { case_sensitive: false },
     length: { in: 3..30 },
     format: { with: /\A[a-z0-9_]+\z/ }
   validates :display_name, presence: true, length: { maximum: 80 }
+
+  class << self
+    def coffee_day_start(now = Time.current)
+      local = now.in_time_zone(COFFEE_DAY_ZONE)
+      start = local.change(hour: COFFEE_DAY_STARTS_AT)
+      local < start ? start - 1.day : start
+    end
+
+    # Which of these users have had a cup this coffee day, in one query, for
+    # boards that list many people. Flagged visits count: the client already
+    # shows them as accepted, and a doodle that stayed asleep would give the
+    # flag away.
+    def ids_with_cup_today(user_ids, now: Time.current)
+      CheckIn.where(user_id: user_ids).where.not(status: :rejected)
+        .where(occurred_at: coffee_day_start(now)..now).distinct.pluck(:user_id).to_set
+    end
+
+    # Finds or creates the account behind a verified Telegram user.
+    def from_telegram!(telegram_user)
+      telegram_id = Integer(telegram_user.fetch("id"))
+      find_by(telegram_user_id: telegram_id) || create!(
+        telegram_user_id: telegram_id,
+        handle: available_handle(telegram_user["username"], telegram_id),
+        display_name: telegram_display_name(telegram_user, telegram_id)
+      )
+    rescue ActiveRecord::RecordNotUnique
+      find_by!(telegram_user_id: telegram_id)
+    end
+
+    private
+      def available_handle(username, telegram_id)
+        base = username.to_s.downcase.gsub(/[^a-z0-9_]/, "")[0, 26]
+        base = "tg_#{telegram_id}"[0, 26] if base.length < 3
+        return base unless exists?(handle: base)
+
+        (2..).lazy.map { |n| "#{base}_#{n}" }.find { |candidate| !exists?(handle: candidate) }
+      end
+
+      def telegram_display_name(telegram_user, telegram_id)
+        name = [ telegram_user["first_name"], telegram_user["last_name"] ].compact.join(" ").strip
+        (name.presence || "Telegram #{telegram_id}")[0, 80]
+      end
+  end
+
+  def had_cup_today?(now = Time.current)
+    self.class.ids_with_cup_today([ id ], now: now).include?(id)
+  end
+
+  # What friends may see on a board: nil once someone has opted out.
+  def public_cup_status(cup_today_ids)
+    shares_cup_status? ? cup_today_ids.include?(id) : nil
+  end
 
   def can_review?
     curator? || moderator?

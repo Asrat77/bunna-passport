@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_06_013016) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -299,19 +299,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_013016) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "avatar_seed"
     t.datetime "created_at", null: false
     t.string "display_name", null: false
-    t.string "email_address", null: false
+    t.string "email_address"
     t.string "handle", null: false
     t.bigint "home_neighborhood_id"
-    t.string "password_digest", null: false
+    t.string "password_digest"
+    t.boolean "shares_cup_status", default: true, null: false
     t.integer "stamps_count", default: 0, null: false
+    t.bigint "telegram_user_id"
     t.string "trust_level", default: "newcomer", null: false
     t.datetime "updated_at", null: false
     t.integer "verified_check_ins_count", default: 0, null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
+    t.index ["telegram_user_id"], name: "index_users_on_telegram_user_id", unique: true
+    t.check_constraint "email_address IS NOT NULL OR telegram_user_id IS NOT NULL", name: "users_have_a_sign_in"
     t.check_constraint "trust_level IN ('newcomer', 'regular', 'curator', 'moderator')", name: "users_trust_level"
     t.check_constraint "verified_check_ins_count >= 0 AND stamps_count >= 0", name: "users_non_negative_counters"
   end

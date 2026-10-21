@@ -1,0 +1,78 @@
+.signin__doodle {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0 8px;
+}
+
+.signin__body {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.signin__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field > input,
+.field__row {
+  height: 52px;
+  border-radius: 16px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+}
+
+.field > input {
+  padding: 0 16px;
+  outline: none;
+}
+
+.field > input:focus,
+.field__row:focus-within {
+  border-color: var(--primary);
+}
+
+.field__row {
+  display: flex;
+  align-items: center;
+  padding: 0 6px 0 16px;
+}
+
+.field__row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+}
+
+.field__reveal {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.signin__error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--negative);
+}
