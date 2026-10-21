@@ -1,7 +1,6 @@
-import { miniApp, themeParams, useSignal } from "@telegram-apps/sdk-react";
+import { miniApp } from "@telegram-apps/sdk-react";
 import { createContext, use, useEffect, useLayoutEffect, useState } from "react";
 import { palette, type ColorScheme } from "@/design/palette";
-import { inTelegram } from "./sdk";
 
 const darkQuery = () => window.matchMedia?.("(prefers-color-scheme: dark)");
 
@@ -20,13 +19,12 @@ function useSystemScheme(): ColorScheme {
 }
 
 /**
- * Follows Telegram's colour scheme and switches live on themeChanged
- * (decision 2). Outside Telegram it follows the OS instead.
+ * The app keeps its own palette rather than Telegram's theme: light or Dark
+ * Roast follows the phone's setting and switches live, and Telegram's chrome
+ * is recoloured to match.
  */
 export function useColorScheme(): ColorScheme {
-  const telegramDark = useSignal(themeParams.isDark);
-  const system = useSystemScheme();
-  const scheme: ColorScheme = inTelegram ? (telegramDark ? "dark" : "light") : system;
+  const scheme = useSystemScheme();
 
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = scheme;

@@ -1,7 +1,7 @@
 /*
  * Colour tokens, copied from mobile/src/design/tokens.ts (docs/DESIGN.md §2).
- * Light is "Modern Ceremony", dark is "Dark Roast". The theme follows
- * Telegram's colorScheme through [data-theme] on <html>.
+ * Light is "Modern Ceremony", dark is "Dark Roast". The app keeps its own
+ * palette rather than Telegram's: [data-theme] on <html> follows the phone.
  */
 :root {
   --surface: #f6f0e6;
