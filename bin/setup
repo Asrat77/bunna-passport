@@ -15,6 +15,12 @@ FileUtils.chdir APP_ROOT do
   puts "== Installing dependencies =="
   system("bundle check") || system!("bundle install")
 
+  # Without libvips, Active Storage quietly leaves image variants unconfigured
+  # and every photo request fails with "undefined method 'new' for nil".
+  unless system("bundle exec ruby -e 'require \"vips\"'", out: File::NULL, err: File::NULL)
+    abort "\nlibvips is missing, so photos cannot be resized. Install it (macOS: brew install vips) and rerun bin/setup."
+  end
+
   # puts "\n== Copying sample files =="
   # unless File.exist?("config/database.yml")
   #   FileUtils.cp "config/database.yml.sample", "config/database.yml"
