@@ -49,6 +49,29 @@ class Shop::LocalCatalogTest < ActiveSupport::TestCase
     assert_equal "Updated local landmark", Shop.find_by!(slug: "local-bole-coffee").landmark
   end
 
+  test "imports optional opening hours and replaces them on rerun" do
+    write_catalog(hours: { "monday" => [ { "opens" => "07:00", "closes" => "21:30" } ] }.to_json)
+    catalog.import!
+
+    shop = Shop.find_by!(slug: "local-bole-coffee")
+    assert_equal({ "monday" => [ { "opens" => "07:00", "closes" => "21:30" } ] }, shop.hours.schedule)
+    assert_equal users(:two), shop.hours.confirmed_by
+
+    write_catalog(hours: { "tuesday" => [] }.to_json)
+    assert_no_difference -> { Shop::Hours.count } do
+      catalog.import!
+    end
+    assert_equal({ "tuesday" => [] }, shop.reload.hours.schedule)
+  end
+
+  test "rejects hours the schedule validation refuses" do
+    write_catalog(hours: { "monday" => [ { "opens" => "25:00", "closes" => "26:00" } ] }.to_json)
+
+    error = assert_raises(ArgumentError) { catalog.import! }
+
+    assert_includes error.message, "invalid opening intervals"
+  end
+
   test "requires all launch-quality fields" do
     CSV.open(@catalog_path, "w", write_headers: true, headers: %w[ slug name ]) do |csv|
       csv << [ "incomplete", "Incomplete" ]
@@ -102,10 +125,10 @@ class Shop::LocalCatalogTest < ActiveSupport::TestCase
       Shop::LocalCatalog.new(path: @catalog_path, contributor: users(:two))
     end
 
-    def write_catalog(landmark: "Across from the local test landmark", photo_paths: "front.png")
+    def write_catalog(landmark: "Across from the local test landmark", photo_paths: "front.png", hours: nil)
       headers = %w[
         slug name name_am neighborhood landmark latitude longitude photo_paths
-        city price_band amenities status
+        city price_band amenities status hours
       ]
 
       CSV.open(@catalog_path, "w", write_headers: true, headers: headers) do |csv|
@@ -121,7 +144,8 @@ class Shop::LocalCatalogTest < ActiveSupport::TestCase
           "city" => "Addis Ababa",
           "price_band" => "standard",
           "amenities" => "wifi|jebena_service",
-          "status" => "live"
+          "status" => "live",
+          "hours" => hours
         }
       end
     end

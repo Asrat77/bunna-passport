@@ -47,10 +47,21 @@ class Shop::LocalCatalog
       )
       shop.submitted_by ||= contributor
       shop.save!
+      import_hours!(shop, row)
 
       photo_paths_for(row).count { |photo_path| attach_photo!(shop, photo_path) }
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, ArgumentError => error
       raise ArgumentError, "Row #{line_number}: #{error.message}"
+    end
+
+    def import_hours!(shop, row)
+      return if row["hours"].blank?
+
+      schedule = JSON.parse(row["hours"])
+      record = shop.hours || shop.build_hours
+      record.update!(schedule: schedule, confirmed_by: contributor, confirmed_at: Time.current)
+    rescue JSON::ParserError => error
+      raise ArgumentError, "hours is not valid JSON: #{error.message}"
     end
 
     def neighborhood_for(row)
