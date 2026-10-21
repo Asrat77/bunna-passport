@@ -230,6 +230,12 @@ export const miniappEn = {
   "signin.title": "Sign in to",
   "signin.titleB": "your passport.",
   "signin.body": "Open Bunna Passport from Telegram to sign in without a password, or use the email you signed up with.",
+
+  "launch.loading": "Brewing your passport",
+  "launch.failed": "We couldn't open",
+  "launch.failedB": "your passport.",
+  "launch.failedBody": "Check your connection, then try again.",
+  "launch.retry": "Try again",
 } as const;
 
 export type MiniappKey = keyof typeof miniappEn;
@@ -454,4 +460,10 @@ export const miniappAm: Record<MiniappKey, string> = {
   "signin.title": "ወደ ፓስፖርትዎ",
   "signin.titleB": "ይግቡ።",
   "signin.body": "ያለ የይለፍ ቃል ለመግባት ቡና ፓስፖርትን ከቴሌግራም ይክፈቱ፣ ወይም የተመዘገቡበትን ኢሜይል ይጠቀሙ።",
+
+  "launch.loading": "ፓስፖርትዎ እየተዘጋጀ ነው",
+  "launch.failed": "ፓስፖርትዎን",
+  "launch.failedB": "መክፈት አልቻልንም።",
+  "launch.failedBody": "ግንኙነትዎን ያረጋግጡ፣ ከዚያ እንደገና ይሞክሩ።",
+  "launch.retry": "እንደገና ሞክር",
 };

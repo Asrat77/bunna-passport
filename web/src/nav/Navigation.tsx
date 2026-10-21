@@ -3,17 +3,13 @@ import type { CheckIn, OpaqueId } from "@/api/types";
 
 export type Tab = "explore" | "passport" | "boards";
 
-export type ExploreFilter = "all" | "jebena" | "notYet";
-
 export type Route =
   | { name: Tab }
-  | { name: "welcome" }
   | { name: "shop"; id: OpaqueId }
   | { name: "checkin"; shopId?: OpaqueId }
   | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
   | { name: "studio" }
-  | { name: "map" }
-  | { name: "list"; filter: ExploreFilter };
+  | { name: "map" };
 
 type Navigation = {
   route: Route;

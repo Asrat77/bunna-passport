@@ -1,0 +1,16 @@
+.launch {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.launch__doodle {
+  display: flex;
+  justify-content: center;
+}
+
+.launch__text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
