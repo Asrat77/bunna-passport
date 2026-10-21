@@ -1,0 +1,171 @@
+.boards__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segment--raised {
+  background: var(--raised);
+  border: 1px solid var(--border);
+}
+
+.segment--raised button {
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.select-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 14px;
+  border-radius: 99px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  gap: 6px;
+}
+
+.select-pill select {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  outline: none;
+  padding-right: 2px;
+}
+
+.podium {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.podium__place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.podium__handle {
+  font-size: 13.5px;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium__value {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.podium__block {
+  width: 100%;
+  border-radius: 18px 18px 6px 6px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.podium__block--1 {
+  height: 92px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.podium__block--2 {
+  height: 66px;
+}
+
+.podium__block--3 {
+  height: 48px;
+}
+
+.board-rows {
+  margin: 0;
+  padding: 4px 14px;
+  list-style: none;
+}
+
+.board-row,
+.board-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+}
+
+.board-row + .board-row {
+  border-top: 1px solid var(--border);
+}
+
+.board-row__rank {
+  width: 22px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.board-row__who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-row__handle {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-row__note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.board-row__value {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.board-me {
+  min-height: 62px;
+  padding: 0 14px;
+  border-radius: 22px;
+  background: var(--primary-soft);
+  border: 1.5px solid var(--primary);
+}
+
+.board-me__rank {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  min-width: 30px;
+}
+
+.boards__footnote {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+}
