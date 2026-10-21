@@ -30,7 +30,6 @@ class Neighborhood < ApplicationRecord
     { name: "Legehar", name_am: "ለገሐር", city: "Addis Ababa", latitude: 9.0116, longitude: 38.7531 },
     { name: "Ambassador", name_am: "አምባሳደር", city: "Addis Ababa", latitude: 9.0183, longitude: 38.7540 },
     { name: "Meshuwalekiya", name_am: "መሿለኪያ", city: "Addis Ababa", latitude: 9.0071, longitude: 38.7589 },
-    { name: "Riche", name_am: "ሪቼ", city: "Addis Ababa", latitude: 9.0028, longitude: 38.7604 },
     { name: "Olympia", name_am: "ኦሎምፒያ", city: "Addis Ababa", latitude: 9.0039, longitude: 38.7681 },
     { name: "Beklo Bet", name_am: "በቅሎ ቤት", city: "Addis Ababa", latitude: 8.9983, longitude: 38.7584 },
     { name: "Bulgaria", name_am: "ቡልጋሪያ", city: "Addis Ababa", latitude: 8.9945, longitude: 38.7479 },
