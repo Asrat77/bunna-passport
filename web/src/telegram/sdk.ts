@@ -2,6 +2,7 @@ import {
   backButton,
   init,
   isTMA,
+  locationManager,
   mainButton,
   miniApp,
   secondaryButton,
@@ -36,6 +37,7 @@ export function startTelegram(): void {
   mainButton.mount.ifAvailable();
   secondaryButton.mount.ifAvailable();
   swipeBehavior.mount.ifAvailable();
+  void locationManager.mount.ifAvailable();
   // A vertical swipe would close the app mid check-in.
   swipeBehavior.disableVertical.ifAvailable();
   const [mounting, viewportReady] = viewport.mount.ifAvailable();
