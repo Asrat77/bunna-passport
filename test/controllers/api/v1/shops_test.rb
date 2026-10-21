@@ -44,6 +44,12 @@ class Api::V1::ShopsTest < ActionDispatch::IntegrationTest
     assert_equal "unknown", response_json.dig("data", "hours", "freshness")
   end
 
+  test "the catalog carries hours so a list can say whether a shop is open" do
+    get api_v1_shops_path, params: { q: "Buna" }, as: :json
+
+    assert_equal "07:00", response_json.dig("data", "shops", 0, "hours", "schedule", "monday", 0, "opens")
+  end
+
   test "nearby similar submissions return duplicate candidates" do
     post api_v1_shops_path,
       params: { shop: submission_params },

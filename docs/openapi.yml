@@ -951,7 +951,19 @@ components:
               enum: [budget, standard, premium, splurge]
             - type: "null"
         attributes: { $ref: "#/components/schemas/ShopAttributes" }
+        hours: { $ref: "#/components/schemas/ShopHours" }
         updated_at: { type: string, format: date-time }
+    ShopHours:
+      type: object
+      required: [schedule, freshness, confirmed_at]
+      properties:
+        schedule: { $ref: "#/components/schemas/WeeklyHours" }
+        freshness: { type: string, enum: [fresh, stale, unknown] }
+        confirmed_at:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
     ShopDetail:
       allOf:
         - $ref: "#/components/schemas/Shop"
@@ -969,17 +981,7 @@ components:
               oneOf:
                 - $ref: "#/components/schemas/OpaqueId"
                 - type: "null"
-            hours:
-              type: object
-              required: [schedule, freshness, confirmed_at]
-              properties:
-                schedule: { $ref: "#/components/schemas/WeeklyHours" }
-                freshness: { type: string, enum: [fresh, stale, unknown] }
-                confirmed_at:
-                  oneOf:
-                    - type: string
-                      format: date-time
-                    - type: "null"
+            hours: { $ref: "#/components/schemas/ShopHours" }
             photos:
               type: array
               items: { $ref: "#/components/schemas/Photo" }
