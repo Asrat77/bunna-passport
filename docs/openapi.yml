@@ -72,6 +72,37 @@ paths:
         "429":
           $ref: "#/components/responses/RateLimited"
 
+  /telegram_sessions:
+    post:
+      tags: [Authentication]
+      operationId: createTelegramSession
+      summary: Sign in from a Telegram Mini App
+      description: |
+        Exchanges the Mini App's signed initData for a revocable device
+        session, creating the account on first launch. The server verifies
+        the HMAC against the bot token and refuses payloads older than a day.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [init_data]
+              properties:
+                init_data:
+                  type: string
+                  description: Telegram.WebApp.initData, exactly as received
+      responses:
+        "201":
+          $ref: "#/components/responses/Authenticated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   /sessions/current:
     delete:
       tags: [Authentication]

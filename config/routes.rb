@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       resources :users, only: :create
       resources :sessions, only: :create
       delete "sessions/current", to: "sessions#destroy", as: :current_session
+      resources :telegram_sessions, only: :create
       resources :password_resets, only: :create
       patch "password_reset", to: "password_resets#update", as: :password_reset
 
