@@ -575,7 +575,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataResponse"
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Passport" }
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -596,6 +599,33 @@ paths:
                   data: { $ref: "#/components/schemas/User" }
         "401":
           $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Activity]
+      operationId: updateProfile
+      summary: Choose a doodle or stop sharing cup status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profile]
+              properties:
+                profile: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/User" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
 
   /badges:
     get:
@@ -637,7 +667,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataResponse"
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/LeaderboardEntry" }
+                  meta:
+                    type: object
+                    properties:
+                      refreshed_at:
+                        oneOf:
+                          - { type: string, format: date-time }
+                          - type: "null"
         "400":
           $ref: "#/components/responses/BadRequest"
 
@@ -785,6 +827,81 @@ components:
           oneOf:
             - $ref: "#/components/schemas/OpaqueId"
             - type: "null"
+        avatar_seed:
+          description: Seed for the generative doodle avatar; clients fall back to the Telegram user id
+          oneOf:
+            - { type: string, maxLength: 64 }
+            - type: "null"
+        had_cup_today:
+          type: boolean
+          description: |
+            Server-computed. True once the user has an accepted check-in this
+            coffee day, which starts at 04:00 Africa/Addis_Ababa.
+        shares_cup_status:
+          type: boolean
+          description: Whether friends see had_cup_today on leaderboards
+        joined_at: { type: string, format: date-time }
+    ProfileInput:
+      type: object
+      properties:
+        avatar_seed:
+          oneOf:
+            - { type: string, maxLength: 64 }
+            - type: "null"
+        shares_cup_status: { type: boolean }
+    Passport:
+      type: object
+      required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today]
+      properties:
+        stamps:
+          type: array
+          items:
+            type: object
+            required: [id, shop, earned_at, level, check_ins_count, visits_to_next_level]
+            properties:
+              id: { $ref: "#/components/schemas/OpaqueId" }
+              shop:
+                type: object
+                required: [id, name, name_am]
+                properties:
+                  id: { $ref: "#/components/schemas/OpaqueId" }
+                  name: { type: string }
+                  name_am: { type: string }
+              earned_at: { type: string, format: date-time }
+              level: { $ref: "#/components/schemas/StampLevel" }
+              check_ins_count: { type: integer, minimum: 0 }
+              visits_to_next_level:
+                oneOf:
+                  - { type: integer, minimum: 1 }
+                  - type: "null"
+        stamped_count: { type: integer, minimum: 0 }
+        total_shops: { type: integer, minimum: 0 }
+        completion_percentage: { type: number, minimum: 0, maximum: 100 }
+        had_cup_today: { type: boolean }
+    LeaderboardEntry:
+      type: object
+      required: [rank, value, user]
+      properties:
+        rank: { type: integer, minimum: 1 }
+        value: { type: integer, minimum: 0 }
+        user:
+          type: object
+          required: [id, handle, display_name, avatar_seed, had_cup_today]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            handle: { type: string }
+            display_name: { type: string }
+            avatar_seed:
+              oneOf:
+                - type: string
+                - type: "null"
+            had_cup_today:
+              description: |
+                Null when that person has turned off sharing it. Never carries
+                the time or the shop.
+              oneOf:
+                - type: boolean
+                - type: "null"
     Neighborhood:
       type: object
       required: [id, name, name_am]

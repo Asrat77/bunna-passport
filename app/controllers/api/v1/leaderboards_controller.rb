@@ -16,17 +16,24 @@ class Api::V1::LeaderboardsController < Api::V1::BaseController
       scope_key: scope_key,
       period: period,
       metric: metric
-    ).ranked.includes(:user).limit(100)
+    ).ranked.includes(:user).limit(100).to_a
+    cup_today_ids = User.ids_with_cup_today(entries.map(&:user_id))
 
     render_data(
       entries.map do |entry|
         {
           rank: entry.rank,
           value: entry.value,
-          user: { id: entry.user_id, handle: entry.user.handle, display_name: entry.user.display_name }
+          user: {
+            id: entry.user_id,
+            handle: entry.user.handle,
+            display_name: entry.user.display_name,
+            avatar_seed: entry.user.avatar_seed,
+            had_cup_today: entry.user.public_cup_status(cup_today_ids)
+          }
         }
       end,
-      meta: { refreshed_at: entries.maximum(:refreshed_at)&.iso8601 }
+      meta: { refreshed_at: entries.map(&:refreshed_at).max&.iso8601 }
     )
   end
 end

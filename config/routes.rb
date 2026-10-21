@@ -28,6 +28,8 @@ Rails.application.routes.draw do
       patch "check_ins/:id", to: "check_ins#update", as: :check_in
       resource :passport, only: :show
       resource :profile, only: :show
+      # PATCH only, for the same reason as check_ins above.
+      patch "profile", to: "profiles#update"
       resources :badges, only: :index
       resources :leaderboards, only: :index
       resources :reports, only: :create

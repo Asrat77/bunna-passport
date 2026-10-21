@@ -22,7 +22,11 @@ module Api::V1::Rendering
         trust_level: user.trust_level,
         verified_check_ins_count: user.verified_check_ins_count,
         stamps_count: user.stamps_count,
-        home_neighborhood_id: user.home_neighborhood_id
+        home_neighborhood_id: user.home_neighborhood_id,
+        avatar_seed: user.avatar_seed,
+        had_cup_today: user.had_cup_today?,
+        shares_cup_status: user.shares_cup_status,
+        joined_at: user.created_at.iso8601
       }
     end
 
