@@ -256,7 +256,12 @@ export function generateDoodle(seed: string, mood: Mood): DoodlePaths {
   };
 }
 
-/** Candidate seeds for the Studio's Shuffle: `{base}-{n}`. */
+/**
+ * Candidate seeds for the Studio grid, as the canvas draws them: the first
+ * round leads with your own face, and each Shuffle deals `{base}-{n}` onwards.
+ */
 export function shuffleSeeds(base: string, round: number, count = 8): string[] {
-  return Array.from({ length: count }, (_, i) => `${base}-${round * count + i + 1}`);
+  return Array.from({ length: count }, (_, i) =>
+    round === 0 && i === 0 ? base : `${base}-${round * count + i}`,
+  );
 }

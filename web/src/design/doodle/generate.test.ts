@@ -34,8 +34,8 @@ describe("generateDoodle", () => {
 });
 
 describe("shuffleSeeds", () => {
-  it("numbers candidates from the base seed and keeps going each round", () => {
-    expect(shuffleSeeds("42", 0)).toEqual(["42-1", "42-2", "42-3", "42-4", "42-5", "42-6", "42-7", "42-8"]);
-    expect(shuffleSeeds("42", 1)[0]).toBe("42-9");
+  it("leads with your own face, then numbers candidates from the base seed", () => {
+    expect(shuffleSeeds("42", 0)).toEqual(["42", "42-1", "42-2", "42-3", "42-4", "42-5", "42-6", "42-7"]);
+    expect(shuffleSeeds("42", 1)).toEqual(["42-8", "42-9", "42-10", "42-11", "42-12", "42-13", "42-14", "42-15"]);
   });
 });
