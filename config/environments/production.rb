@@ -22,8 +22,9 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files in Cloudflare R2 (see config/storage.yml). Set
+  # ACTIVE_STORAGE_SERVICE=local to fall back to the storage volume.
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "r2").to_sym
 
   # The Kamal proxy terminates TLS and forwards plain HTTP on the host network.
   config.assume_ssl = true
