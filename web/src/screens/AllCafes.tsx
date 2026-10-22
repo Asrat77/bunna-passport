@@ -16,7 +16,6 @@ import { StatStrip } from "@/ui/StatStrip";
 import "./cafes.css";
 
 const PAGE_SIZE = 20;
-const TOP_AREAS = 5;
 
 type CafesRoute = Extract<Route, { name: "cafes" }>;
 
@@ -116,8 +115,6 @@ export function AllCafes({ route }: { route: CafesRoute }) {
   };
   const areaName = (area: { name: string; name_am: string }) => (language === "am" ? area.name_am : area.name);
   const percent = stats.total > 0 ? Math.round((stats.visited / stats.total) * 100) : 0;
-  const busiest = stats.neighborhoods.slice(0, TOP_AREAS);
-  const most = busiest[0]?.count ?? 1;
 
   return (
     <main className="screen cafes">
@@ -140,33 +137,6 @@ export function AllCafes({ route }: { route: CafesRoute }) {
               <div className="cafes__progress-bar" style={{ width: `${Math.max(percent, 1)}%` }} />
               <span className="mono">{t("cafes.visitedShare", { percent })}</span>
             </div>
-          ) : null}
-
-          {busiest.length > 1 ? (
-            <section className="card cafes__areas">
-              <div className="section-head">
-                <h2 className="cafes__areas-title">{t("cafes.areas")}</h2>
-                <span className="cafes__areas-count mono">{t("cafes.areasCount", { count: stats.neighborhoods.length })}</span>
-              </div>
-              <ul>
-                {busiest.map((area) => (
-                  <li key={area.id}>
-                    <button
-                      type="button"
-                      className="area-bar"
-                      aria-pressed={filters.neighborhoodId === area.id}
-                      onClick={() => update({ neighborhoodId: filters.neighborhoodId === area.id ? null : area.id })}
-                    >
-                      <span className="area-bar__name">{areaName(area)}</span>
-                      <span className="area-bar__track">
-                        <span className="area-bar__fill" style={{ width: `${(area.count / most) * 100}%` }} />
-                      </span>
-                      <span className="area-bar__count mono">{area.count}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
           ) : null}
         </>
       )}
