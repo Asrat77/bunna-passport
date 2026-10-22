@@ -28,7 +28,6 @@ export function Explore() {
   const location = useLocation();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ShopFilter>("all");
-  const [expanded, setExpanded] = useState(false);
 
   const ranked = useMemo(
     () =>
@@ -42,8 +41,8 @@ export function Explore() {
   );
 
   const searching = query.trim().length > 0;
-  const showAll = expanded || searching || filter !== "all";
-  const visible = showAll ? ranked : ranked.slice(0, PREVIEW_COUNT);
+  // A preview only: the whole catalog, paged, lives on All cafés.
+  const visible = ranked.slice(0, PREVIEW_COUNT);
   const title = searching
     ? t("explore.results")
     : filter === "jebena"
@@ -121,9 +120,9 @@ export function Explore() {
 
       <div className="section-head">
         <h2 className="section-title">{title}</h2>
-        {!showAll && ranked.length > PREVIEW_COUNT ? (
-          <button type="button" className="link-button" onClick={() => setExpanded(true)}>
-            {t("explore.seeAll")}
+        {ranked.length > PREVIEW_COUNT ? (
+          <button type="button" className="link-button" onClick={() => push({ name: "cafes", query, filter })}>
+            {t("explore.seeAll", { count: ranked.length.toLocaleString() })}
           </button>
         ) : null}
       </div>
