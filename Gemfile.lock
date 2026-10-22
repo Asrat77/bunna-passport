@@ -421,6 +421,7 @@ DEPENDENCIES
   capybara
   csv
   debug
+  dotenv
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
