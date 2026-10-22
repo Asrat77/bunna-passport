@@ -32,6 +32,8 @@ Rails.application.routes.draw do
       patch "profile", to: "profiles#update"
       resources :badges, only: :index
       resources :leaderboards, only: :index
+      get "stats/me", to: "personal_stats#show", as: :personal_stats
+      get "stats/city", to: "city_stats#show", as: :city_stats
       resources :reports, only: :create
     end
   end
