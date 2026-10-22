@@ -15,30 +15,6 @@
   font-weight: 600;
 }
 
-.select-pill {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--touch);
-  padding: 0 14px;
-  border-radius: 99px;
-  background: var(--raised);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  gap: 6px;
-}
-
-.select-pill select {
-  appearance: none;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  color: inherit;
-  outline: none;
-  padding-right: 2px;
-}
-
 .podium {
   margin: 0;
   padding: 0;
