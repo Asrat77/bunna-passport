@@ -169,6 +169,22 @@ Two values have to be supplied before the schedule does anything:
 Check the schedule with `crontab -l` and the last run in
 `/var/log/bunna/backup.log`.
 
+### Backing up a laptop
+
+When the data worth keeping is on a development machine (the scraped catalog,
+its photos, the development database), `script/backup_local` does the same job
+from there: it snapshots `development*` databases with `script/backup`,
+encrypts the archive to `BUNNA_BACKUP_RECIPIENT`, and uploads it to
+`$BUNNA_BACKUP_REMOTE/local/`, apart from the server's nightly archives. It
+needs `sqlite3`, `age` and `rclone` (`brew install sqlite age rclone`) and an
+rclone remote for the backup bucket with a token that can write to it.
+
+Restore by decrypting and unpacking the archive, then:
+
+```sh
+BUNNA_BACKUP_DATABASES=development script/restore /absolute/path/to/bunna-passport-<stamp> --confirm-overwrite
+```
+
 ## Photo storage (Cloudflare R2)
 
 Production stores Active Storage files (shop photos, check-in photos, avatars)

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# Backs up this machine's storage/ to the off-host bucket: the development
+# database, Active Storage files, and the ignored local catalog. For when the
+# data worth keeping lives on a laptop rather than a server.
+#
+# Same shape as script/backup_offsite: script/backup takes the snapshot, the
+# archive is encrypted to a public key before it leaves, and the upload is
+# checked by size afterwards. Archives go under local/ so they never mix with
+# the server's nightly archives or its pruning.
+#
+# Usage: script/backup_local
+#
+# Required environment:
+#   BUNNA_BACKUP_REMOTE     rclone destination, e.g. r2backup:bunna-backups
+#   BUNNA_BACKUP_RECIPIENT  age public key (age1... or an ssh-ed25519 line)
+#
+# Optional:
+#   BUNNA_BACKUP_DATABASES  database name prefix (default development)
+#   BUNNA_BACKUP_STAGING    where archives are built (default $TMPDIR/bunna-backups)
+set -euo pipefail
+
+: "${BUNNA_BACKUP_REMOTE:?Set BUNNA_BACKUP_REMOTE to an rclone destination}"
+: "${BUNNA_BACKUP_RECIPIENT:?Set BUNNA_BACKUP_RECIPIENT to an age public key}"
+
+cd "$(dirname "$0")/.."
+
+tmp="${TMPDIR:-/tmp}"
+staging="${BUNNA_BACKUP_STAGING:-${tmp%/}/bunna-backups}"
+remote="${BUNNA_BACKUP_REMOTE%/}/local"
+mkdir -p "$staging"
+
+destination="$(BUNNA_BACKUP_DATABASES="${BUNNA_BACKUP_DATABASES:-development}" script/backup "$staging" | tail -1)"
+name="$(basename "$destination")"
+archive="$staging/$name.tar.age"
+
+tar -czf - -C "$staging" "$name" | age -r "$BUNNA_BACKUP_RECIPIENT" -o "$archive"
+
+# The plain copy holds unencrypted user data and doubles the disk it takes.
+rm -rf "$destination"
+
+# R2 does not implement the read-back rclone uses to confirm an upload; see
+# script/backup_offsite. Check the stored size ourselves.
+rclone copy "$archive" "$remote/" --s3-no-head
+
+expected="$(wc -c < "$archive" | tr -d ' ')"
+stored="$(rclone lsl "$remote/$(basename "$archive")" | awk '{print $1}')"
+if [[ "$stored" != "$expected" ]]; then
+  echo "Upload did not land: expected $expected bytes, found '${stored:-nothing}'" >&2
+  exit 1
+fi
+
+echo "$archive -> $remote/$(basename "$archive") ($expected bytes)"
