@@ -1,0 +1,336 @@
+.stats__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stats-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 4px;
+  border-radius: 99px;
+  background: var(--sunken);
+}
+
+.stats-switch button {
+  min-height: 44px;
+  border-radius: 99px;
+  font-size: 14.5px;
+  color: var(--muted);
+}
+
+.stats-switch button[aria-selected="true"] {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.stats__line {
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Meter: a share of the city, read out on the right */
+.meter {
+  position: relative;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--sunken);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: -6px;
+}
+
+.meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--primary-soft);
+}
+
+.meter span {
+  position: relative;
+}
+
+.rank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  border-radius: var(--radius-card);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.rank-card__rank {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rank-card__note {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Cards */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.stat-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stat-card__aside {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.regular {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.regular__eyebrow {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.regular__name {
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.regular__note {
+  font-size: 12.5px;
+  color: var(--primary);
+}
+
+/* Fact grid */
+.fact-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fact-grid__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius-tile);
+  background: var(--sunken);
+}
+
+.fact-grid__label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.fact-grid__value {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fact-grid__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Upright columns */
+.columns {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.columns + .columns {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.columns__title {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.columns__plot {
+  display: grid;
+  gap: 2px;
+  height: 84px;
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+}
+
+.columns__hit {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.columns__bar {
+  display: block;
+  width: 100%;
+  max-width: 22px;
+  border-radius: 4px 4px 0 0;
+  /* One hue: the picked bar in full clay, the rest a lighter step of it. */
+  background: color-mix(in srgb, var(--primary) 38%, var(--raised));
+}
+
+.columns__hit[aria-pressed="true"] .columns__bar {
+  background: var(--primary);
+}
+
+.columns__axis {
+  display: grid;
+  gap: 2px;
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
+.columns__axis span {
+  white-space: nowrap;
+  overflow: visible;
+  text-align: center;
+}
+
+.columns__caption {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+/* Ranked bar list */
+.bar-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.bar-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.bar-list__row {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 2px;
+  text-align: left;
+}
+
+.bar-list__rank {
+  width: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.bar-list__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bar-list__label {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-list__note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bar-list__track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.bar-list__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.bar-list__value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Four counted cells: stamp levels, price bands */
+.levels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.levels__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: var(--radius-tile);
+  background: var(--sunken);
+}
+
+.levels__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.levels__count {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.levels__name {
+  font-size: 11.5px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
