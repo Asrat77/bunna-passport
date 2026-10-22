@@ -89,3 +89,17 @@ export function useLeaderboard(params: {
     enabled: params.scope === "city" || params.neighborhoodId !== undefined,
   });
 }
+
+export function usePersonalStats() {
+  const enabled = useSignedIn();
+  return useQuery({ queryKey: ["stats", "me"], queryFn: async () => (await api.getPersonalStats()).data, enabled });
+}
+
+/** The server caches these for ten minutes, so asking more often buys nothing. */
+export function useCityStats() {
+  return useQuery({
+    queryKey: ["stats", "city"],
+    queryFn: async () => (await api.getCityStats()).data,
+    staleTime: 10 * 60_000,
+  });
+}

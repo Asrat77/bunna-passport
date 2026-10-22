@@ -2,7 +2,7 @@ import { createContext, use, useCallback, useMemo, useState, type ReactNode } fr
 import type { CheckIn, OpaqueId } from "@/api/types";
 import type { ShopFilter } from "@/data/nearby";
 
-export type Tab = "explore" | "passport" | "boards";
+export type Tab = "explore" | "passport" | "stats";
 
 export type Route =
   | { name: Tab }
@@ -27,7 +27,7 @@ type Navigation = {
 const NavigationContext = createContext<Navigation | null>(null);
 
 const isTab = (route: Route): route is { name: Tab } =>
-  route.name === "explore" || route.name === "passport" || route.name === "boards";
+  route.name === "explore" || route.name === "passport" || route.name === "stats";
 
 /**
  * A plain screen stack. Tabs sit at the bottom; Shop, Check in, the ceremony,

@@ -1,6 +1,6 @@
 import { mdiCheck, mdiMapMarkerOutline } from "@mdi/js";
 import { useState } from "react";
-import type { PriceBand, ShopAttributes, ShopDetail } from "@/api/types";
+import type { ShopAttributes, ShopDetail } from "@/api/types";
 import { useCatalog, useReviews, useShop } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { InkStamp } from "@/design/stamp/InkStamp";
@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n/context";
 import { distanceMeters, formatMeters } from "@/lib/distance";
 import { openStatus } from "@/lib/hours";
 import { openInMaps } from "@/lib/maps";
+import { PRICE_GLYPHS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
@@ -18,13 +19,6 @@ import { StatStrip } from "@/ui/StatStrip";
 import "./shop.css";
 
 type Section = "overview" | "photos" | "reviews";
-
-const PRICE_GLYPHS: Record<PriceBand, string> = {
-  budget: "ብር",
-  standard: "ብርብር",
-  premium: "ብርብርብር",
-  splurge: "ብርብርብርብር",
-};
 
 /** "Near" enough that the first step of the directions counts as done. */
 const IN_THE_AREA_METERS = 1000;

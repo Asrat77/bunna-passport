@@ -239,3 +239,70 @@ export type LeaderboardEntry = {
     had_cup_today: boolean | null;
   };
 };
+
+/** A café as the stats name it: just enough to open it. */
+export type StatsShop = { id: OpaqueId; name: string; name_am: string };
+
+export type StatsShopCount = { shop: StatsShop; cups: number };
+
+export type StatsDrink = { name: string; cups: number };
+
+export type MonthCount = { month: string; cups: number };
+
+/** GET /stats/me. Verified cups only; times bucketed in Addis local time. */
+export type PersonalStats = {
+  totals: {
+    cups: number;
+    cafes: number;
+    areas: number;
+    reviews: number;
+    contributions: number;
+    badges: number;
+    catalog_cafes: number;
+    catalog_areas: number;
+    catalog_badges: number;
+  };
+  first_cup_at: Timestamp | null;
+  last_cup_at: Timestamp | null;
+  city_rank: { rank: number; drinkers: number } | null;
+  streaks: { current_weeks: number; longest_weeks: number; coffee_days: number; best_day_cups: number };
+  favorite_cafe: { shop: StatsShop; cups: number; level: StampLevel } | null;
+  stamp_levels: Record<StampLevel, number>;
+  /** 24 entries, local hour 0–23. */
+  by_hour: number[];
+  /** 7 entries, Monday first. */
+  by_weekday: number[];
+  by_month: MonthCount[];
+  top_areas: (Neighborhood & { cups: number })[];
+  favorite_drink: StatsDrink | null;
+  average_rating: number | null;
+};
+
+/** GET /stats/city. Public, cached for up to ten minutes. */
+export type CityStats = {
+  totals: {
+    cafes: number;
+    areas: number;
+    cups: number;
+    cups_this_week: number;
+    drinkers: number;
+    drinkers_this_week: number;
+    stamps: number;
+    reviews: number;
+    contributions: number;
+    unstamped_cafes: number;
+    jebena_cafes: number;
+    cafes_with_hours: number;
+    new_cafes: number;
+  };
+  by_hour: number[];
+  by_weekday: number[];
+  by_month: MonthCount[];
+  top_cafes: StatsShopCount[];
+  rising_cafes: StatsShopCount[];
+  top_rated: { shop: StatsShop; average: number; ratings: number }[];
+  areas: (Neighborhood & { cafes: number; cups: number; cups_this_week: number })[];
+  top_drinks: StatsDrink[];
+  price_bands: Record<"budget" | "standard" | "premium" | "splurge", number>;
+  generated_at: Timestamp;
+};

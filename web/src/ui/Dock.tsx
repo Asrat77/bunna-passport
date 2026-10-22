@@ -1,23 +1,23 @@
-import { mdiCoffeeOutline, mdiCompassOutline, mdiPassport, mdiTrophyOutline } from "@mdi/js";
+import { mdiCoffeeOutline, mdiCompassOutline, mdiPassport, mdiChartBar } from "@mdi/js";
 import { useI18n } from "@/i18n/context";
 import { useNavigation, type Tab } from "@/nav/Navigation";
 import { Icon } from "./Icon";
 
-const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "tab.boards" }[] = [
+const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "tab.stats" }[] = [
   { tab: "explore", icon: mdiCompassOutline, label: "tab.explore" },
   { tab: "passport", icon: mdiPassport, label: "tab.passport" },
-  { tab: "boards", icon: mdiTrophyOutline, label: "tab.boards" },
+  { tab: "stats", icon: mdiChartBar, label: "tab.stats" },
 ];
 
 /**
  * The navigation dock: three labelled tabs in a raised pill and the Check in
  * control to the right, a pill with its label on Explore and Passport and a
- * circle on Boards.
+ * circle on Stats.
  */
 export function Dock() {
   const { t } = useI18n();
   const { tab: current, switchTab, push } = useNavigation();
-  const compact = current === "boards";
+  const compact = current === "stats";
 
   return (
     <div className="dock">

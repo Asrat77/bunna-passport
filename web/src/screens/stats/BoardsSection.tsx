@@ -5,7 +5,6 @@ import { doodleSeedFor, useMyDoodle } from "@/data/me";
 import { useCatalog, useLeaderboard, usePassport, useProfile } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
-import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./boards.css";
@@ -13,11 +12,11 @@ import "./boards.css";
 const SHOWN_BELOW_PODIUM = 7;
 
 /**
- * This week's boards (DESIGN.md §6.5). Handles only, never real names. A
- * doodle is awake when that person has had a cup today, unless they've
- * chosen to keep it to themselves.
+ * This week's boards (DESIGN.md §6.5), the first section of Stats. Handles
+ * only, never real names. A doodle is awake when that person has had a cup
+ * today, unless they've chosen to keep it to themselves.
  */
-export function Boards() {
+export function BoardsSection() {
   const { t, language } = useI18n();
   const { data: profile } = useProfile();
   const { data: passport } = usePassport();
@@ -52,7 +51,7 @@ export function Boards() {
     t(metric === "cups" ? "boards.cupsCount" : "boards.cafesCount", { count: entry.value });
 
   return (
-    <main className="screen screen--with-dock boards">
+    <>
       <Headline first={t("boards.thisWeekIn")} second={t("boards.place", { place })} size={32} />
 
       <div className="boards__controls">
@@ -129,8 +128,7 @@ export function Boards() {
       ) : null}
 
       <p className="boards__footnote">{t("boards.footnote")}</p>
-      <Dock />
-    </main>
+    </>
   );
 }
 

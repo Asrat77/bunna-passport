@@ -683,6 +683,45 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+  /stats/me:
+    get:
+      tags: [Activity]
+      operationId: getPersonalStats
+      summary: Fetch the current user's coffee stats
+      description: |
+        Built from verified check-ins only. Hours, weekdays and months are
+        Addis local time; weeks start Monday and coffee days start at 04:00.
+      responses:
+        "200":
+          description: Personal stats
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/PersonalStats" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /stats/city:
+    get:
+      tags: [Activity]
+      operationId: getCityStats
+      summary: Fetch what the whole city's passports add up to
+      description: Public and cached for up to ten minutes.
+      security: []
+      responses:
+        "200":
+          description: City stats
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CityStats" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -902,6 +941,187 @@ components:
               oneOf:
                 - type: boolean
                 - type: "null"
+    StatsShop:
+      type: object
+      required: [id, name, name_am]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        name: { type: string }
+        name_am: { type: string }
+    StatsShopCount:
+      type: object
+      required: [shop, cups]
+      properties:
+        shop: { $ref: "#/components/schemas/StatsShop" }
+        cups: { type: integer, minimum: 0 }
+    StatsDrink:
+      type: object
+      required: [name, cups]
+      properties:
+        name: { type: string }
+        cups: { type: integer, minimum: 1 }
+    HourCounts:
+      description: Cups per Addis local hour, 0 to 23.
+      type: array
+      minItems: 24
+      maxItems: 24
+      items: { type: integer, minimum: 0 }
+    WeekdayCounts:
+      description: Cups per weekday, Monday first.
+      type: array
+      minItems: 7
+      maxItems: 7
+      items: { type: integer, minimum: 0 }
+    MonthCounts:
+      description: The last six calendar months, oldest first.
+      type: array
+      items:
+        type: object
+        required: [month, cups]
+        properties:
+          month: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+          cups: { type: integer, minimum: 0 }
+    PersonalStats:
+      type: object
+      required: [totals, first_cup_at, last_cup_at, city_rank, streaks, favorite_cafe, stamp_levels, by_hour, by_weekday, by_month, top_areas, favorite_drink, average_rating]
+      properties:
+        totals:
+          type: object
+          required: [cups, cafes, areas, reviews, contributions, badges, catalog_cafes, catalog_areas, catalog_badges]
+          properties:
+            cups: { type: integer, minimum: 0 }
+            cafes: { type: integer, minimum: 0 }
+            areas: { type: integer, minimum: 0 }
+            reviews: { type: integer, minimum: 0 }
+            contributions: { type: integer, minimum: 0 }
+            badges: { type: integer, minimum: 0 }
+            catalog_cafes: { type: integer, minimum: 0 }
+            catalog_areas: { type: integer, minimum: 0 }
+            catalog_badges: { type: integer, minimum: 0 }
+        first_cup_at:
+          oneOf:
+            - { type: string, format: date-time }
+            - type: "null"
+        last_cup_at:
+          oneOf:
+            - { type: string, format: date-time }
+            - type: "null"
+        city_rank:
+          description: Null until the first verified cup.
+          oneOf:
+            - type: object
+              required: [rank, drinkers]
+              properties:
+                rank: { type: integer, minimum: 1 }
+                drinkers: { type: integer, minimum: 1 }
+            - type: "null"
+        streaks:
+          type: object
+          required: [current_weeks, longest_weeks, coffee_days, best_day_cups]
+          properties:
+            current_weeks: { type: integer, minimum: 0 }
+            longest_weeks: { type: integer, minimum: 0 }
+            coffee_days: { type: integer, minimum: 0 }
+            best_day_cups: { type: integer, minimum: 0 }
+        favorite_cafe:
+          oneOf:
+            - type: object
+              required: [shop, cups, level]
+              properties:
+                shop: { $ref: "#/components/schemas/StatsShop" }
+                cups: { type: integer, minimum: 1 }
+                level: { type: string, enum: [bronze, silver, gold, diamond] }
+            - type: "null"
+        stamp_levels:
+          type: object
+          required: [bronze, silver, gold, diamond]
+          additionalProperties: { type: integer, minimum: 0 }
+        by_hour: { $ref: "#/components/schemas/HourCounts" }
+        by_weekday: { $ref: "#/components/schemas/WeekdayCounts" }
+        by_month: { $ref: "#/components/schemas/MonthCounts" }
+        top_areas:
+          type: array
+          maxItems: 5
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Neighborhood"
+              - type: object
+                required: [cups]
+                properties:
+                  cups: { type: integer, minimum: 1 }
+        favorite_drink:
+          oneOf:
+            - $ref: "#/components/schemas/StatsDrink"
+            - type: "null"
+        average_rating:
+          oneOf:
+            - { type: number, minimum: 1, maximum: 5 }
+            - type: "null"
+    CityStats:
+      type: object
+      required: [totals, by_hour, by_weekday, by_month, top_cafes, rising_cafes, top_rated, areas, top_drinks, price_bands, generated_at]
+      properties:
+        totals:
+          type: object
+          required: [cafes, areas, cups, cups_this_week, drinkers, drinkers_this_week, stamps, reviews, contributions, unstamped_cafes, jebena_cafes, cafes_with_hours, new_cafes]
+          properties:
+            cafes: { type: integer, minimum: 0 }
+            areas: { type: integer, minimum: 0 }
+            cups: { type: integer, minimum: 0 }
+            cups_this_week: { type: integer, minimum: 0 }
+            drinkers: { type: integer, minimum: 0 }
+            drinkers_this_week: { type: integer, minimum: 0 }
+            stamps: { type: integer, minimum: 0 }
+            reviews: { type: integer, minimum: 0 }
+            contributions: { type: integer, minimum: 0 }
+            unstamped_cafes: { type: integer, minimum: 0 }
+            jebena_cafes: { type: integer, minimum: 0 }
+            cafes_with_hours: { type: integer, minimum: 0 }
+            new_cafes:
+              description: Live cafés added in the last 30 days.
+              type: integer
+              minimum: 0
+        by_hour: { $ref: "#/components/schemas/HourCounts" }
+        by_weekday: { $ref: "#/components/schemas/WeekdayCounts" }
+        by_month: { $ref: "#/components/schemas/MonthCounts" }
+        top_cafes:
+          description: Most verified cups, all time.
+          type: array
+          items: { $ref: "#/components/schemas/StatsShopCount" }
+        rising_cafes:
+          description: Most verified cups this week.
+          type: array
+          items: { $ref: "#/components/schemas/StatsShopCount" }
+        top_rated:
+          description: Highest average rating, with at least three ratings.
+          type: array
+          items:
+            type: object
+            required: [shop, average, ratings]
+            properties:
+              shop: { $ref: "#/components/schemas/StatsShop" }
+              average: { type: number, minimum: 1, maximum: 5 }
+              ratings: { type: integer, minimum: 3 }
+        areas:
+          description: Every area with a live café, most cafés first.
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Neighborhood"
+              - type: object
+                required: [cafes, cups, cups_this_week]
+                properties:
+                  cafes: { type: integer, minimum: 1 }
+                  cups: { type: integer, minimum: 0 }
+                  cups_this_week: { type: integer, minimum: 0 }
+        top_drinks:
+          type: array
+          items: { $ref: "#/components/schemas/StatsDrink" }
+        price_bands:
+          type: object
+          required: [budget, standard, premium, splurge]
+          additionalProperties: { type: integer, minimum: 0 }
+        generated_at: { type: string, format: date-time }
     Neighborhood:
       type: object
       required: [id, name, name_am]

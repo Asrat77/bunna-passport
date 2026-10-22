@@ -7,7 +7,6 @@ import { I18nProvider, useI18n } from "./i18n/context";
 import { LocationProvider } from "./location/LocationProvider";
 import { NavigationProvider, useNavigation } from "./nav/Navigation";
 import { AllCafes } from "./screens/AllCafes";
-import { Boards } from "./screens/Boards";
 import { Ceremony } from "./screens/Ceremony";
 import { CheckIn } from "./screens/checkin/CheckIn";
 import { Explore } from "./screens/Explore";
@@ -15,6 +14,7 @@ import { MapScreen } from "./screens/map/MapScreen";
 import { Passport } from "./screens/passport/Passport";
 import { Shop } from "./screens/Shop";
 import { SignIn } from "./screens/SignIn";
+import { Stats } from "./screens/Stats";
 import { Studio } from "./screens/Studio";
 import { Welcome } from "./screens/Welcome";
 import { PrimaryAction } from "./telegram/buttons";
@@ -94,8 +94,8 @@ function Screens() {
       return <Explore />;
     case "passport":
       return <Passport />;
-    case "boards":
-      return <Boards />;
+    case "stats":
+      return <Stats />;
     case "shop":
       return <Shop key={route.id} id={route.id} />;
     case "checkin":

@@ -142,7 +142,7 @@ discoverability still beats minimalism.
 │                 (screen content)             │
 │                                              │
 │  ┌─────────┬──────────┬────────┐ ┌─────────┐ │
-│  │ Explore │ Passport │ Boards │ │CHECK IN │ │
+│  │ Explore │ Passport │ Stats  │ │CHECK IN │ │
 │  └─────────┴──────────┴────────┘ └─────────┘ │
 └──────────────────────────────────────────────┘
 ```
@@ -151,9 +151,13 @@ discoverability still beats minimalism.
 - **Passport** — profile header, stamps by neighborhood page, cups, coffee
   weeks, and settings. There is no separate Profile tab: identity lives in the
   Passport header and the doodle Studio.
-- **Boards** — weekly neighborhood and city leaderboards
+- **Stats** — a switch between three sections: Boards (the weekly
+  neighborhood and city leaderboards), You (your own numbers: cups, cafés,
+  areas, streaks, your regular, when and where you drink) and Addis (what the
+  whole city adds up to: busiest hours, most-visited and best-rated cafés,
+  cafés by area, drinks). Served by `GET /stats/me` and `GET /stats/city`.
 - **Check In** — the clay pill to the right of the dock. It shrinks to an icon
-  on Boards so the tabs keep their labels.
+  on Stats so the tabs keep their labels.
 
 Contribution actions (add shop, suggest edit, add photo, report) live in
 context — on shop detail and map — not as a tab. Contributors are 2–5% of
