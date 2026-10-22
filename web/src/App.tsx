@@ -6,6 +6,7 @@ import { Doodle } from "./design/doodle/Doodle";
 import { I18nProvider, useI18n } from "./i18n/context";
 import { LocationProvider } from "./location/LocationProvider";
 import { NavigationProvider, useNavigation } from "./nav/Navigation";
+import { AllCafes } from "./screens/AllCafes";
 import { Boards } from "./screens/Boards";
 import { Ceremony } from "./screens/Ceremony";
 import { CheckIn } from "./screens/checkin/CheckIn";
@@ -105,6 +106,8 @@ function Screens() {
       return <Studio />;
     case "map":
       return <MapScreen />;
+    case "cafes":
+      return <AllCafes route={route} />;
   }
 }
 
