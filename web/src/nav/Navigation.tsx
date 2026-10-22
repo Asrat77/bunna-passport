@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from "react";
 import type { CheckIn, OpaqueId } from "@/api/types";
+import type { ShopFilter } from "@/data/nearby";
 
 export type Tab = "explore" | "passport" | "boards";
 
@@ -9,7 +10,8 @@ export type Route =
   | { name: "checkin"; shopId?: OpaqueId }
   | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
   | { name: "studio" }
-  | { name: "map" };
+  | { name: "map" }
+  | { name: "cafes"; query?: string; filter?: ShopFilter };
 
 type Navigation = {
   route: Route;
@@ -28,8 +30,8 @@ const isTab = (route: Route): route is { name: Tab } =>
   route.name === "explore" || route.name === "passport" || route.name === "boards";
 
 /**
- * A plain screen stack. Tabs sit at the bottom; Shop, Check in, the ceremony
- * and the Studio push on top and come off with Telegram's BackButton.
+ * A plain screen stack. Tabs sit at the bottom; Shop, Check in, the ceremony,
+ * the Studio and All cafés push on top and come off with Telegram's BackButton.
  */
 export function NavigationProvider({ initial, children }: { initial: Route; children: ReactNode }) {
   const [stack, setStack] = useState<Route[]>([initial]);
