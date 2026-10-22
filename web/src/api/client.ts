@@ -5,6 +5,7 @@ import type {
   CatalogPage,
   CheckIn,
   CheckInInput,
+  CityStats,
   Contribution,
   LeaderboardEntry,
   LeaderboardMetric,
@@ -12,6 +13,7 @@ import type {
   LeaderboardScope,
   OpaqueId,
   Passport,
+  PersonalStats,
   Review,
   Shop,
   ShopDetail,
@@ -287,6 +289,14 @@ export const api = {
       },
       anonymous: true,
     });
+  },
+
+  getPersonalStats() {
+    return request<PersonalStats>("/stats/me");
+  },
+
+  getCityStats() {
+    return request<CityStats>("/stats/city", { anonymous: true });
   },
 
   submitShop(shop: Record<string, unknown>) {
