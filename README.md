@@ -21,7 +21,7 @@ graphs, trails, and additional cities are intentionally out of scope.
 
 ## Local setup
 
-Install SQLite and libvips, then run:
+Install SQLite and libvips (`brew install sqlite vips` on macOS), then run:
 
 ```sh
 bin/setup

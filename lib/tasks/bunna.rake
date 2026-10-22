@@ -92,4 +92,42 @@ namespace :bunna do
     puts "#{genuinely_far} weak_gps rejections were outside the radius anyway — loosening accuracy would not have helped them."
     puts "Treat anything under a few hundred attempts as anecdote, not evidence."
   end
+
+  desc "Copy Active Storage files between services and repoint their blobs (FROM=local TO=r2)"
+  task move_storage: :environment do
+    from = ENV["FROM"].presence or abort "Missing FROM (e.g. FROM=local)"
+    to = ENV["TO"].presence or abort "Missing TO (e.g. TO=r2)"
+    abort "FROM and TO are the same service" if from == to
+    dry_run = ENV["DRY_RUN"].present?
+
+    source = ActiveStorage::Blob.services.fetch(from.to_sym)
+    target = ActiveStorage::Blob.services.fetch(to.to_sym)
+    blobs = ActiveStorage::Blob.where(service_name: from)
+    puts "#{blobs.count} blobs on #{from}#{" (dry run, nothing copied)" if dry_run}"
+    next if dry_run
+
+    moved = missing = 0
+    blobs.find_each do |blob|
+      # A blob whose file is gone stays where it is, so the report shows it
+      # rather than the move quietly pointing it at nothing.
+      unless source.exist?(blob.key)
+        missing += 1
+        puts "missing on #{from}: blob #{blob.id} #{blob.key}"
+        next
+      end
+
+      # The source file is left in place. Undoing the move is setting
+      # service_name back; nothing has to be copied home.
+      unless target.exist?(blob.key)
+        source.open(blob.key, checksum: blob.checksum, verify: blob.checksum.present?) do |file|
+          target.upload(blob.key, file, checksum: blob.checksum, content_type: blob.content_type, filename: blob.filename)
+        end
+      end
+      blob.update_columns(service_name: to)
+      moved += 1
+      puts "#{moved} moved" if (moved % 100).zero?
+    end
+
+    puts "Moved #{moved} blobs from #{from} to #{to}; #{missing} missing on #{from}; #{blobs.count} still on #{from}"
+  end
 end

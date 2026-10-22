@@ -30,8 +30,14 @@ verify_checksums() {
   verify_checksums
 )
 
+databases="${BUNNA_BACKUP_DATABASES:-production}"
+if [[ ! "$databases" =~ ^[a-z_]+$ ]]; then
+  echo "BUNNA_BACKUP_DATABASES must be a database name prefix such as production." >&2
+  exit 64
+fi
+
 mkdir -p storage
-for database in "$source_directory"/databases/production*.sqlite3; do
+for database in "$source_directory"/databases/${databases}*.sqlite3; do
   [[ -f "$database" ]] || continue
   cp "$database" "storage/$(basename "$database")"
 done
