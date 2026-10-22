@@ -41,7 +41,9 @@ rm -rf "$destination"
 
 # R2 does not implement the read-back rclone uses to confirm an upload; see
 # script/backup_offsite. Check the stored size ourselves.
-rclone copy "$archive" "$remote/" --s3-no-head
+# The archive is hundreds of megabytes over a slow link: report progress so a
+# slow upload can be told apart from a stalled one.
+rclone copy "$archive" "$remote/" --s3-no-head --stats 30s --stats-one-line -v
 
 expected="$(wc -c < "$archive" | tr -d ' ')"
 stored="$(rclone lsl "$remote/$(basename "$archive")" | awk '{print $1}')"
