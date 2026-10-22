@@ -179,6 +179,12 @@ able to read or delete the backups, and the backup job should not see photos.
 Blobs record which service holds them, so files uploaded to `local` before the
 switch keep being served from the volume. New uploads go to R2.
 
+To move those older files across, run `bin/rails bunna:move_storage FROM=local
+TO=r2` (add `DRY_RUN=1` to count first). It copies each file, then points its
+blob at R2, and leaves the local copy behind, so it can be rerun safely and a
+move is undone by setting `service_name` back. In production run it through
+`bin/kamal app exec`.
+
 One-time setup in the Cloudflare dashboard (same account as the backup bucket):
 
 1. **R2 Object Storage → Create bucket.** Name it `bunna-photos`. Location

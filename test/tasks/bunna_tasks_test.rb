@@ -10,12 +10,14 @@ class BunnaTasksTest < ActiveSupport::TestCase
     reference_task.reenable
     founder_task.reenable
     local_import_task.reenable
+    move_storage_task.reenable
   end
 
   teardown do
     reference_task.reenable
     founder_task.reenable
     local_import_task.reenable
+    move_storage_task.reenable
   end
 
   test "production database preparation does not load seeds" do
@@ -125,6 +127,44 @@ class BunnaTasksTest < ActiveSupport::TestCase
     FileUtils.remove_entry(directory) if directory&.exist?
   end
 
+  test "move_storage copies files to the target service and repoints their blobs" do
+    directory = Pathname(Dir.mktmpdir("bunna-move-storage"))
+    with_storage_services(directory) do
+      blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("bunna"), filename: "cup.jpg", service_name: "source")
+      gone = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("gone"), filename: "gone.jpg", service_name: "source")
+      ActiveStorage::Blob.services.fetch(:source).delete(gone.key)
+
+      stdout, _stderr = capture_io do
+        with_environment("FROM" => "source", "TO" => "target") { move_storage_task.invoke }
+      end
+
+      assert_equal "target", blob.reload.service_name
+      assert_equal "bunna", ActiveStorage::Blob.services.fetch(:target).download(blob.key)
+      assert ActiveStorage::Blob.services.fetch(:source).exist?(blob.key), "the source copy stays for rollback"
+      assert_equal "source", gone.reload.service_name
+      assert_includes stdout, "Moved 1 blobs from source to target; 1 missing on source"
+    end
+  ensure
+    FileUtils.remove_entry(directory) if directory&.exist?
+  end
+
+  test "move_storage dry run changes nothing" do
+    directory = Pathname(Dir.mktmpdir("bunna-move-storage"))
+    with_storage_services(directory) do
+      blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("bunna"), filename: "cup.jpg", service_name: "source")
+
+      stdout, _stderr = capture_io do
+        with_environment("FROM" => "source", "TO" => "target", "DRY_RUN" => "1") { move_storage_task.invoke }
+      end
+
+      assert_equal "source", blob.reload.service_name
+      refute ActiveStorage::Blob.services.fetch(:target).exist?(blob.key)
+      assert_includes stdout, "1 blobs on source (dry run, nothing copied)"
+    end
+  ensure
+    FileUtils.remove_entry(directory) if directory&.exist?
+  end
+
   private
     def reference_task
       Rake::Task["bunna:bootstrap_reference_data"]
@@ -136,6 +176,21 @@ class BunnaTasksTest < ActiveSupport::TestCase
 
     def local_import_task
       Rake::Task["bunna:import_local_shops"]
+    end
+
+    def move_storage_task
+      Rake::Task["bunna:move_storage"]
+    end
+
+    def with_storage_services(directory)
+      original = ActiveStorage::Blob.services
+      ActiveStorage::Blob.services = ActiveStorage::Service::Registry.new(
+        source: { service: "Disk", root: directory.join("source").to_s },
+        target: { service: "Disk", root: directory.join("target").to_s }
+      )
+      yield
+    ensure
+      ActiveStorage::Blob.services = original
     end
 
     def with_environment(values)
