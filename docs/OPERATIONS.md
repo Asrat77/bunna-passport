@@ -194,7 +194,8 @@ One-time setup in the Cloudflare dashboard (same account as the backup bucket):
    *Object Read & Write*, applied to `bunna-photos` only, no expiry (or one you
    will remember to rotate). Copy the Access Key ID and Secret Access Key; the
    secret is shown once.
-3. Note the **Account ID** from the R2 overview page.
+3. Note the **Account ID** (32 hex characters) from the R2 overview page or the
+   dashboard URL. It is not the token value: R2 only needs the key pair.
 
 Then add these to `.kamal/secrets` (gitignored) so Kamal passes them to the
 container:
