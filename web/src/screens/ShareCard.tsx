@@ -72,6 +72,7 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
           {t("share.save")}
         </button>
         <p className="share-card__hint muted">{t("share.saveHint")}</p>
+        <p className="share-card__hint muted">{t("share.invites")}</p>
       </div>
 
       <PrimaryAction
@@ -80,7 +81,10 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
         loading={cards.isFetching}
         onClick={() => {
           if (!card) return;
-          void shareCardToChat({ postUrl: card.post_url, preparedMessageId: card.prepared_message_id }, caption).then(done);
+          void shareCardToChat(
+            { postUrl: card.post_url, preparedMessageId: card.prepared_message_id, inviteUrl: card.invite_url },
+            caption,
+          ).then(done);
         }}
       />
     </main>

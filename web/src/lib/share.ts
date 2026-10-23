@@ -48,9 +48,14 @@ async function shareFile(url: string, name: string, text: string): Promise<boole
 /**
  * Sends the post card to a chat. Inside Telegram that's the prepared photo
  * message (Bot API 8.0), so friends see the card rather than a link; older
- * clients get Telegram's link sheet with the card's URL.
+ * clients get Telegram's link sheet with the card's URL. The prepared
+ * message's button carries the sender's invite; the fallbacks put the
+ * invite link in the text instead.
  */
-export async function shareCardToChat(card: { postUrl: string; preparedMessageId: string | null }, text: string): Promise<boolean> {
+export async function shareCardToChat(
+  card: { postUrl: string; preparedMessageId: string | null; inviteUrl?: string },
+  caption: string,
+): Promise<boolean> {
   if (card.preparedMessageId) {
     const [called, sending] = shareMessage.ifAvailable(card.preparedMessageId);
     if (called) {
@@ -63,6 +68,7 @@ export async function shareCardToChat(card: { postUrl: string; preparedMessageId
       }
     }
   }
+  const text = card.inviteUrl ? `${caption}\n${card.inviteUrl}` : caption;
   const [linked] = shareURL.ifAvailable(card.postUrl, text);
   if (linked) return true;
   return (await shareFile(card.postUrl, "bunna-stamp.png", text)) || shareStamp(text);
