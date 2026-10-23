@@ -62,6 +62,14 @@ class User < ApplicationRecord
         .where(occurred_at: coffee_day_start(now)..now).distinct.pluck(:user_id).to_set
     end
 
+    # People the bot may nudge today: they started it, kept nudges on, and
+    # haven't been nudged this coffee day. Whether they had a cup is checked
+    # separately, in one query for the lot.
+    def nudgeable(now = Time.current)
+      where.not(telegram_user_id: nil).where.not(telegram_chat_started_at: nil).where(daily_nudges: true)
+        .where("last_nudged_at IS NULL OR last_nudged_at < ?", coffee_day_start(now))
+    end
+
     # Finds or creates the account behind a verified Telegram user.
     def from_telegram!(telegram_user)
       telegram_id = Integer(telegram_user.fetch("id"))
@@ -87,6 +95,20 @@ class User < ApplicationRecord
         name = [ telegram_user["first_name"], telegram_user["last_name"] ].compact.join(" ").strip
         (name.presence || "Telegram #{telegram_id}")[0, 80]
       end
+  end
+
+  # Whether the bot may write to this person: they started it and haven't
+  # blocked it since.
+  def bot_chat?
+    telegram_user_id.present? && telegram_chat_started_at.present?
+  end
+
+  def start_bot_chat!
+    update!(telegram_chat_started_at: Time.current) unless telegram_chat_started_at
+  end
+
+  def stop_bot_chat!
+    update!(telegram_chat_started_at: nil)
   end
 
   def had_cup_today?(now = Time.current)

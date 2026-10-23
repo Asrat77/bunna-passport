@@ -349,16 +349,76 @@ Build-time settings (`web/.env.example`):
 | `VITE_API_BASE_URL` | API root when it isn't same-origin `/api/v1` |
 | `VITE_MAP_STYLE_URL` | MapLibre style for the self-hosted Addis PMTiles; unset hides the map |
 | `VITE_MAP_STYLE_DARK_URL` | The dark style, used when the phone is in dark mode; falls back to the light one |
+
+People reading the app in Amharic get the `-am` twin of whichever style
+applies (`style-light-am.json` beside `style-light.json`), so there is no
+separate setting for it.
 | `VITE_SHARE_URL` | Link a shared stamp points to, such as `https://t.me/<bot>/<app>` |
 
 Checks before a release: `npm run build` (type-checks, then bundles) and
 `npm test` in `web/`.
 
+### The bot
+
+The bot answers in private chats only:
+
+- `/start` (and anything else typed) creates the account if needed and replies
+  with a welcome and an **Open Bunna Passport** button. A `/start` payload is
+  ignored; invite links open the Mini App directly with `startapp`.
+- `/nudges_off` and `/nudges_on` switch the daily nudge. The Mini App's
+  Passport settings has the same switch inside Telegram (`daily_nudges` on
+  the profile).
+- Every afternoon at 15:00 Addis (`send_daily_nudges` in
+  `config/recurring.yml`, so production only), anyone who started the bot,
+  kept nudges on and hasn't had a cup this coffee day (from 04:00 Addis) gets
+  one "Had a cup today?" message with **Check in** and **Stop daily nudges**
+  buttons. `users.last_nudged_at` keeps it to one a day.
+- A counted visit that presses a new stamp or takes one to silver, gold or
+  diamond sends a message, including when a moderator verifies a flagged
+  visit later.
+
+A bot may only write to someone who started it, so `users.telegram_chat_started_at`
+is set on `/start` and cleared when Telegram reports the bot blocked (a 403
+or a `my_chat_member` update). Messages are English for now.
+
+The buttons open `TELEGRAM_MINI_APP_URL`, or `PUBLIC_BASE_URL` when that is
+unset. Telegram only accepts HTTPS there; without one the bot still talks but
+shows no button.
+
+**Production** takes updates on `POST /telegram/webhook`, which only accepts
+requests carrying `TELEGRAM_WEBHOOK_SECRET` in Telegram's secret header (set
+it in `.kamal/secrets`; letters, digits, `_` and `-`). After a deploy, point
+the bot there once:
+
+```sh
+bin/kamal app exec 'bin/rails bunna:telegram:set_webhook URL=https://<host>/telegram/webhook'
+```
+
+That also registers the command list and the chat's menu button.
+
+**Development** without a public URL: run long polling next to the server. It
+removes any webhook first, since Telegram allows only one of the two.
+
+```sh
+TELEGRAM_BOT_TOKEN=... PUBLIC_BASE_URL=https://mac.tail498795.ts.net bin/rails server
+TELEGRAM_BOT_TOKEN=... PUBLIC_BASE_URL=https://mac.tail498795.ts.net bin/rails bunna:telegram:poll
+```
+
+Stamp messages go out from the server process, so both need the token. To
+send the nudge without waiting for the afternoon:
+`bin/rails bunna:telegram:nudge HANDLE=<you> FORCE=1` (it still skips anyone
+who has had a cup today). A webhook through the tunnel works too, since the
+Vite dev server proxies `/telegram`: set `TELEGRAM_WEBHOOK_SECRET` on the
+server and run `bin/rails bunna:telegram:set_webhook`.
+
 ### Addis map
 
 The map is static files in a public R2 bucket, `bunna-map`, so it needs no
 app server. The browser reads one `.pmtiles` file with range requests, plus
-two styles and the fonts and sprites they use. The tiles are an Addis cut of
+a style and the fonts and sprites it uses. There are four styles, light and
+dark in English and in Amharic. English labels carry the fidel name on a
+second line where OSM has one; Amharic labels lead with fidel and carry the
+English name underneath, and fall back to English where OSM has no Amharic. The tiles are an Addis cut of
 the Protomaps OpenStreetMap build; the attribution button credits OSM, as its
 licence requires.
 
@@ -368,8 +428,8 @@ One-time setup in the Cloudflare dashboard (same account as `bunna-photos`):
 2. **Bucket → Settings → Public access → R2.dev subdomain → Allow.** The
    `https://pub-….r2.dev` URL it shows is `MAP_PUBLIC_URL`. Cloudflare
    rate-limits r2.dev (throttling starts around hundreds of requests a second)
-   and doesn't cache it; connect a custom domain instead once there's real
-   traffic, then republish with that as `MAP_PUBLIC_URL`.
+   and doesn't cache it; move to a custom domain (below) once there's real
+   traffic.
 3. **Bucket → Settings → CORS policy:**
 
    ```json
@@ -391,10 +451,34 @@ export MAP_PUBLIC_URL=https://pub-<id>.r2.dev
 script/publish_addis_map
 ```
 
-It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the two
+It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the four
 styles pointing at the new tiles, and prints the two `VITE_MAP_STYLE*` lines
 for `web/.env`. Those URLs stay the same across refreshes, so only the first
 run needs a rebuild. Delete older `addis-*.pmtiles` a day after a refresh.
 Re-cut every few months. The colours live in `web/scripts/map-style.mjs`;
 after changing them, `MAP_STYLES_ONLY=addis-<date>.pmtiles script/publish_addis_map`
-uploads just the two styles for the tiles already in the bucket.
+uploads just the styles for the tiles already in the bucket.
+
+#### Custom domain for the map
+
+A custom domain puts the map behind Cloudflare's cache and out of r2.dev's
+rate limit. The domain has to be a zone on the same Cloudflare account
+(nameservers pointed at Cloudflare).
+
+1. **R2 → `bunna-map` → Settings → Custom Domains → Connect Domain,** for
+   example `map.<your domain>`. Cloudflare adds the DNS record and
+   certificate; wait until the domain shows **Active**. The bucket's CORS
+   policy applies to it as is.
+2. Rewrite the styles so their tiles, fonts and sprites come from the new
+   host (the tiles and fonts themselves don't move):
+
+   ```sh
+   MAP_PUBLIC_URL=https://map.<your domain> \
+   MAP_STYLES_ONLY=addis-<date>.pmtiles script/publish_addis_map
+   ```
+
+3. Set the printed `VITE_MAP_STYLE_URL` and `VITE_MAP_STYLE_DARK_URL` in
+   `web/.env`, rebuild and redeploy `web/dist`.
+4. Once nobody runs an older build (a day or two), turn the r2.dev subdomain
+   off under **Public access**. Until then old builds keep working, because
+   r2.dev serves the same files.

@@ -134,16 +134,18 @@ class CheckIn < ApplicationRecord
   def apply_verified_activity!
     return if counted_at.present?
 
+    stamp = nil
     transaction do
       user.increment!(:verified_check_ins_count)
       shop.increment!(:check_ins_count)
       earn_stamp!
-      count_toward_stamp_level!
+      stamp = count_toward_stamp_level!
       update!(verified_at: Time.current, counted_at: Time.current)
     end
 
     AwardBadgesJob.perform_later(user)
     EvaluateTrustJob.perform_later(user)
+    notify_stamp(stamp)
   end
 
   def earn_stamp!
@@ -163,6 +165,15 @@ class CheckIn < ApplicationRecord
   # by counted_at in the caller, so a replay cannot inflate it.
   def count_toward_stamp_level!
     user.stamps.find_by(shop: shop)&.increment!(:check_ins_count)
+  end
+
+  # Only Telegram accounts that started the bot hear about it, and only when
+  # this visit reached a level; the count is taken now because the stamp can
+  # move on before the job runs.
+  def notify_stamp(stamp)
+    return unless stamp && user.bot_chat? && Stamp.level_reached_at(stamp.check_ins_count)
+
+    SendStampNotificationJob.perform_later(stamp, stamp.check_ins_count)
   end
 
   def public_status

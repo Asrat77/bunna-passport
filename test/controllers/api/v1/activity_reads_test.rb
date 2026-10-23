@@ -65,11 +65,12 @@ class Api::V1::ActivityReadsTest < ActionDispatch::IntegrationTest
     get api_v1_passport_path, headers: headers, as: :json
     assert_equal true, response_json.dig("data", "had_cup_today")
 
-    patch api_v1_profile_path, params: { profile: { avatar_seed: "42-3", shares_cup_status: false } },
+    patch api_v1_profile_path, params: { profile: { avatar_seed: "42-3", shares_cup_status: false, daily_nudges: false } },
       headers: headers, as: :json
     assert_response :success
     assert_equal "42-3", response_json.dig("data", "avatar_seed")
     assert_equal false, response_json.dig("data", "shares_cup_status")
+    assert_equal false, response_json.dig("data", "daily_nudges")
   end
 
   test "boards show the doodle and hide cup status for anyone who opted out" do

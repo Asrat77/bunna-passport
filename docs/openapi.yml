@@ -1212,6 +1212,11 @@ components:
         shares_visits:
           type: boolean
           description: Whether friends see this user's verified visits in their feed
+        daily_nudges:
+          type: boolean
+          description: |
+            Whether the Telegram bot sends an afternoon "had a cup?" nudge on
+            days without a check-in. Only reaches people who started the bot.
         joined_at: { type: string, format: date-time }
     ProfileInput:
       type: object
@@ -1222,6 +1227,7 @@ components:
             - type: "null"
         shares_cup_status: { type: boolean }
         shares_visits: { type: boolean }
+        daily_nudges: { type: boolean }
     Friend:
       type: object
       required: [id, handle, display_name, avatar_seed, had_cup_today, stamps_count, verified_check_ins_count]

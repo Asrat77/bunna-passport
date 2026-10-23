@@ -32,6 +32,8 @@ export type User = {
   shares_cup_status: boolean;
   /** Whether friends see this person's verified visits in their feed. */
   shares_visits: boolean;
+  /** Whether the bot sends the afternoon "had a cup?" nudge. */
+  daily_nudges: boolean;
   joined_at: Timestamp;
 };
 

@@ -15,13 +15,27 @@ class Stamp < ApplicationRecord
 
   scope :reverse_chronologically, -> { order(earned_at: :desc, id: :desc) }
 
-  def level
+  def self.level_for(check_ins_count)
     LEVELS.reduce("bronze") { |earned, (name, required)| check_ins_count >= required ? name : earned }
   end
 
   # Visits still needed for the next level, or nil at the top.
-  def visits_to_next_level
+  def self.visits_to_next_level(check_ins_count)
     next_threshold = LEVELS.values.find { |required| check_ins_count < required }
     next_threshold && next_threshold - check_ins_count
+  end
+
+  # The level a visit count first reaches, or nil when that count changes
+  # nothing. The first counted visit reaches bronze, which is the new stamp.
+  def self.level_reached_at(check_ins_count)
+    LEVELS.key(check_ins_count)
+  end
+
+  def level
+    self.class.level_for(check_ins_count)
+  end
+
+  def visits_to_next_level
+    self.class.visits_to_next_level(check_ins_count)
   end
 end

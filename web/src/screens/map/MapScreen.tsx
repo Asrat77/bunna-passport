@@ -4,6 +4,7 @@ import { useNavigation } from "@/nav/Navigation";
 import { BackControl } from "@/telegram/buttons";
 import { useScheme } from "@/telegram/theme";
 import { Headline } from "@/ui/Headline";
+import { amharicStyle } from "./styleUrl";
 
 // MapLibre is most of the bundle, so the list ships first and the map only
 // loads behind the Map tile.
@@ -17,9 +18,10 @@ const STYLE_URL: string | undefined = import.meta.env.VITE_MAP_STYLE_URL;
 const DARK_STYLE_URL: string | undefined = import.meta.env.VITE_MAP_STYLE_DARK_URL ?? STYLE_URL;
 
 export function MapScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { back } = useNavigation();
-  const styleUrl = useScheme() === "dark" ? DARK_STYLE_URL : STYLE_URL;
+  const schemeUrl = useScheme() === "dark" ? DARK_STYLE_URL : STYLE_URL;
+  const styleUrl = schemeUrl && language === "am" ? amharicStyle(schemeUrl) : schemeUrl;
   return (
     <main className="screen map-screen">
       <BackControl onBack={back} label={t("common.back")} />

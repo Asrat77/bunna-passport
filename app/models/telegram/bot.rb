@@ -4,8 +4,13 @@ require "net/http"
 # only here, in the API's environment; the Mini App never sees it.
 class Telegram::Bot
   class Error < StandardError; end
+  # The person blocked the bot or never started it: stop writing to them.
+  class Forbidden < Error; end
 
   ENDPOINT = "https://api.telegram.org".freeze
+
+  # What Telegram::Update knows how to handle; the rest is never delivered.
+  UPDATE_TYPES = %w[ message callback_query my_chat_member ].freeze
 
   def self.configured?
     ENV["TELEGRAM_BOT_TOKEN"].present?
@@ -30,15 +35,51 @@ class Telegram::Bot
     ).fetch("id")
   end
 
+  def send_message(chat_id:, text:, reply_markup: nil)
+    params = { chat_id: chat_id, text: text, parse_mode: "HTML", link_preview_options: { is_disabled: true } }
+    params[:reply_markup] = reply_markup if reply_markup
+    call("sendMessage", params)
+  end
+
+  def answer_callback_query(callback_query_id:, text: nil)
+    call("answerCallbackQuery", { callback_query_id: callback_query_id, text: text }.compact)
+  end
+
+  # Long polling for local development, where Telegram can't reach a webhook.
+  # Holds the connection open for up to `timeout` seconds.
+  def get_updates(offset:, timeout: 30, allowed_updates: UPDATE_TYPES)
+    call("getUpdates", { offset: offset, timeout: timeout, allowed_updates: allowed_updates }, read_timeout: timeout + 10)
+  end
+
+  def set_webhook(url:, secret_token:, allowed_updates: UPDATE_TYPES)
+    call("setWebhook", url: url, secret_token: secret_token, allowed_updates: allowed_updates)
+  end
+
+  def delete_webhook
+    call("deleteWebhook", {})
+  end
+
+  def set_my_commands(commands)
+    call("setMyCommands", commands: commands)
+  end
+
+  # The button beside the message box that opens the Mini App.
+  def set_chat_menu_button(text:, url:)
+    call("setChatMenuButton", menu_button: { type: "web_app", text: text, web_app: { url: url } })
+  end
+
   private
-    def call(method, params)
+    def call(method, params, read_timeout: 10)
       uri = URI("#{ENDPOINT}/bot#{@token}/#{method}")
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: read_timeout) do |http|
         http.post(uri.path, params.to_json, "Content-Type" => "application/json")
       end
       body = JSON.parse(response.body)
       # Never echo the URI: it carries the token.
-      raise Error, "#{method} failed: #{body['description']}" unless body["ok"]
+      unless body["ok"]
+        error_class = body["error_code"] == 403 ? Forbidden : Error
+        raise error_class, "#{method} failed: #{body['description']}"
+      end
 
       body.fetch("result")
     rescue JSON::ParserError, Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError, OpenSSL::SSL::SSLError => error
