@@ -236,6 +236,16 @@ function Settings({
     }
   }
 
+  async function toggleNudges(next: boolean) {
+    setSaving(true);
+    try {
+      const { data } = await api.updateProfile({ daily_nudges: next });
+      queryClient.setQueryData(["profile"], data);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="card settings" aria-labelledby="settings-title">
       <h2 id="settings-title" className="eyebrow">
@@ -263,6 +273,21 @@ function Settings({
             checked={profile.shares_cup_status}
             disabled={saving}
             onChange={(event) => void toggleSharing(event.target.checked)}
+          />
+        </label>
+      ) : null}
+      {profile && inTelegram ? (
+        <label className="settings__row settings__toggle">
+          <span className="settings__text">
+            {t("passport.dailyNudges")}
+            <span className="muted">{t("passport.dailyNudgesHint")}</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={profile.daily_nudges}
+            disabled={saving}
+            onChange={(event) => void toggleNudges(event.target.checked)}
           />
         </label>
       ) : null}

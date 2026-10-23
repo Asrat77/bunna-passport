@@ -1014,6 +1014,11 @@ components:
         shares_cup_status:
           type: boolean
           description: Whether friends see had_cup_today on leaderboards
+        daily_nudges:
+          type: boolean
+          description: |
+            Whether the Telegram bot sends an afternoon "had a cup?" nudge on
+            days without a check-in. Only reaches people who started the bot.
         joined_at: { type: string, format: date-time }
     ProfileInput:
       type: object
@@ -1023,6 +1028,7 @@ components:
             - { type: string, maxLength: 64 }
             - type: "null"
         shares_cup_status: { type: boolean }
+        daily_nudges: { type: boolean }
     Passport:
       type: object
       required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today]
