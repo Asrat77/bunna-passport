@@ -12,6 +12,7 @@ export type Route =
   | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
   | { name: "share"; target: ShareTarget; shopName: string }
   | { name: "studio" }
+  | { name: "invite"; token: string }
   | { name: "map" }
   | { name: "cafes"; query?: string; filter?: ShopFilter };
 

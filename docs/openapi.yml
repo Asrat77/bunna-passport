@@ -18,6 +18,8 @@ tags:
     description: User-supplied shops, corrections, photos, confirmations, and reports.
   - name: Activity
     description: GPS check-ins, passport progress, badges, profiles, and leaderboards.
+  - name: Friends
+    description: Mutual friendships made from invite links, and friends' visits.
 
 paths:
   /users:
@@ -616,6 +618,12 @@ paths:
                       doodle: { type: boolean }
                       post_url: { type: string, format: uri }
                       story_url: { type: string, format: uri }
+                      invite_url:
+                        type: string
+                        format: uri
+                        description: >
+                          The caller's invite link. Also the button on the
+                          prepared message, so a shared card invites friends.
                       prepared_message_id:
                         type: string
                         nullable: true
@@ -682,6 +690,12 @@ paths:
                       doodle: { type: boolean }
                       post_url: { type: string, format: uri }
                       story_url: { type: string, format: uri }
+                      invite_url:
+                        type: string
+                        format: uri
+                        description: >
+                          The caller's invite link. Also the button on the
+                          prepared message, so a shared card invites friends.
                       prepared_message_id:
                         type: string
                         nullable: true
@@ -786,7 +800,8 @@ paths:
       parameters:
         - name: scope
           in: query
-          schema: { type: string, enum: [city, neighborhood], default: city }
+          description: friends needs a bearer token; it is the city board narrowed to the caller and their friends.
+          schema: { type: string, enum: [city, neighborhood, friends], default: city }
         - name: neighborhood_id
           in: query
           schema: { $ref: "#/components/schemas/OpaqueId" }
@@ -817,6 +832,171 @@ paths:
                           - type: "null"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /friends:
+    get:
+      tags: [Friends]
+      operationId: listFriends
+      summary: List the caller's friends
+      responses:
+        "200":
+          description: Friends, by handle
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Friend" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Friends]
+      operationId: acceptInvite
+      summary: Accept an invite link
+      description: >
+        Makes the caller and the link's owner friends with each other at
+        once. Accepting a link again changes nothing and answers 200.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invite_token]
+              properties:
+                invite_token: { type: string }
+      responses:
+        "201":
+          description: Now friends
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Friend" }
+        "200":
+          description: Already friends
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Friend" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /friends/{id}:
+    delete:
+      tags: [Friends]
+      operationId: removeFriend
+      summary: Stop being friends, on both sides
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /feed:
+    get:
+      tags: [Friends]
+      operationId: getFeed
+      summary: Friends' recent verified visits
+      description: >
+        The last 30 days of verified check-ins by friends who share their
+        visits, newest first. Each carries the coffee day it happened on
+        (04:00 Africa/Addis_Ababa), never the time or the coordinates.
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200":
+          description: Feed page
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/FeedItem" }
+                  meta: { $ref: "#/components/schemas/CursorMeta" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /invite:
+    get:
+      tags: [Friends]
+      operationId: getInvite
+      summary: The caller's invite link
+      description: >
+        A Mini App deep link (t.me/<bot>?startapp=invite_<token>) once the
+        bot is configured, otherwise this site with ?invite=<token>.
+      responses:
+        "200":
+          $ref: "#/components/responses/Invite"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Friends]
+      operationId: rotateInvite
+      summary: Revoke the invite link and issue a new one
+      description: Existing friends stay friends.
+      responses:
+        "200":
+          $ref: "#/components/responses/Invite"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /invites/{token}:
+    get:
+      tags: [Friends]
+      operationId: previewInvite
+      summary: Who sent an invite link
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The inviter
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [inviter, own, already_friends]
+                    properties:
+                      inviter: { $ref: "#/components/schemas/Friend" }
+                      own: { type: boolean, description: The caller's own link }
+                      already_friends: { type: boolean }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /stats/me:
     get:
@@ -881,6 +1061,21 @@ components:
       schema: { $ref: "#/components/schemas/OpaqueId" }
 
   responses:
+    Invite:
+      description: The caller's invite link
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [token, url, friends_count]
+                properties:
+                  token: { type: string }
+                  url: { type: string, format: uri }
+                  friends_count: { type: integer, minimum: 0 }
     Authenticated:
       description: Account and raw bearer token for this device
       content:
@@ -1014,6 +1209,9 @@ components:
         shares_cup_status:
           type: boolean
           description: Whether friends see had_cup_today on leaderboards
+        shares_visits:
+          type: boolean
+          description: Whether friends see this user's verified visits in their feed
         daily_nudges:
           type: boolean
           description: |
@@ -1028,7 +1226,61 @@ components:
             - { type: string, maxLength: 64 }
             - type: "null"
         shares_cup_status: { type: boolean }
+        shares_visits: { type: boolean }
         daily_nudges: { type: boolean }
+    Friend:
+      type: object
+      required: [id, handle, display_name, avatar_seed, had_cup_today, stamps_count, verified_check_ins_count]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        handle: { type: string }
+        display_name: { type: string }
+        avatar_seed:
+          oneOf:
+            - type: string
+            - type: "null"
+        had_cup_today:
+          description: Null when that person has turned off sharing it.
+          oneOf:
+            - type: boolean
+            - type: "null"
+        stamps_count: { type: integer, minimum: 0 }
+        verified_check_ins_count: { type: integer, minimum: 0 }
+    FeedItem:
+      type: object
+      required: [id, user, shop, coffee_day, stamp_earned]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        user: { $ref: "#/components/schemas/Friend" }
+        shop:
+          type: object
+          required: [id, name, name_am, neighborhood]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            name: { type: string }
+            name_am: { type: string }
+            neighborhood: { $ref: "#/components/schemas/Neighborhood" }
+        coffee_day:
+          type: string
+          format: date
+          description: The Addis coffee day of the visit; there is deliberately no time.
+        stamp_earned: { type: boolean, description: This visit pressed the stamp }
+        stamp_level:
+          oneOf:
+            - { type: string, enum: [bronze, silver, gold, diamond] }
+            - type: "null"
+        drink:
+          oneOf:
+            - type: string
+            - type: "null"
+        rating:
+          oneOf:
+            - { type: integer, minimum: 1, maximum: 5 }
+            - type: "null"
+        note:
+          oneOf:
+            - type: string
+            - type: "null"
     Passport:
       type: object
       required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today]

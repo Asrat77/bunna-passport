@@ -33,6 +33,11 @@ Rails.application.routes.draw do
       # PATCH only, for the same reason as check_ins above.
       patch "profile", to: "profiles#update"
       resources :badges, only: :index
+      resources :friends, only: %i[ index create destroy ]
+      get "feed", to: "feeds#show", as: :feed
+      get "invite", to: "invites#show", as: :invite
+      delete "invite", to: "invites#destroy"
+      get "invites/:token", to: "invite_previews#show", as: :invite_preview
       resources :leaderboards, only: :index
       get "stats/me", to: "personal_stats#show", as: :personal_stats
       get "stats/city", to: "city_stats#show", as: :city_stats

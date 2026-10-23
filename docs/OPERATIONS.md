@@ -310,6 +310,25 @@ from the request's host unless `PUBLIC_BASE_URL` is set (for example
 proxy that rewrites the host, such as the Vite dev server. The dev server
 proxies `/cards` to Rails as well as `/api`.
 
+### Friends and invite links
+
+Everyone has an invite link (`GET /api/v1/invite`). With
+`TELEGRAM_BOT_USERNAME` set it is a Mini App deep link,
+`https://t.me/<bot>?startapp=invite_<token>`, which needs the bot's **Main
+Mini App** turned on in BotFather (Bot Settings → Configure Mini App). To use
+a named app from `/newapp` instead, set `TELEGRAM_MINI_APP_NAME` to its short
+name and links become `t.me/<bot>/<app>?startapp=…`. Without a bot username
+the link is `PUBLIC_BASE_URL/?invite=<token>` (or the request's host), which
+the web app reads the same way, so invites can be tested in a browser.
+
+Shared cards carry the sender's invite: it is the button on the prepared
+Telegram message and is appended to the text when the app falls back to a
+plain link share. Accepting a link makes both people friends at once; either
+can remove the other, and `DELETE /api/v1/invite` retires a link that spread
+too far. The friends feed shows friends' verified visits from the last 30
+days with the coffee day only, never the time, and skips anyone who turned
+off "Show my café visits to friends".
+
 Local development, with Rails on port 3000:
 
 ```sh

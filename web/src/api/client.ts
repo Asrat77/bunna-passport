@@ -7,6 +7,10 @@ import type {
   CheckInInput,
   CityStats,
   Contribution,
+  FeedItem,
+  Friend,
+  Invite,
+  InvitePreview,
   LeaderboardEntry,
   LeaderboardMetric,
   LeaderboardPeriod,
@@ -266,7 +270,12 @@ export const api = {
     return request<User>("/profile");
   },
 
-  updateProfile(profile: { avatar_seed?: string | null; shares_cup_status?: boolean; daily_nudges?: boolean }) {
+  updateProfile(profile: {
+    avatar_seed?: string | null;
+    shares_cup_status?: boolean;
+    shares_visits?: boolean;
+    daily_nudges?: boolean;
+  }) {
     return request<User>("/profile", { method: "PATCH", body: { profile } });
   },
 
@@ -291,8 +300,39 @@ export const api = {
         period: params.period,
         metric: params.metric,
       },
-      anonymous: true,
+      // The friends board is yours, so it needs to know who you are.
+      anonymous: params.scope !== "friends",
     });
+  },
+
+  listFriends() {
+    return request<Friend[]>("/friends");
+  },
+
+  /** Accepting a link befriends both people at once. */
+  acceptInvite(invite_token: string) {
+    return request<Friend>("/friends", { method: "POST", body: { invite_token } });
+  },
+
+  removeFriend(id: OpaqueId) {
+    return request<void>(`/friends/${id}`, { method: "DELETE" });
+  },
+
+  getInvite() {
+    return request<Invite>("/invite");
+  },
+
+  /** Retires the current link for a new one; friends stay friends. */
+  rotateInvite() {
+    return request<Invite>("/invite", { method: "DELETE" });
+  },
+
+  previewInvite(token: string) {
+    return request<InvitePreview>(`/invites/${encodeURIComponent(token)}`);
+  },
+
+  getFeed(cursor?: OpaqueId) {
+    return request<FeedItem[]>("/feed", { query: { cursor } });
   },
 
   getPersonalStats() {

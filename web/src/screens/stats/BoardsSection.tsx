@@ -2,7 +2,7 @@ import { mdiChevronDown } from "@mdi/js";
 import { useMemo, useState } from "react";
 import type { LeaderboardEntry, LeaderboardMetric } from "@/api/types";
 import { doodleSeedFor, useMyDoodle } from "@/data/me";
-import { useCatalog, useLeaderboard, usePassport, useProfile } from "@/data/queries";
+import { useCatalog, useFriends, useLeaderboard, usePassport, useProfile } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
 import { Headline } from "@/ui/Headline";
@@ -12,7 +12,8 @@ import "./boards.css";
 const SHOWN_BELOW_PODIUM = 7;
 
 /**
- * This week's boards (DESIGN.md §6.5), the first section of Stats. Handles
+ * This week's boards (DESIGN.md §6.5), the first section of Stats: your
+ * neighbourhood, all Addis, or just you and your friends. Handles
  * only, never real names. A doodle is awake when that person has had a cup
  * today, unless they've chosen to keep it to themselves.
  */
@@ -22,7 +23,9 @@ export function BoardsSection() {
   const { data: passport } = usePassport();
   const catalog = useCatalog();
   const mine = useMyDoodle();
-  const [scope, setScope] = useState<"neighborhood" | "city">("neighborhood");
+  const { data: friends } = useFriends();
+  const hasFriends = (friends?.length ?? 0) > 0;
+  const [scope, setScope] = useState<"neighborhood" | "city" | "friends">("neighborhood");
   const [metric, setMetric] = useState<LeaderboardMetric>("cups");
 
   // Your board is your home neighbourhood, else wherever you last got a stamp.
@@ -34,15 +37,18 @@ export function BoardsSection() {
     return fromHome ?? shops.find((s) => s.id === newest)?.neighborhood;
   }, [catalog.data, profile, passport]);
 
-  const effectiveScope = scope === "neighborhood" && neighborhood ? "neighborhood" : "city";
+  const effectiveScope =
+    scope === "friends" && hasFriends ? "friends" : scope === "neighborhood" && neighborhood ? "neighborhood" : "city";
   const board = useLeaderboard({ scope: effectiveScope, neighborhoodId: neighborhood?.id, metric });
   const entries = board.data ?? [];
   const place =
-    effectiveScope === "neighborhood" && neighborhood
-      ? language === "am"
-        ? neighborhood.name_am
-        : neighborhood.name
-      : t("boards.city");
+    effectiveScope === "friends"
+      ? t("boards.friendsPlace")
+      : effectiveScope === "neighborhood" && neighborhood
+        ? language === "am"
+          ? neighborhood.name_am
+          : neighborhood.name
+        : t("boards.city");
   const me = profile ? entries.find((entry) => entry.user.id === profile.id) : undefined;
   const top = entries.slice(0, 3);
   const podium = [top[1], top[0], top[2]].filter(Boolean) as LeaderboardEntry[];
@@ -64,6 +70,11 @@ export function BoardsSection() {
           <button type="button" aria-pressed={effectiveScope === "city"} onClick={() => setScope("city")}>
             {t("boards.allAddis")}
           </button>
+          {hasFriends ? (
+            <button type="button" aria-pressed={effectiveScope === "friends"} onClick={() => setScope("friends")}>
+              {t("boards.friends")}
+            </button>
+          ) : null}
         </div>
         <label className="select-pill">
           <span className="visually-hidden">{t("boards.metric")}</span>

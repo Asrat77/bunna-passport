@@ -21,13 +21,15 @@ class Api::V1::ShareCardsController < Api::V1::BaseController
     doodle = ActiveModel::Type::Boolean.new.cast(params.fetch(:doodle, true))
     images = ShareCard::FORMATS.keys.index_with { |format| ShareImage.for!(check_in, format: format, doodle: doodle) }
     post_url = card_url(images.fetch("post"))
+    invite = invite_url(Current.user)
 
     render_data({
       check_in_id: check_in.id,
       doodle: doodle,
       post_url: post_url,
       story_url: card_url(images.fetch("story")),
-      prepared_message_id: prepare_message(images.fetch("post"), post_url)
+      invite_url: invite,
+      prepared_message_id: prepare_message(images.fetch("post"), post_url, invite)
     })
   end
 
@@ -51,16 +53,17 @@ class Api::V1::ShareCardsController < Api::V1::BaseController
     end
 
     # A photo message with the post card that the Mini App hands to
-    # shareMessage, so friends get the image itself rather than a link. Only
-    # for Telegram accounts; without it the app falls back to a share link.
-    def prepare_message(image, url)
+    # shareMessage, so friends get the image itself rather than a link. Its
+    # button is the sender's invite link, so every card shared is an invite.
+    # Only for Telegram accounts; without it the app falls back to a link.
+    def prepare_message(image, url, invite)
       return unless Current.user.telegram_user_id && Telegram::Bot.configured?
 
       result = { type: "photo", id: image.token, photo_url: url, thumbnail_url: url }
       caption = params[:caption].to_s.strip.first(CAPTION_LIMIT)
       result[:caption] = caption if caption.present?
-      if (username = ENV["TELEGRAM_BOT_USERNAME"].presence)
-        result[:reply_markup] = { inline_keyboard: [ [ { text: "Bunna Passport", url: "https://t.me/#{username.delete_prefix('@')}" } ] ] }
+      if ENV["TELEGRAM_BOT_USERNAME"].present?
+        result[:reply_markup] = { inline_keyboard: [ [ { text: "Join me on Bunna Passport ☕", url: invite } ] ] }
       end
 
       Telegram::Bot.new.save_prepared_inline_message(user_id: Current.user.telegram_user_id, result: result)

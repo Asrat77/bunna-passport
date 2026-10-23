@@ -47,6 +47,8 @@ env:
     SOLID_QUEUE_IN_PUMA: true
     # The bot's @username, printed as t.me/<name> on share cards. Optional.
     # TELEGRAM_BOT_USERNAME: bunnapassportbot
+    # Short name of a /newapp Mini App for invite links; unset uses the bot's Main Mini App.
+    # TELEGRAM_MINI_APP_NAME: passport
     # Where the bot's "Open" buttons go. Defaults to PUBLIC_BASE_URL.
     # TELEGRAM_MINI_APP_URL: https://bunna.example
 

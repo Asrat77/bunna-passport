@@ -110,7 +110,9 @@ class Api::V1::ShareCardsTest < ActionDispatch::IntegrationTest
     assert_equal "photo", result[:type]
     assert_equal data["post_url"], result[:photo_url]
     assert_equal "My stamp", result[:caption]
-    assert_equal "https://t.me/bunna_bot", result.dig(:reply_markup, :inline_keyboard, 0, 0, :url)
+    invite = "https://t.me/bunna_bot?startapp=invite_#{user.reload.invite_token}"
+    assert_equal invite, result.dig(:reply_markup, :inline_keyboard, 0, 0, :url)
+    assert_equal invite, data["invite_url"]
   end
 
   test "without Telegram there is no prepared message" do
@@ -149,14 +151,6 @@ class Api::V1::ShareCardsTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def with_env(values)
-      previous = values.to_h { |key, _value| [ key, ENV[key] ] }
-      values.each { |key, value| ENV[key] = value }
-      yield
-    ensure
-      previous.each { |key, value| ENV[key] = value }
-    end
-
     # Swaps the Bot API call for a recorder, so tests never reach Telegram.
     def capture_prepared_messages(raises: nil)
       sent = []

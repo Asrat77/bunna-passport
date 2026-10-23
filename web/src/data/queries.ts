@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import type { CatalogPage, LeaderboardMetric, LeaderboardScope, OpaqueId, Shop } from "@/api/types";
 import { useAuth } from "@/auth/AuthProvider";
@@ -86,7 +86,32 @@ export function useLeaderboard(params: {
           metric: params.metric,
         })
       ).data,
-    enabled: params.scope === "city" || params.neighborhoodId !== undefined,
+    enabled: params.scope !== "neighborhood" || params.neighborhoodId !== undefined,
+  });
+}
+
+export function useFriends() {
+  const enabled = useSignedIn();
+  return useQuery({ queryKey: ["friends"], queryFn: async () => (await api.listFriends()).data, enabled });
+}
+
+export function useInvite() {
+  const enabled = useSignedIn();
+  return useQuery({ queryKey: ["invite"], queryFn: async () => (await api.getInvite()).data, enabled, staleTime: Infinity });
+}
+
+/** Friends' visits, a page at a time. */
+export function useFeed() {
+  const enabled = useSignedIn();
+  return useInfiniteQuery({
+    queryKey: ["feed"],
+    queryFn: async ({ pageParam }) => {
+      const { data, meta } = await api.getFeed(pageParam);
+      return { items: data, nextCursor: (meta?.next_cursor as number | null | undefined) ?? undefined };
+    },
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (page) => page.nextCursor,
+    enabled,
   });
 }
 

@@ -225,10 +225,10 @@ function Settings({
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
-  async function toggleSharing(next: boolean) {
+  async function toggleSharing(change: { shares_cup_status: boolean } | { shares_visits: boolean }) {
     setSaving(true);
     try {
-      const { data } = await api.updateProfile({ shares_cup_status: next });
+      const { data } = await api.updateProfile(change);
       queryClient.setQueryData(["profile"], data);
       void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     } finally {
@@ -272,7 +272,22 @@ function Settings({
             role="switch"
             checked={profile.shares_cup_status}
             disabled={saving}
-            onChange={(event) => void toggleSharing(event.target.checked)}
+            onChange={(event) => void toggleSharing({ shares_cup_status: event.target.checked })}
+          />
+        </label>
+      ) : null}
+      {profile ? (
+        <label className="settings__row settings__toggle">
+          <span className="settings__text">
+            {t("passport.shareVisits")}
+            <span className="muted">{t("passport.shareVisitsHint")}</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={profile.shares_visits}
+            disabled={saving}
+            onChange={(event) => void toggleSharing({ shares_visits: event.target.checked })}
           />
         </label>
       ) : null}

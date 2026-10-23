@@ -11,6 +11,7 @@ import { Ceremony } from "./screens/Ceremony";
 import { ShareCard } from "./screens/ShareCard";
 import { CheckIn } from "./screens/checkin/CheckIn";
 import { Explore } from "./screens/Explore";
+import { Invite } from "./screens/Invite";
 import { MapScreen } from "./screens/map/MapScreen";
 import { Passport } from "./screens/passport/Passport";
 import { Shop } from "./screens/Shop";
@@ -18,6 +19,7 @@ import { SignIn } from "./screens/SignIn";
 import { Stats } from "./screens/Stats";
 import { Studio } from "./screens/Studio";
 import { Welcome } from "./screens/Welcome";
+import { takeLaunchInvite } from "./lib/invite";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
 import { SchemeContext, useColorScheme } from "./telegram/theme";
@@ -84,7 +86,13 @@ function Gate() {
 }
 
 function Screens() {
-  const { route } = useNavigation();
+  const { route, push } = useNavigation();
+
+  // Opened from a friend's invite link: ask about it over Explore.
+  useEffect(() => {
+    const token = takeLaunchInvite();
+    if (token) push({ name: "invite", token });
+  }, [push]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -107,6 +115,8 @@ function Screens() {
       return <ShareCard target={route.target} shopName={route.shopName} />;
     case "studio":
       return <Studio />;
+    case "invite":
+      return <Invite token={route.token} />;
     case "map":
       return <MapScreen />;
     case "cafes":
