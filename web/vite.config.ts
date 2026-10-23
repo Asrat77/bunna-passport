@@ -13,6 +13,10 @@ export default defineConfig({
     port: 5173,
     // Rails only answers its own host in development, hence changeOrigin.
     proxy: { "/api": { target: process.env.API_ORIGIN ?? "http://localhost:3000", changeOrigin: true } },
+    // Leave CORS to Rails (rack-cors). Vite's own CORS answers every preflight
+    // itself with a 204 that only allows localhost, so a front end on another
+    // origin (the Appwrite site) could never reach the API through this proxy.
+    cors: false,
   },
   test: {
     environment: "node",
