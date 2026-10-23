@@ -30,6 +30,8 @@ export type User = {
   /** Server-computed against the 04:00 Addis coffee day. */
   had_cup_today: boolean;
   shares_cup_status: boolean;
+  /** Whether friends see this person's verified visits in their feed. */
+  shares_visits: boolean;
   joined_at: Timestamp;
 };
 
@@ -174,6 +176,8 @@ export type ShareCards = {
   post_url: string;
   /** 1080 × 1920, for Telegram, Instagram and TikTok stories. */
   story_url: string;
+  /** The sender's invite link; also the button on the prepared message. */
+  invite_url: string;
   /** For Telegram's shareMessage; null outside Telegram accounts. */
   prepared_message_id: string | null;
 };
@@ -225,7 +229,7 @@ export type Contribution = {
   created_at: Timestamp;
 };
 
-export type LeaderboardScope = "city" | "neighborhood";
+export type LeaderboardScope = "city" | "neighborhood" | "friends";
 export type LeaderboardPeriod = "week" | "month" | "all_time";
 export type LeaderboardMetric = "cups" | "shops";
 
@@ -317,4 +321,39 @@ export type CityStats = {
   top_drinks: StatsDrink[];
   price_bands: Record<"budget" | "standard" | "premium" | "splurge", number>;
   generated_at: Timestamp;
+};
+
+/** Someone the viewer is friends with: a doodle and a handle, nothing more. */
+export type Friend = {
+  id: OpaqueId;
+  handle: string;
+  display_name: string;
+  avatar_seed: string | null;
+  /** null when they've turned off sharing it. */
+  had_cup_today: boolean | null;
+  stamps_count: number;
+  verified_check_ins_count: number;
+};
+
+/** GET /invite. */
+export type Invite = { token: string; url: string; friends_count: number };
+
+/** GET /invites/{token}: who sent the link that was just opened. */
+export type InvitePreview = { inviter: Friend; own: boolean; already_friends: boolean };
+
+/**
+ * A friend's verified visit. It names the coffee day, never the time, so the
+ * feed can't say where someone is right now.
+ */
+export type FeedItem = {
+  id: OpaqueId;
+  user: Friend;
+  shop: { id: OpaqueId; name: string; name_am: string; neighborhood: Neighborhood };
+  /** YYYY-MM-DD, the Addis coffee day (starting 04:00). */
+  coffee_day: string;
+  stamp_earned: boolean;
+  stamp_level: StampLevel | null;
+  drink: string | null;
+  rating: number | null;
+  note: string | null;
 };
