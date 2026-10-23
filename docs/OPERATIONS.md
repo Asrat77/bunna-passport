@@ -293,7 +293,21 @@ in. The Docker image installs `librsvg2-bin` and the fonts in
 librsvg` on macOS, then copy the fonts into `~/Library/Fonts`) and run
 `bin/rails bunna:sample_share_cards`, which writes both sizes to
 `tmp/share_cards`. Set `TELEGRAM_BOT_USERNAME` to print `t.me/<bot>` in the
-card footer.
+card footer and add a button to it on shared messages.
+`POST /api/v1/shops/:shop_id/share_cards` does the same for the visit that
+earned the caller's stamp at a shop.
+
+For Telegram accounts the API also saves a prepared photo message with the
+Bot API (`savePreparedInlineMessage`, using `TELEGRAM_BOT_TOKEN`) and returns
+its id, which the Mini App passes to `shareMessage` so the card itself lands
+in the chat. If that call fails the cards are still returned and the app
+falls back to sharing the card's link.
+
+Card URLs must be reachable by Telegram's servers over HTTPS. They are built
+from the request's host unless `PUBLIC_BASE_URL` is set (for example
+`https://mac.tail498795.ts.net`), which is needed whenever Rails sits behind a
+proxy that rewrites the host, such as the Vite dev server. The dev server
+proxies `/cards` to Rails as well as `/api`.
 
 Local development, with Rails on port 3000:
 
