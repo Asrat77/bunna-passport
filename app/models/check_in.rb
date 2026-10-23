@@ -8,6 +8,7 @@ class CheckIn < ApplicationRecord
   DAILY_LIMIT = 8
   MAX_SPEED_KPH = 120
   NEW_ACCOUNT_LIMIT = 3
+  FEED_WINDOW = 30.days
 
   belongs_to :user
   belongs_to :shop
@@ -38,6 +39,16 @@ class CheckIn < ApplicationRecord
       .where("rating IS NOT NULL OR (note IS NOT NULL AND TRIM(note) != '')")
       .reverse_chronologically
   }
+
+  # The friends feed: verified visits by this person's friends who share
+  # them, over the last month. Newest first by id, which the cursor pages on.
+  def self.friend_feed_for(user, now: Time.current)
+    verified
+      .where(user_id: user.friendships.select(:friend_id))
+      .where(user_id: User.where(shares_visits: true).select(:id))
+      .where(occurred_at: (now - FEED_WINDOW)..now)
+      .order(id: :desc)
+  end
 
   def self.rating_average
     average = rated.average(:rating)

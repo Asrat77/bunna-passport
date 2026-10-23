@@ -26,8 +26,36 @@ module Api::V1::Rendering
         avatar_seed: user.avatar_seed,
         had_cup_today: user.had_cup_today?,
         shares_cup_status: user.shares_cup_status,
+        shares_visits: user.shares_visits,
         joined_at: user.created_at.iso8601
       }
+    end
+
+    # Someone else as a friend sees them: the doodle and handle, never an
+    # email or a Telegram id.
+    def friend_json(user, cup_today_ids)
+      {
+        id: user.id,
+        handle: user.handle,
+        display_name: user.display_name,
+        avatar_seed: user.avatar_seed,
+        had_cup_today: user.public_cup_status(cup_today_ids),
+        stamps_count: user.stamps_count,
+        verified_check_ins_count: user.verified_check_ins_count
+      }
+    end
+
+    # Where a friend lands from an invite: the bot's Mini App with the token
+    # as its start parameter, or this site when there's no bot yet.
+    def invite_url(user)
+      token = user.invite_token!
+      if (bot = ENV["TELEGRAM_BOT_USERNAME"].presence&.delete_prefix("@"))
+        app = ENV["TELEGRAM_MINI_APP_NAME"].presence
+        "https://t.me/#{[ bot, app ].compact.join('/')}?startapp=invite_#{token}"
+      else
+        base = ENV["PUBLIC_BASE_URL"].presence || request.base_url
+        "#{base.delete_suffix('/')}/?invite=#{token}"
+      end
     end
 
     def shop_json(shop, detailed: false)

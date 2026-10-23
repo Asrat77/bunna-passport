@@ -44,7 +44,7 @@ class Api::V1::ActivityReadsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal user.handle, response_json.dig("data", 0, "user", "handle")
 
-    get api_v1_leaderboards_path, params: { scope: "friends" }, as: :json
+    get api_v1_leaderboards_path, params: { scope: "everyone" }, as: :json
     assert_response :bad_request
 
     get api_v1_leaderboards_path, params: { period: "year" }, as: :json
