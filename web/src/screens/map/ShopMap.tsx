@@ -14,6 +14,8 @@ let protocolAdded = false;
 /**
  * The shop map: self-hosted Addis tiles through the pmtiles:// protocol, a
  * pin per café (filled once stamped, dashed until then) and your position.
+ * A new style URL (the phone switching light or dark) restyles the same map,
+ * so the pins and the view stay put.
  */
 export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   const { t } = useI18n();
@@ -23,6 +25,7 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   const { fix } = useLocation();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const appliedStyle = useRef(styleUrl);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
     try {
       map.current = new maplibregl.Map({
         container: container.current,
-        style: styleUrl,
+        style: appliedStyle.current,
         center: ADDIS,
         zoom: 13,
         attributionControl: { compact: true },
@@ -47,6 +50,12 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
       map.current?.remove();
       map.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    if (!map.current || styleUrl === appliedStyle.current) return;
+    appliedStyle.current = styleUrl;
+    map.current.setStyle(styleUrl);
   }, [styleUrl]);
 
   useEffect(() => {
