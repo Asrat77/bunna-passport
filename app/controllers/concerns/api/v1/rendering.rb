@@ -26,6 +26,7 @@ module Api::V1::Rendering
         avatar_seed: user.avatar_seed,
         had_cup_today: user.had_cup_today?,
         shares_cup_status: user.shares_cup_status,
+        daily_nudges: user.daily_nudges,
         joined_at: user.created_at.iso8601
       }
     end

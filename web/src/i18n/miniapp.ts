@@ -230,6 +230,8 @@ export const miniappEn = {
   "passport.language": "Language",
   "passport.shareCupStatus": "Show friends when I've had a cup",
   "passport.shareCupStatusHint": "Only that you've had one today. Never where or when.",
+  "passport.dailyNudges": "Afternoon nudge from the bot",
+  "passport.dailyNudgesHint": "One message on days you haven't had a cup yet.",
 
   "boards.thisWeekIn": "This week in",
   "boards.place": "{place}.",
@@ -582,6 +584,8 @@ export const miniappAm: Record<MiniappKey, string> = {
   "passport.language": "ቋንቋ",
   "passport.shareCupStatus": "ቡና ስጠጣ ለጓደኞች አሳይ",
   "passport.shareCupStatusHint": "ዛሬ መጠጣትዎን ብቻ። የትና መቼ በፍጹም።",
+  "passport.dailyNudges": "ከሰዓት በኋላ ከቦቱ ማስታወሻ",
+  "passport.dailyNudgesHint": "ቡና ባልጠጡበት ቀን አንድ መልዕክት ብቻ።",
 
   "boards.thisWeekIn": "በዚህ ሳምንት በ",
   "boards.place": "{place}።",

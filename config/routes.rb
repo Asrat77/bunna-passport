@@ -67,6 +67,9 @@ Rails.application.routes.draw do
   # Public on purpose: the unguessable token is the only key.
   get "cards/:token", to: "share_images#show", as: :share_image, constraints: { format: "png" }
 
+  # The bot's webhook. Telegram proves itself with a secret header.
+  post "telegram/webhook", to: "telegram/webhooks#create", as: :telegram_webhook
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check

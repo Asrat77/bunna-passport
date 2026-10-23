@@ -30,6 +30,8 @@ export type User = {
   /** Server-computed against the 04:00 Addis coffee day. */
   had_cup_today: boolean;
   shares_cup_status: boolean;
+  /** Whether the bot sends the afternoon "had a cup?" nudge. */
+  daily_nudges: boolean;
   joined_at: Timestamp;
 };
 

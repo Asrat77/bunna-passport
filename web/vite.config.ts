@@ -15,10 +15,12 @@ export default defineConfig({
     // (*.ts.net) is how Telegram reaches this dev server.
     allowedHosts: [".ts.net"],
     // Rails only answers its own host in development, hence changeOrigin.
-    // /cards serves the share card images Telegram fetches through the tunnel.
+    // /cards serves the share card images Telegram fetches through the tunnel,
+    // and /telegram the bot's webhook when one points here.
     proxy: {
       "/api": { target: process.env.API_ORIGIN ?? "http://localhost:3000", changeOrigin: true },
       "/cards": { target: process.env.API_ORIGIN ?? "http://localhost:3000", changeOrigin: true },
+      "/telegram": { target: process.env.API_ORIGIN ?? "http://localhost:3000", changeOrigin: true },
     },
     // Leave CORS to Rails (rack-cors). Vite's own CORS answers every preflight
     // itself with a 204 that only allows localhost, so a front end on another
