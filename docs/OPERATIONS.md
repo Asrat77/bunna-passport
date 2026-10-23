@@ -335,6 +335,59 @@ Build-time settings (`web/.env.example`):
 Checks before a release: `npm run build` (type-checks, then bundles) and
 `npm test` in `web/`.
 
+### The bot
+
+The bot answers in private chats only:
+
+- `/start` (and anything else typed) creates the account if needed and replies
+  with a welcome and an **Open Bunna Passport** button. A `/start` payload is
+  ignored; invite links open the Mini App directly with `startapp`.
+- `/nudges_off` and `/nudges_on` switch the daily nudge. The Mini App's
+  Passport settings has the same switch inside Telegram (`daily_nudges` on
+  the profile).
+- Every afternoon at 15:00 Addis (`send_daily_nudges` in
+  `config/recurring.yml`, so production only), anyone who started the bot,
+  kept nudges on and hasn't had a cup this coffee day (from 04:00 Addis) gets
+  one "Had a cup today?" message with **Check in** and **Stop daily nudges**
+  buttons. `users.last_nudged_at` keeps it to one a day.
+- A counted visit that presses a new stamp or takes one to silver, gold or
+  diamond sends a message, including when a moderator verifies a flagged
+  visit later.
+
+A bot may only write to someone who started it, so `users.telegram_chat_started_at`
+is set on `/start` and cleared when Telegram reports the bot blocked (a 403
+or a `my_chat_member` update). Messages are English for now.
+
+The buttons open `TELEGRAM_MINI_APP_URL`, or `PUBLIC_BASE_URL` when that is
+unset. Telegram only accepts HTTPS there; without one the bot still talks but
+shows no button.
+
+**Production** takes updates on `POST /telegram/webhook`, which only accepts
+requests carrying `TELEGRAM_WEBHOOK_SECRET` in Telegram's secret header (set
+it in `.kamal/secrets`; letters, digits, `_` and `-`). After a deploy, point
+the bot there once:
+
+```sh
+bin/kamal app exec 'bin/rails bunna:telegram:set_webhook URL=https://<host>/telegram/webhook'
+```
+
+That also registers the command list and the chat's menu button.
+
+**Development** without a public URL: run long polling next to the server. It
+removes any webhook first, since Telegram allows only one of the two.
+
+```sh
+TELEGRAM_BOT_TOKEN=... PUBLIC_BASE_URL=https://mac.tail498795.ts.net bin/rails server
+TELEGRAM_BOT_TOKEN=... PUBLIC_BASE_URL=https://mac.tail498795.ts.net bin/rails bunna:telegram:poll
+```
+
+Stamp messages go out from the server process, so both need the token. To
+send the nudge without waiting for the afternoon:
+`bin/rails bunna:telegram:nudge HANDLE=<you> FORCE=1` (it still skips anyone
+who has had a cup today). A webhook through the tunnel works too, since the
+Vite dev server proxies `/telegram`: set `TELEGRAM_WEBHOOK_SECRET` on the
+server and run `bin/rails bunna:telegram:set_webhook`.
+
 ### Addis map
 
 The map is static files in a public R2 bucket, `bunna-map`, so it needs no
