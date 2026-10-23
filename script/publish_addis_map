@@ -22,6 +22,8 @@
 #   MAP_BBOX     min lon,min lat,max lon,max lat (default greater Addis)
 #   MAP_MAXZOOM  default 15
 #   MAP_STAGING  where files are built (default $TMPDIR/bunna-map)
+#   MAP_STYLES_ONLY=addis-<date>.pmtiles
+#                rebuild and upload only the styles, for tiles already up
 set -euo pipefail
 
 : "${MAP_R2_ENDPOINT:?Set MAP_R2_ENDPOINT to https://<account id>.r2.cloudflarestorage.com}"
@@ -42,7 +44,31 @@ bbox="${MAP_BBOX:-38.60,8.80,38.95,9.15}"
 maxzoom="${MAP_MAXZOOM:-15}"
 tmp="${TMPDIR:-/tmp}"
 staging="${MAP_STAGING:-${tmp%/}/bunna-map}"
-tiles="addis-$build.pmtiles"
+tiles="${MAP_STYLES_ONLY:-addis-$build.pmtiles}"
+
+export RCLONE_CONFIG_BUNNAMAP_TYPE=s3
+export RCLONE_CONFIG_BUNNAMAP_PROVIDER=Cloudflare
+export RCLONE_CONFIG_BUNNAMAP_ENDPOINT="$endpoint"
+export RCLONE_CONFIG_BUNNAMAP_ACCESS_KEY_ID="$MAP_R2_ACCESS_KEY_ID"
+export RCLONE_CONFIG_BUNNAMAP_SECRET_ACCESS_KEY="$MAP_R2_SECRET_ACCESS_KEY"
+export RCLONE_CONFIG_BUNNAMAP_NO_CHECK_BUCKET=true
+remote="bunnamap:$MAP_R2_BUCKET"
+public="${MAP_PUBLIC_URL%/}"
+
+if [[ -n "${MAP_STYLES_ONLY:-}" ]]; then
+  if ! rclone lsl "$remote/$tiles" --s3-no-head >/dev/null 2>&1; then
+    echo "$tiles is not in $MAP_R2_BUCKET; publish tiles first" >&2
+    exit 1
+  fi
+  echo "== Building styles for $tiles"
+  rm -rf "$staging/styles"
+  (cd web && node scripts/map-style.mjs "$MAP_PUBLIC_URL" "$tiles" "$staging/styles")
+  echo "== Uploading styles to $MAP_R2_BUCKET"
+  rclone copy "$staging/styles" "$remote" --s3-no-head \
+    --header-upload "Cache-Control: public, max-age=300"
+  echo "Styles updated for $tiles. Apps pick them up within five minutes."
+  exit 0
+fi
 
 echo "== Cutting Addis from Protomaps build $build into $staging"
 rm -rf "$staging"
@@ -64,14 +90,6 @@ cp "$staging/assets/sprites/v4/"* "$staging/site/sprites/v4/"
 echo "== Building styles"
 (cd web && node scripts/map-style.mjs "$MAP_PUBLIC_URL" "$tiles" "$staging/styles")
 
-export RCLONE_CONFIG_BUNNAMAP_TYPE=s3
-export RCLONE_CONFIG_BUNNAMAP_PROVIDER=Cloudflare
-export RCLONE_CONFIG_BUNNAMAP_ENDPOINT="$endpoint"
-export RCLONE_CONFIG_BUNNAMAP_ACCESS_KEY_ID="$MAP_R2_ACCESS_KEY_ID"
-export RCLONE_CONFIG_BUNNAMAP_SECRET_ACCESS_KEY="$MAP_R2_SECRET_ACCESS_KEY"
-export RCLONE_CONFIG_BUNNAMAP_NO_CHECK_BUCKET=true
-remote="bunnamap:$MAP_R2_BUCKET"
-
 # Tiles, fonts and sprites never change under a name, so browsers may keep
 # them. The styles go last and stay short-lived, so a refresh only takes
 # effect once its tiles are already up. R2 lacks the read-back rclone checks
@@ -89,7 +107,6 @@ if [[ "$stored" != "$expected" ]]; then
   exit 1
 fi
 
-public="${MAP_PUBLIC_URL%/}"
 echo "Uploaded $tiles ($expected bytes). Older addis-*.pmtiles can go once nobody has the old style cached (a day is plenty)."
 echo "Set in web/.env, then rebuild:"
 echo "VITE_MAP_STYLE_URL=$public/style-light.json"

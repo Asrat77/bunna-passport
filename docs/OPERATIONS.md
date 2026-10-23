@@ -342,4 +342,6 @@ It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the two
 styles pointing at the new tiles, and prints the two `VITE_MAP_STYLE*` lines
 for `web/.env`. Those URLs stay the same across refreshes, so only the first
 run needs a rebuild. Delete older `addis-*.pmtiles` a day after a refresh.
-Re-cut every few months. The colours live in `web/scripts/map-style.mjs`.
+Re-cut every few months. The colours live in `web/scripts/map-style.mjs`;
+after changing them, `MAP_STYLES_ONLY=addis-<date>.pmtiles script/publish_addis_map`
+uploads just the two styles for the tiles already in the bucket.
