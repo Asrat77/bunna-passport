@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+#
+# Builds and uploads the Mini App's Addis basemap to its public R2 bucket:
+# an Addis cut of the Protomaps OpenStreetMap build, the light and dark
+# styles from web/scripts/map-style.mjs, and the fonts and sprites those
+# styles use. Rerun it to refresh the map; each run uploads a dated tiles
+# file and only then repoints the styles at it.
+#
+# Usage: script/publish_addis_map
+#
+# Needs pmtiles, rclone, git and node (brew install pmtiles rclone).
+#
+# Required environment:
+#   MAP_R2_ENDPOINT           https://<account id>.r2.cloudflarestorage.com
+#   MAP_R2_BUCKET             e.g. bunna-map
+#   MAP_R2_ACCESS_KEY_ID      R2 token with write access to that bucket
+#   MAP_R2_SECRET_ACCESS_KEY
+#   MAP_PUBLIC_URL            the bucket's public URL, e.g. https://pub-<id>.r2.dev
+#
+# Optional:
+#   MAP_BUILD    Protomaps build date, YYYYMMDD (default yesterday, UTC)
+#   MAP_BBOX     min lon,min lat,max lon,max lat (default greater Addis)
+#   MAP_MAXZOOM  default 15
+#   MAP_STAGING  where files are built (default $TMPDIR/bunna-map)
+#   MAP_STYLES_ONLY=addis-<date>.pmtiles
+#                rebuild and upload only the styles, for tiles already up
+set -euo pipefail
+
+: "${MAP_R2_ENDPOINT:?Set MAP_R2_ENDPOINT to https://<account id>.r2.cloudflarestorage.com}"
+: "${MAP_R2_BUCKET:?Set MAP_R2_BUCKET}"
+: "${MAP_R2_ACCESS_KEY_ID:?Set MAP_R2_ACCESS_KEY_ID}"
+: "${MAP_R2_SECRET_ACCESS_KEY:?Set MAP_R2_SECRET_ACCESS_KEY}"
+: "${MAP_PUBLIC_URL:?Set MAP_PUBLIC_URL to the public r2.dev URL of the bucket}"
+
+cd "$(dirname "$0")/.."
+
+# Cloudflare shows the S3 endpoint with the bucket on the end; rclone wants
+# the bare host.
+endpoint="$(printf '%s' "$MAP_R2_ENDPOINT" | sed -E 's#^(https://[^/]+).*#\1#')"
+
+build="${MAP_BUILD:-$(date -u -v-1d +%Y%m%d 2>/dev/null || date -u -d yesterday +%Y%m%d)}"
+# Covers the city and the edge neighbourhoods (Shola Gebeya, the outer sub-cities).
+bbox="${MAP_BBOX:-38.60,8.80,38.95,9.15}"
+maxzoom="${MAP_MAXZOOM:-15}"
+tmp="${TMPDIR:-/tmp}"
+staging="${MAP_STAGING:-${tmp%/}/bunna-map}"
+tiles="${MAP_STYLES_ONLY:-addis-$build.pmtiles}"
+
+export RCLONE_CONFIG_BUNNAMAP_TYPE=s3
+export RCLONE_CONFIG_BUNNAMAP_PROVIDER=Cloudflare
+export RCLONE_CONFIG_BUNNAMAP_ENDPOINT="$endpoint"
+export RCLONE_CONFIG_BUNNAMAP_ACCESS_KEY_ID="$MAP_R2_ACCESS_KEY_ID"
+export RCLONE_CONFIG_BUNNAMAP_SECRET_ACCESS_KEY="$MAP_R2_SECRET_ACCESS_KEY"
+export RCLONE_CONFIG_BUNNAMAP_NO_CHECK_BUCKET=true
+remote="bunnamap:$MAP_R2_BUCKET"
+public="${MAP_PUBLIC_URL%/}"
+
+if [[ -n "${MAP_STYLES_ONLY:-}" ]]; then
+  if ! rclone lsl "$remote/$tiles" --s3-no-head >/dev/null 2>&1; then
+    echo "$tiles is not in $MAP_R2_BUCKET; publish tiles first" >&2
+    exit 1
+  fi
+  echo "== Building styles for $tiles"
+  rm -rf "$staging/styles"
+  (cd web && node scripts/map-style.mjs "$MAP_PUBLIC_URL" "$tiles" "$staging/styles")
+  echo "== Uploading styles to $MAP_R2_BUCKET"
+  rclone copy "$staging/styles" "$remote" --s3-no-head \
+    --header-upload "Cache-Control: public, max-age=300"
+  echo "Styles updated for $tiles. Apps pick them up within five minutes."
+  exit 0
+fi
+
+echo "== Cutting Addis from Protomaps build $build into $staging"
+rm -rf "$staging"
+mkdir -p "$staging/site/fonts" "$staging/site/sprites/v4"
+
+pmtiles extract "https://build.protomaps.com/$build.pmtiles" "$staging/site/$tiles" \
+  --bbox="$bbox" --maxzoom="$maxzoom"
+
+echo "== Fetching fonts and sprites"
+# Only the three font stacks and two sprite sheets the styles reference.
+git clone --quiet --depth 1 --filter=blob:none --sparse \
+  https://github.com/protomaps/basemaps-assets.git "$staging/assets"
+git -C "$staging/assets" sparse-checkout set --no-cone \
+  "/fonts/Noto Sans Regular/" "/fonts/Noto Sans Medium/" "/fonts/Noto Sans Italic/" "/fonts/OFL.txt" \
+  "/sprites/v4/light*" "/sprites/v4/dark*"
+cp -R "$staging/assets/fonts/." "$staging/site/fonts/"
+cp "$staging/assets/sprites/v4/"* "$staging/site/sprites/v4/"
+
+echo "== Building styles"
+(cd web && node scripts/map-style.mjs "$MAP_PUBLIC_URL" "$tiles" "$staging/styles")
+
+# Tiles, fonts and sprites never change under a name, so browsers may keep
+# them. The styles go last and stay short-lived, so a refresh only takes
+# effect once its tiles are already up. R2 lacks the read-back rclone checks
+# uploads with; see script/backup_offsite.
+echo "== Uploading to $MAP_R2_BUCKET"
+rclone copy "$staging/site" "$remote" --s3-no-head --stats 30s --stats-one-line -v \
+  --header-upload "Cache-Control: public, max-age=31536000, immutable"
+rclone copy "$staging/styles" "$remote" --s3-no-head \
+  --header-upload "Cache-Control: public, max-age=300"
+
+expected="$(wc -c < "$staging/site/$tiles" | tr -d ' ')"
+stored="$(rclone lsl "$remote/$tiles" | awk '{print $1}')" || stored=""
+if [[ "$stored" != "$expected" ]]; then
+  echo "Tiles upload did not land: expected $expected bytes, found '${stored:-nothing}'" >&2
+  exit 1
+fi
+
+echo "Uploaded $tiles ($expected bytes). Older addis-*.pmtiles can go once nobody has the old style cached (a day is plenty)."
+echo "Set in web/.env, then rebuild:"
+echo "VITE_MAP_STYLE_URL=$public/style-light.json"
+echo "VITE_MAP_STYLE_DARK_URL=$public/style-dark.json"
