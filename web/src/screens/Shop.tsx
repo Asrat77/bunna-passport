@@ -69,7 +69,9 @@ function ShopBody({
   const area = language === "am" ? shop.neighborhood.name_am : shop.neighborhood.name;
   const areaShops = (catalog.data ?? []).filter((s) => s.neighborhood.id === shop.neighborhood.id);
   const areaStamped = areaShops.filter((s) => stamps.has(s.id)).length;
-  const stamp = shop.stamp;
+  // The shop is fetched without signing in (it's cached for everyone), so the
+  // viewer's own stamp comes from their passport.
+  const stamp = shop.stamp ?? stamps.get(shop.id) ?? null;
 
   const statusText =
     status === "open" ? t("shop.openNow") : status === "closingSoon" ? t("shop.closingSoon") : status === "closed" ? t("shop.closedNow") : null;
