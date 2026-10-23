@@ -295,7 +295,51 @@ Build-time settings (`web/.env.example`):
 | --- | --- |
 | `VITE_API_BASE_URL` | API root when it isn't same-origin `/api/v1` |
 | `VITE_MAP_STYLE_URL` | MapLibre style for the self-hosted Addis PMTiles; unset hides the map |
+| `VITE_MAP_STYLE_DARK_URL` | The dark style, used when the phone is in dark mode; falls back to the light one |
 | `VITE_SHARE_URL` | Link a shared stamp points to, such as `https://t.me/<bot>/<app>` |
 
 Checks before a release: `npm run build` (type-checks, then bundles) and
 `npm test` in `web/`.
+
+### Addis map
+
+The map is static files in a public R2 bucket, `bunna-map`, so it needs no
+app server. The browser reads one `.pmtiles` file with range requests, plus
+two styles and the fonts and sprites they use. The tiles are an Addis cut of
+the Protomaps OpenStreetMap build; the attribution button credits OSM, as its
+licence requires.
+
+One-time setup in the Cloudflare dashboard (same account as `bunna-photos`):
+
+1. **R2 Object Storage → Create bucket** `bunna-map`.
+2. **Bucket → Settings → Public access → R2.dev subdomain → Allow.** The
+   `https://pub-….r2.dev` URL it shows is `MAP_PUBLIC_URL`. Cloudflare
+   rate-limits r2.dev (throttling starts around hundreds of requests a second)
+   and doesn't cache it; connect a custom domain instead once there's real
+   traffic, then republish with that as `MAP_PUBLIC_URL`.
+3. **Bucket → Settings → CORS policy:**
+
+   ```json
+   [{"AllowedOrigins":["*"],"AllowedMethods":["GET","HEAD"],"AllowedHeaders":["range","if-match"],"ExposeHeaders":["etag"],"MaxAgeSeconds":3000}]
+   ```
+
+4. **Manage API tokens → Create API token,** Object Read & Write, scoped to
+   `bunna-map` only. It is used only to upload from a laptop; never put it in
+   `web/.env`, whose `VITE_` values end up in the public page.
+
+To publish or refresh the map (`brew install pmtiles rclone`):
+
+```sh
+export MAP_R2_ENDPOINT=https://<account id>.r2.cloudflarestorage.com
+export MAP_R2_BUCKET=bunna-map
+export MAP_R2_ACCESS_KEY_ID=...
+export MAP_R2_SECRET_ACCESS_KEY=...
+export MAP_PUBLIC_URL=https://pub-<id>.r2.dev
+script/publish_addis_map
+```
+
+It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the two
+styles pointing at the new tiles, and prints the two `VITE_MAP_STYLE*` lines
+for `web/.env`. Those URLs stay the same across refreshes, so only the first
+run needs a rebuild. Delete older `addis-*.pmtiles` a day after a refresh.
+Re-cut every few months. The colours live in `web/scripts/map-style.mjs`.
