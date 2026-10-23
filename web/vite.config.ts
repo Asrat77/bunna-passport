@@ -11,6 +11,9 @@ export default defineConfig({
     // Telegram loads the Mini App over HTTPS from a tunnel, so listen beyond localhost.
     host: true,
     port: 5173,
+    // Vite refuses requests for hosts it doesn't know. Tailscale Funnel
+    // (*.ts.net) is how Telegram reaches this dev server.
+    allowedHosts: [".ts.net"],
     // Rails only answers its own host in development, hence changeOrigin.
     // /cards serves the share card images Telegram fetches through the tunnel.
     proxy: {
