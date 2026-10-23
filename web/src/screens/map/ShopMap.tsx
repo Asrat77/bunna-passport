@@ -1,5 +1,6 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import * as maplibregl from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { Protocol } from "pmtiles";
 import { useEffect, useRef, useState } from "react";
 import { useCatalog } from "@/data/queries";
@@ -10,6 +11,11 @@ import { useNavigation } from "@/nav/Navigation";
 
 const ADDIS: [number, number] = [38.7578, 9.0301];
 let protocolAdded = false;
+
+// MapLibre finds its worker next to its own module, which Vite moves when it
+// bundles it (and pre-bundles it in dev), so point it at the emitted copy.
+// Without a worker no tile is ever parsed and only the background shows.
+maplibregl.setWorkerUrl(workerUrl);
 
 /**
  * The shop map: self-hosted Addis tiles through the pmtiles:// protocol, a
