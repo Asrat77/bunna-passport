@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       # A bare verb rather than :update, which would also route PUT and oblige
       # the contract to document a method nothing calls.
       patch "check_ins/:id", to: "check_ins#update", as: :check_in
+      post "check_ins/:check_in_id/share_cards", to: "share_cards#create", as: :check_in_share_cards
       resource :passport, only: :show
       resource :profile, only: :show
       # PATCH only, for the same reason as check_ins above.
@@ -60,6 +61,10 @@ Rails.application.routes.draw do
     resources :shop_batches, only: %i[ new create ]
     resources :users, only: %i[ index show update ]
   end
+
+  # Rendered share cards, fetched by Telegram and by phones saving the image.
+  # Public on purpose: the unguessable token is the only key.
+  get "cards/:token", to: "share_images#show", as: :share_image, constraints: { format: "png" }
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

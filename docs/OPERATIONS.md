@@ -273,8 +273,27 @@ sign-in answers `401 invalid_init_data`; email sign-in keeps working.
 
 The app calls `/api/v1` on its own origin unless `VITE_API_BASE_URL` is set
 at build time. Serve the built `web/dist` from the same host as the API (or
-behind the same proxy). A different origin would need CORS, which the API does
-not enable.
+behind the same proxy). A front end on another origin, such as the Appwrite
+site, needs that origin in `CORS_ORIGINS` (comma-separated, default
+`https://bunna-passport.appwrite.network`) and `VITE_API_BASE_URL` set to the
+API's full `/api/v1` URL in its build. CORS covers `/api/*` only and never
+allows cookies; the API uses bearer tokens.
+
+The bot token belongs to the API only. Never put it in a `VITE_` variable:
+those are compiled into the public JavaScript.
+
+### Share cards
+
+`POST /api/v1/check_ins/:check_in_id/share_cards` renders a stamp's share
+cards (a 1080 x 1350 post and a 1080 x 1920 story) with `rsvg-convert` and
+stores them through Active Storage, so on R2 in production. They are served
+publicly at `/cards/:token.png`, because Telegram fetches them without signing
+in. The Docker image installs `librsvg2-bin` and the fonts in
+`vendor/fonts/share_card`; to render locally, install the same (`brew install
+librsvg` on macOS, then copy the fonts into `~/Library/Fonts`) and run
+`bin/rails bunna:sample_share_cards`, which writes both sizes to
+`tmp/share_cards`. Set `TELEGRAM_BOT_USERNAME` to print `t.me/<bot>` in the
+card footer.
 
 Local development, with Rails on port 3000:
 

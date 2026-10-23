@@ -76,10 +76,13 @@ jobs:
     #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips librsvg2-bin fontconfig
 
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Install share card fonts
+        run: mkdir -p ~/.local/share/fonts && cp vendor/fonts/share_card/*.woff ~/.local/share/fonts/ && fc-cache -f
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

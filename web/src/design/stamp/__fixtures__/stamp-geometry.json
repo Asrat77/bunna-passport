@@ -1,0 +1,26 @@
+{
+ "nameFontSize": {
+  "Tomoca": 25,
+  "Kaldi's Coffee": 13.800000000000002,
+  "Alem Bunna": 19.166666666666668,
+  "ቶሞካ": 25,
+  "Garden of Coffee Bole Atlas Branch": 5.750000000000001,
+  "A": 25
+ },
+ "inkNoiseSeed": {
+  "Tomoca": 86,
+  "Kaldi's Coffee": 69,
+  "Alem Bunna": 71,
+  "ቶሞካ": 58,
+  "Garden of Coffee Bole Atlas Branch": 30,
+  "A": 60
+ },
+ "stampRotation": {
+  "1": -7.5,
+  "17": 10.4,
+  "204": -1.9,
+  "1573": -2.1,
+  "99999": -4.5,
+  "shop-9": 3.1
+ }
+}
