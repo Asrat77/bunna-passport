@@ -16,6 +16,9 @@ class User < ApplicationRecord
   has_many :awards, dependent: :destroy
   has_many :badges, through: :awards
   has_many :reports, dependent: :restrict_with_exception
+  has_many :friendships, dependent: :delete_all
+  has_many :friends, through: :friendships
+  has_many :inverse_friendships, class_name: "Friendship", foreign_key: :friend_id, dependent: :delete_all
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 
@@ -93,6 +96,27 @@ class User < ApplicationRecord
   # What friends may see on a board: nil once someone has opted out.
   def public_cup_status(cup_today_ids)
     shares_cup_status? ? cup_today_ids.include?(id) : nil
+  end
+
+  # Everyone on this person's friends board: their friends and themselves.
+  def friend_ids_with_self
+    friendships.pluck(:friend_id) << id
+  end
+
+  # The key in this person's invite link, made the first time they ask.
+  def invite_token!
+    return invite_token if invite_token.present?
+
+    update!(invite_token: SecureRandom.base58(16))
+    invite_token
+  rescue ActiveRecord::RecordNotUnique
+    retry
+  end
+
+  # Revokes the old link, for one that reached people it shouldn't have.
+  def rotate_invite_token!
+    update!(invite_token: nil)
+    invite_token!
   end
 
   def can_review?

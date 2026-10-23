@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -123,6 +123,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
     t.index ["user_id", "created_at"], name: "index_contributions_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_contributions_on_user_id"
     t.check_constraint "status IN ('pending', 'approved', 'rejected', 'auto_approved')", name: "contributions_status"
+  end
+
+  create_table "friendships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "friend_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["friend_id"], name: "index_friendships_on_friend_id"
+    t.index ["user_id", "friend_id"], name: "index_friendships_on_user_id_and_friend_id", unique: true
+    t.index ["user_id"], name: "index_friendships_on_user_id"
+    t.check_constraint "user_id != friend_id", name: "friendships_not_self"
   end
 
   create_table "leaderboard_entries", force: :cascade do |t|
@@ -318,8 +329,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
     t.string "email_address"
     t.string "handle", null: false
     t.bigint "home_neighborhood_id"
+    t.string "invite_token"
     t.string "password_digest"
     t.boolean "shares_cup_status", default: true, null: false
+    t.boolean "shares_visits", default: true, null: false
     t.integer "stamps_count", default: 0, null: false
     t.bigint "telegram_user_id"
     t.string "trust_level", default: "newcomer", null: false
@@ -328,6 +341,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
+    t.index ["invite_token"], name: "index_users_on_invite_token", unique: true
     t.index ["telegram_user_id"], name: "index_users_on_telegram_user_id", unique: true
     t.check_constraint "email_address IS NOT NULL OR telegram_user_id IS NOT NULL", name: "users_have_a_sign_in"
     t.check_constraint "trust_level IN ('newcomer', 'regular', 'curator', 'moderator')", name: "users_trust_level"
@@ -344,6 +358,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
   add_foreign_key "contribution_confirmations", "users"
   add_foreign_key "contributions", "users"
   add_foreign_key "contributions", "users", column: "reviewed_by_id"
+  add_foreign_key "friendships", "users"
+  add_foreign_key "friendships", "users", column: "friend_id"
   add_foreign_key "leaderboard_entries", "users"
   add_foreign_key "reports", "users"
   add_foreign_key "reports", "users", column: "reviewed_by_id"
