@@ -20,6 +20,11 @@ production:
     args: [ all_time ]
     schedule: every hour
 
+  # Afternoon buna time in Addis. Only people whose doodle is still asleep.
+  send_daily_nudges:
+    class: SendDailyNudgesJob
+    schedule: "0 15 * * * Africa/Addis_Ababa"
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
