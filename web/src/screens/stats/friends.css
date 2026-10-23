@@ -1,0 +1,151 @@
+/* Invite */
+.invite-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--accent-soft);
+}
+
+.invite-card__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.invite-card__body {
+  margin: 0;
+  font-size: 14px;
+}
+
+.invite-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invite-card__action {
+  height: 48px;
+  font-size: 15px;
+}
+
+.invite-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.invite-card__note {
+  font-size: 12.5px;
+  color: var(--primary);
+}
+
+.invite-card__rotate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* Feed */
+.friends-feed,
+.friend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feed-day__label {
+  margin: 0;
+}
+
+.feed-rows {
+  margin: 0;
+  padding: 2px 6px;
+  list-style: none;
+}
+
+.feed-rows li + li {
+  border-top: 1px solid var(--border);
+}
+
+.feed-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.feed-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feed-row__line {
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+.feed-row__meta {
+  font-size: 12px;
+}
+
+.feed-row__note {
+  font-size: 13px;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.feed-row__badge {
+  align-self: center;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.friends-feed__more {
+  align-self: center;
+}
+
+/* Friend list */
+.friend-list__remove {
+  min-height: 36px;
+  padding: 0 4px;
+  font-size: 12.5px;
+}
+
+.friend-list__confirm {
+  display: flex;
+  gap: 6px;
+}
+
+.friend-list__confirm .pill-button {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.pill-button--danger {
+  border-color: var(--caution);
+  color: var(--caution);
+}
