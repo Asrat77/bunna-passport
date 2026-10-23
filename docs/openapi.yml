@@ -618,6 +618,12 @@ paths:
                       doodle: { type: boolean }
                       post_url: { type: string, format: uri }
                       story_url: { type: string, format: uri }
+                      invite_url:
+                        type: string
+                        format: uri
+                        description: >
+                          The caller's invite link. Also the button on the
+                          prepared message, so a shared card invites friends.
                       prepared_message_id:
                         type: string
                         nullable: true
@@ -684,6 +690,12 @@ paths:
                       doodle: { type: boolean }
                       post_url: { type: string, format: uri }
                       story_url: { type: string, format: uri }
+                      invite_url:
+                        type: string
+                        format: uri
+                        description: >
+                          The caller's invite link. Also the button on the
+                          prepared message, so a shared card invites friends.
                       prepared_message_id:
                         type: string
                         nullable: true
