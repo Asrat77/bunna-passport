@@ -166,6 +166,18 @@ export type CheckIn = {
   stamp_level: StampLevel | null;
 };
 
+/** The rendered share cards for one stamp (POST …/share_cards). */
+export type ShareCards = {
+  check_in_id: OpaqueId;
+  doodle: boolean;
+  /** 1080 × 1350, for chats and feeds. */
+  post_url: string;
+  /** 1080 × 1920, for Telegram, Instagram and TikTok stories. */
+  story_url: string;
+  /** For Telegram's shareMessage; null outside Telegram accounts. */
+  prepared_message_id: string | null;
+};
+
 export type Review = {
   id: OpaqueId;
   user: { id: OpaqueId; handle: string; display_name: string };

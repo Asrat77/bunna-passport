@@ -8,6 +8,7 @@ import { LocationProvider } from "./location/LocationProvider";
 import { NavigationProvider, useNavigation } from "./nav/Navigation";
 import { AllCafes } from "./screens/AllCafes";
 import { Ceremony } from "./screens/Ceremony";
+import { ShareCard } from "./screens/ShareCard";
 import { CheckIn } from "./screens/checkin/CheckIn";
 import { Explore } from "./screens/Explore";
 import { MapScreen } from "./screens/map/MapScreen";
@@ -102,6 +103,8 @@ function Screens() {
       return <CheckIn shopId={route.shopId} />;
     case "ceremony":
       return <Ceremony checkIn={route.checkIn} wasAwake={route.wasAwake} />;
+    case "share":
+      return <ShareCard target={route.target} shopName={route.shopName} />;
     case "studio":
       return <Studio />;
     case "map":

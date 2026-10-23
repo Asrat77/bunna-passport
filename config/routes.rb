@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       # the contract to document a method nothing calls.
       patch "check_ins/:id", to: "check_ins#update", as: :check_in
       post "check_ins/:check_in_id/share_cards", to: "share_cards#create", as: :check_in_share_cards
+      post "shops/:shop_id/share_cards", to: "share_cards#create", as: :shop_share_cards
       resource :passport, only: :show
       resource :profile, only: :show
       # PATCH only, for the same reason as check_ins above.

@@ -575,7 +575,8 @@ paths:
         The URLs are public and unguessable, because Telegram fetches them
         without signing in; the cards carry no name, handle or time of day.
         Someone else's check-in is not found, and a flagged or rejected one
-        has no stamp to share.
+        has no stamp to share. With a bot token configured, a Telegram
+        account also gets a prepared message to send the card to any chat.
       parameters:
         - name: check_in_id
           in: path
@@ -592,6 +593,12 @@ paths:
                   type: boolean
                   default: true
                   description: Draw the caller's doodle on the card
+                caption:
+                  type: string
+                  maxLength: 300
+                  description: >
+                    Caption for the Telegram message, in the caller's
+                    language. Longer text is cut.
       responses:
         "200":
           description: Where to fetch the two cards
@@ -609,6 +616,80 @@ paths:
                       doodle: { type: boolean }
                       post_url: { type: string, format: uri }
                       story_url: { type: string, format: uri }
+                      prepared_message_id:
+                        type: string
+                        nullable: true
+                        description: >
+                          A prepared Telegram message carrying the post card,
+                          for the Mini App's shareMessage. Null for accounts
+                          not signed in with Telegram, or when the bot is not
+                          configured.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /shops/{shop_id}/share_cards:
+    post:
+      tags: [Activity]
+      operationId: createShopShareCards
+      summary: Render the share cards for the stamp at a shop
+      description: >
+        Same as createShareCards, for the verified visit that earned the
+        caller's stamp at this shop, so a stamp can be shared from the shop
+        page long after the visit. Not found when the caller has no verified
+        visit there.
+      parameters:
+        - name: shop_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doodle:
+                  type: boolean
+                  default: true
+                  description: Draw the caller's doodle on the card
+                caption:
+                  type: string
+                  maxLength: 300
+                  description: >
+                    Caption for the Telegram message, in the caller's
+                    language. Longer text is cut.
+      responses:
+        "200":
+          description: Where to fetch the two cards
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [check_in_id, doodle, post_url, story_url]
+                    properties:
+                      check_in_id: { $ref: "#/components/schemas/OpaqueId" }
+                      doodle: { type: boolean }
+                      post_url: { type: string, format: uri }
+                      story_url: { type: string, format: uri }
+                      prepared_message_id:
+                        type: string
+                        nullable: true
+                        description: >
+                          A prepared Telegram message carrying the post card,
+                          for the Mini App's shareMessage. Null for accounts
+                          not signed in with Telegram, or when the bot is not
+                          configured.
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":

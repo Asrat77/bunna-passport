@@ -1,4 +1,4 @@
-import { mdiCheck, mdiMapMarkerOutline } from "@mdi/js";
+import { mdiCheck, mdiMapMarkerOutline, mdiShareVariantOutline } from "@mdi/js";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
 import { useCatalog, useReviews, useShop } from "@/data/queries";
@@ -61,6 +61,7 @@ function ShopBody({
   language: string;
 }) {
   const { t } = useI18n();
+  const { push } = useNavigation();
   const { fix } = useLocation();
   const catalog = useCatalog();
   const stamps = useStampsByShop();
@@ -69,7 +70,9 @@ function ShopBody({
   const area = language === "am" ? shop.neighborhood.name_am : shop.neighborhood.name;
   const areaShops = (catalog.data ?? []).filter((s) => s.neighborhood.id === shop.neighborhood.id);
   const areaStamped = areaShops.filter((s) => stamps.has(s.id)).length;
-  const stamp = shop.stamp;
+  // The shop is fetched without signing in (it's cached for everyone), so the
+  // viewer's own stamp comes from their passport.
+  const stamp = shop.stamp ?? stamps.get(shop.id) ?? null;
 
   const statusText =
     status === "open" ? t("shop.openNow") : status === "closingSoon" ? t("shop.closingSoon") : status === "closed" ? t("shop.closedNow") : null;
@@ -111,6 +114,12 @@ function ShopBody({
             </>
           ) : null}
         </span>
+        {stamp ? (
+          <button type="button" className="shop__share" onClick={() => push({ name: "share", target: { shopId: shop.id }, shopName: shop.name })}>
+            <Icon path={mdiShareVariantOutline} size={18} />
+            {t("shop.shareStamp")}
+          </button>
+        ) : null}
       </header>
 
       <StatStrip
