@@ -66,6 +66,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Load .env (R2 credentials and the like) into bin/dev and bin/rails
+  gem "dotenv"
 end
 
 group :test do

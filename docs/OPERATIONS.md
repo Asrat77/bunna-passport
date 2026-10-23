@@ -228,9 +228,10 @@ that cannot store photos. To deploy before R2 is ready, set
 `ACTIVE_STORAGE_SERVICE=local` in the deploy env and drop the four `R2_*`
 entries from `config/deploy.yml`.
 
-Development stays on local disk. To try R2 from a laptop, create a second
-bucket (`bunna-photos-dev`) and token the same way, export the four variables
-with that bucket, and start the server with `ACTIVE_STORAGE_SERVICE=r2`.
+Development stores new uploads on local disk. To try R2 from a laptop, put
+the four `R2_*` variables in `.env` (gitignored; development loads it
+automatically) and set `ACTIVE_STORAGE_SERVICE=r2` there too. Once any blobs
+have been moved to R2, development needs those variables to show them.
 
 `script/backup` archives only the local volume, so photos in R2 are not in the
 nightly backup. Scraped catalog photos can be re-imported; user uploads cannot,
