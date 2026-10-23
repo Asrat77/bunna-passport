@@ -2,8 +2,8 @@
 #
 # Builds and uploads the Mini App's Addis basemap to its public R2 bucket:
 # an Addis cut of the Protomaps OpenStreetMap build, the light and dark
-# styles from web/scripts/map-style.mjs, and the fonts and sprites those
-# styles use. Rerun it to refresh the map; each run uploads a dated tiles
+# styles (English and Amharic) from web/scripts/map-style.mjs, and the fonts
+# and sprites those styles use. Rerun it to refresh the map; each run uploads a dated tiles
 # file and only then repoints the styles at it.
 #
 # Usage: script/publish_addis_map
@@ -16,6 +16,7 @@
 #   MAP_R2_ACCESS_KEY_ID      R2 token with write access to that bucket
 #   MAP_R2_SECRET_ACCESS_KEY
 #   MAP_PUBLIC_URL            the bucket's public URL, e.g. https://pub-<id>.r2.dev
+#                             or its custom domain, e.g. https://map.<domain>
 #
 # Optional:
 #   MAP_BUILD    Protomaps build date, YYYYMMDD (default yesterday, UTC)
@@ -30,7 +31,7 @@ set -euo pipefail
 : "${MAP_R2_BUCKET:?Set MAP_R2_BUCKET}"
 : "${MAP_R2_ACCESS_KEY_ID:?Set MAP_R2_ACCESS_KEY_ID}"
 : "${MAP_R2_SECRET_ACCESS_KEY:?Set MAP_R2_SECRET_ACCESS_KEY}"
-: "${MAP_PUBLIC_URL:?Set MAP_PUBLIC_URL to the public r2.dev URL of the bucket}"
+: "${MAP_PUBLIC_URL:?Set MAP_PUBLIC_URL to the bucket's public URL (r2.dev or custom domain)}"
 
 cd "$(dirname "$0")/.."
 

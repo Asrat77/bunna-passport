@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Writes the Addis map's two MapLibre styles, style-light.json and
- * style-dark.json, for script/publish_addis_map to upload next to the tiles.
- * They start from the Protomaps light and dark flavours, recoloured to the
- * app palette (styles/tokens.css), with English labels and OSM landmarks but
- * not OSM's cafés, so the only café pins are ours. Fonts and sprites are
- * expected beside the styles on the same bucket, so the map never calls
- * anyone else's server.
+ * Writes the Addis map's MapLibre styles for script/publish_addis_map to
+ * upload next to the tiles: style-light.json and style-dark.json for English,
+ * style-light-am.json and style-dark-am.json for Amharic. They start from the
+ * Protomaps light and dark flavours, recoloured to the app palette
+ * (styles/tokens.css), with OSM landmarks but not OSM's cafés, so the only
+ * café pins are ours. Fonts and sprites are expected beside the styles on the
+ * same bucket, so the map never calls anyone else's server.
  *
  * Usage: node scripts/map-style.mjs <public base URL> <tiles file name> <out dir>
  *   e.g. node scripts/map-style.mjs https://pub-abc.r2.dev addis-20261023.pmtiles dist-map
@@ -117,10 +117,42 @@ function withoutOsmCafes(layer) {
   return { ...layer, filter: ["all", layer.filter, ["!=", ["get", "kind"], "cafe"]] };
 }
 
-function style(name, flavor) {
+/**
+ * The Amharic label: OSM's name:am, or the plain name when it is already
+ * written in fidel (most Addis names are), with the English name underneath
+ * when there is one that differs, the mirror of the English styles, which
+ * Protomaps already gives a fidel second line. Names with no Amharic at all
+ * stay English rather than vanish.
+ */
+const amharicName = [
+  "let",
+  "am",
+  ["coalesce", ["get", "name:am"], ["case", ["==", ["get", "script"], "Ethiopic"], ["get", "name"], null]],
+  "en",
+  ["coalesce", ["get", "name:en"], ["get", "name"]],
+  [
+    "case",
+    ["==", ["var", "am"], null],
+    ["format", ["var", "en"], {}],
+    ["any", ["==", ["var", "en"], null], ["==", ["var", "am"], ["var", "en"]]],
+    ["format", ["var", "am"], {}],
+    ["format", ["var", "am"], {}, "\n", {}, ["var", "en"], { "font-scale": 0.8 }],
+  ],
+];
+
+/** Swaps every name label (not house numbers or road shields) to Amharic. */
+function inAmharic(layer) {
+  const field = layer.layout?.["text-field"];
+  if (layer.type !== "symbol" || !JSON.stringify(field ?? null).includes('"name:en"')) return layer;
+  return { ...layer, layout: { ...layer.layout, "text-field": amharicName } };
+}
+
+function style(name, flavor, language) {
+  let mapLayers = layers("protomaps", flavor, { lang: "en" }).map(withoutOsmCafes);
+  if (language === "am") mapLayers = mapLayers.map(inAmharic);
   return {
     version: 8,
-    name: `Bunna Addis ${name}`,
+    name: `Bunna Addis ${name}${language === "am" ? " Amharic" : ""}`,
     glyphs: `${base}/fonts/{fontstack}/{range}.pbf`,
     sprite: `${base}/sprites/v4/${name}`,
     sources: {
@@ -131,13 +163,15 @@ function style(name, flavor) {
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       },
     },
-    layers: layers("protomaps", flavor, { lang: "en" }).map(withoutOsmCafes),
+    layers: mapLayers,
   };
 }
 
 mkdirSync(outDir, { recursive: true });
 for (const [name, flavor] of [["light", light], ["dark", dark]]) {
-  const path = join(outDir, `style-${name}.json`);
-  writeFileSync(path, `${JSON.stringify(style(name, flavor))}\n`);
-  console.log(`Wrote ${path}`);
+  for (const language of ["en", "am"]) {
+    const path = join(outDir, `style-${name}${language === "am" ? "-am" : ""}.json`);
+    writeFileSync(path, `${JSON.stringify(style(name, flavor, language))}\n`);
+    console.log(`Wrote ${path}`);
+  }
 }

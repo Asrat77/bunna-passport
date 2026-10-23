@@ -330,6 +330,10 @@ Build-time settings (`web/.env.example`):
 | `VITE_API_BASE_URL` | API root when it isn't same-origin `/api/v1` |
 | `VITE_MAP_STYLE_URL` | MapLibre style for the self-hosted Addis PMTiles; unset hides the map |
 | `VITE_MAP_STYLE_DARK_URL` | The dark style, used when the phone is in dark mode; falls back to the light one |
+
+People reading the app in Amharic get the `-am` twin of whichever style
+applies (`style-light-am.json` beside `style-light.json`), so there is no
+separate setting for it.
 | `VITE_SHARE_URL` | Link a shared stamp points to, such as `https://t.me/<bot>/<app>` |
 
 Checks before a release: `npm run build` (type-checks, then bundles) and
@@ -339,7 +343,10 @@ Checks before a release: `npm run build` (type-checks, then bundles) and
 
 The map is static files in a public R2 bucket, `bunna-map`, so it needs no
 app server. The browser reads one `.pmtiles` file with range requests, plus
-two styles and the fonts and sprites they use. The tiles are an Addis cut of
+a style and the fonts and sprites it uses. There are four styles, light and
+dark in English and in Amharic. English labels carry the fidel name on a
+second line where OSM has one; Amharic labels lead with fidel and carry the
+English name underneath, and fall back to English where OSM has no Amharic. The tiles are an Addis cut of
 the Protomaps OpenStreetMap build; the attribution button credits OSM, as its
 licence requires.
 
@@ -349,8 +356,8 @@ One-time setup in the Cloudflare dashboard (same account as `bunna-photos`):
 2. **Bucket → Settings → Public access → R2.dev subdomain → Allow.** The
    `https://pub-….r2.dev` URL it shows is `MAP_PUBLIC_URL`. Cloudflare
    rate-limits r2.dev (throttling starts around hundreds of requests a second)
-   and doesn't cache it; connect a custom domain instead once there's real
-   traffic, then republish with that as `MAP_PUBLIC_URL`.
+   and doesn't cache it; move to a custom domain (below) once there's real
+   traffic.
 3. **Bucket → Settings → CORS policy:**
 
    ```json
@@ -372,10 +379,34 @@ export MAP_PUBLIC_URL=https://pub-<id>.r2.dev
 script/publish_addis_map
 ```
 
-It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the two
+It uploads `addis-<build date>.pmtiles`, the fonts and sprites, then the four
 styles pointing at the new tiles, and prints the two `VITE_MAP_STYLE*` lines
 for `web/.env`. Those URLs stay the same across refreshes, so only the first
 run needs a rebuild. Delete older `addis-*.pmtiles` a day after a refresh.
 Re-cut every few months. The colours live in `web/scripts/map-style.mjs`;
 after changing them, `MAP_STYLES_ONLY=addis-<date>.pmtiles script/publish_addis_map`
-uploads just the two styles for the tiles already in the bucket.
+uploads just the styles for the tiles already in the bucket.
+
+#### Custom domain for the map
+
+A custom domain puts the map behind Cloudflare's cache and out of r2.dev's
+rate limit. The domain has to be a zone on the same Cloudflare account
+(nameservers pointed at Cloudflare).
+
+1. **R2 → `bunna-map` → Settings → Custom Domains → Connect Domain,** for
+   example `map.<your domain>`. Cloudflare adds the DNS record and
+   certificate; wait until the domain shows **Active**. The bucket's CORS
+   policy applies to it as is.
+2. Rewrite the styles so their tiles, fonts and sprites come from the new
+   host (the tiles and fonts themselves don't move):
+
+   ```sh
+   MAP_PUBLIC_URL=https://map.<your domain> \
+   MAP_STYLES_ONLY=addis-<date>.pmtiles script/publish_addis_map
+   ```
+
+3. Set the printed `VITE_MAP_STYLE_URL` and `VITE_MAP_STYLE_DARK_URL` in
+   `web/.env`, rebuild and redeploy `web/dist`.
+4. Once nobody runs an older build (a day or two), turn the r2.dev subdomain
+   off under **Public access**. Until then old builds keep working, because
+   r2.dev serves the same files.
