@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import shared from "./__fixtures__/stamp-geometry.json";
 import { inkNoiseSeed, nameFontSize, stampDate, stampRotation } from "./geometry";
 
 describe("ink stamp geometry", () => {
@@ -22,6 +23,20 @@ describe("ink stamp geometry", () => {
       expect(Math.abs(rotation)).toBeLessThanOrEqual(12);
     }
     expect(new Set(keys.map(stampRotation)).size).toBeGreaterThan(50);
+  });
+
+  // The server-rendered share card (app/models/share_card/ink_stamp.rb) checks
+  // the same fixture, so the card prints the stamp the ceremony showed.
+  it("matches the fixture the share card renderer is tested against", () => {
+    for (const [name, size] of Object.entries(shared.nameFontSize)) {
+      expect(nameFontSize(name.toUpperCase())).toBe(size);
+    }
+    for (const [name, seed] of Object.entries(shared.inkNoiseSeed)) {
+      expect(inkNoiseSeed(name)).toBe(seed);
+    }
+    for (const [key, rotation] of Object.entries(shared.stampRotation)) {
+      expect(stampRotation(key)).toBe(rotation);
+    }
   });
 
   it("prints dates like a rubber stamp", () => {
