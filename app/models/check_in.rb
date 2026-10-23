@@ -13,6 +13,7 @@ class CheckIn < ApplicationRecord
   belongs_to :shop
   has_one :stamp, foreign_key: :first_check_in_id, dependent: :restrict_with_exception
   has_one_attached :photo
+  has_many :share_images, dependent: :destroy
 
   enum :status, {
     verified: "verified",

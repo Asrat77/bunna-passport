@@ -564,6 +564,60 @@ paths:
         "429":
           $ref: "#/components/responses/RateLimited"
 
+  /check_ins/{check_in_id}/share_cards:
+    post:
+      tags: [Activity]
+      operationId: createShareCards
+      summary: Render the share cards for a stamp
+      description: >
+        Renders, or reuses, the two share card images for one of the caller's
+        own verified check-ins: a 1080 x 1350 post and a 1080 x 1920 story.
+        The URLs are public and unguessable, because Telegram fetches them
+        without signing in; the cards carry no name, handle or time of day.
+        Someone else's check-in is not found, and a flagged or rejected one
+        has no stamp to share.
+      parameters:
+        - name: check_in_id
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doodle:
+                  type: boolean
+                  default: true
+                  description: Draw the caller's doodle on the card
+      responses:
+        "200":
+          description: Where to fetch the two cards
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [check_in_id, doodle, post_url, story_url]
+                    properties:
+                      check_in_id: { $ref: "#/components/schemas/OpaqueId" }
+                      doodle: { type: boolean }
+                      post_url: { type: string, format: uri }
+                      story_url: { type: string, format: uri }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   /passport:
     get:
       tags: [Activity]

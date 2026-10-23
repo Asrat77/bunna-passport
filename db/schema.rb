@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_060000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -191,6 +191,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "share_images", force: :cascade do |t|
+    t.integer "check_in_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "doodle", default: true, null: false
+    t.string "format", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version", null: false
+    t.index ["check_in_id", "format", "doodle"], name: "index_share_images_on_check_in_id_and_format_and_doodle", unique: true
+    t.index ["check_in_id"], name: "index_share_images_on_check_in_id"
+    t.index ["token"], name: "index_share_images_on_token", unique: true
+  end
+
   create_table "shop_edits", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "previous_values", default: {}, null: false
@@ -335,6 +348,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_150000) do
   add_foreign_key "reports", "users"
   add_foreign_key "reports", "users", column: "reviewed_by_id"
   add_foreign_key "sessions", "users"
+  add_foreign_key "share_images", "check_ins"
   add_foreign_key "shop_edits", "shops"
   add_foreign_key "shop_hours", "shops"
   add_foreign_key "shop_hours", "users", column: "confirmed_by_id"
