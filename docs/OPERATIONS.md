@@ -273,8 +273,11 @@ sign-in answers `401 invalid_init_data`; email sign-in keeps working.
 
 The app calls `/api/v1` on its own origin unless `VITE_API_BASE_URL` is set
 at build time. Serve the built `web/dist` from the same host as the API (or
-behind the same proxy). A different origin would need CORS, which the API does
-not enable.
+behind the same proxy). A front end on another origin, such as the Appwrite
+site, needs that origin in `CORS_ORIGINS` (comma-separated, default
+`https://bunna-passport.appwrite.network`) and `VITE_API_BASE_URL` set to the
+API's full `/api/v1` URL in its build. CORS covers `/api/*` only and never
+allows cookies; the API uses bearer tokens.
 
 The bot token belongs to the API only. Never put it in a `VITE_` variable:
 those are compiled into the public JavaScript.
