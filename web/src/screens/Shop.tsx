@@ -1,4 +1,4 @@
-import { mdiCheck, mdiMapMarkerOutline } from "@mdi/js";
+import { mdiCheck, mdiMapMarkerOutline, mdiShareVariantOutline } from "@mdi/js";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
 import { useCatalog, useReviews, useShop } from "@/data/queries";
@@ -61,6 +61,7 @@ function ShopBody({
   language: string;
 }) {
   const { t } = useI18n();
+  const { push } = useNavigation();
   const { fix } = useLocation();
   const catalog = useCatalog();
   const stamps = useStampsByShop();
@@ -113,6 +114,12 @@ function ShopBody({
             </>
           ) : null}
         </span>
+        {stamp ? (
+          <button type="button" className="shop__share" onClick={() => push({ name: "share", target: { shopId: shop.id }, shopName: shop.name })}>
+            <Icon path={mdiShareVariantOutline} size={18} />
+            {t("shop.shareStamp")}
+          </button>
+        ) : null}
       </header>
 
       <StatStrip

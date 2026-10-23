@@ -102,6 +102,21 @@
   color: var(--on-primary);
 }
 
+.shop__share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch);
+  padding: 0 16px;
+  margin-top: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--raised);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .getting-there__maps {
   display: inline-flex;
   align-items: center;

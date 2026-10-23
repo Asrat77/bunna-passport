@@ -1,0 +1,63 @@
+.share-card__preview {
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+}
+
+/* The 4:5 post card, held at its shape while it draws. */
+.share-card__preview img,
+.share-card__skeleton {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border-radius: calc(var(--radius-card) - 6px);
+}
+
+.share-card__failed {
+  aspect-ratio: 4 / 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px;
+  text-align: center;
+}
+
+.share-card__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch);
+}
+
+.share-card__toggle-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.share-card__toggle-text .muted {
+  font-size: 12.5px;
+}
+
+.share-card__toggle input {
+  width: 46px;
+  height: 28px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.share-card__more {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.share-card__hint {
+  margin: 0;
+  font-size: 12.5px;
+  text-align: center;
+}

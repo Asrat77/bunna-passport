@@ -15,6 +15,7 @@ import type {
   Passport,
   PersonalStats,
   Review,
+  ShareCards,
   Shop,
   ShopDetail,
   SignupInput,
@@ -29,6 +30,9 @@ import type {
  */
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+
+/** A stamp to share: by the visit that earned it, or by its shop. */
+export type ShareTarget = { checkInId: OpaqueId } | { shopId: OpaqueId };
 
 /**
  * Where the Rails API lives. Same origin by default: the dev server proxies
@@ -327,6 +331,20 @@ export const api = {
     return request<CheckIn>(`/check_ins/${id}`, {
       method: "PATCH",
       body: { check_in: saying },
+    });
+  },
+
+  /**
+   * Renders, or reuses, the share cards for a stamp: by the visit that earned
+   * it, or by its shop. `caption` goes on the Telegram message.
+   */
+  createShareCards(target: ShareTarget, options: { doodle: boolean; caption?: string }) {
+    const path = "checkInId" in target ? `/check_ins/${target.checkInId}/share_cards` : `/shops/${target.shopId}/share_cards`;
+    return request<ShareCards>(path, {
+      method: "POST",
+      body: options,
+      // Drawing the cards the first time takes a few seconds.
+      timeoutMs: 30_000,
     });
   },
 

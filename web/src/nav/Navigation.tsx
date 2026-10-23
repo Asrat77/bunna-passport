@@ -1,4 +1,5 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from "react";
+import type { ShareTarget } from "@/api/client";
 import type { CheckIn, OpaqueId } from "@/api/types";
 import type { ShopFilter } from "@/data/nearby";
 
@@ -9,6 +10,7 @@ export type Route =
   | { name: "shop"; id: OpaqueId }
   | { name: "checkin"; shopId?: OpaqueId }
   | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
+  | { name: "share"; target: ShareTarget; shopName: string }
   | { name: "studio" }
   | { name: "map" }
   | { name: "cafes"; query?: string; filter?: ShopFilter };

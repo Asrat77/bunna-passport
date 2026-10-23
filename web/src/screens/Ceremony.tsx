@@ -8,7 +8,6 @@ import { nextLevel, visitsToNextLevel } from "@/design/seal/levels";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { stampDate, stampRotation } from "@/design/stamp/geometry";
 import { useI18n } from "@/i18n/context";
-import { shareStamp } from "@/lib/share";
 import { useNavigation } from "@/nav/Navigation";
 import { PrimaryAction, SecondaryAction } from "@/telegram/buttons";
 import { hapticSuccess } from "@/telegram/haptics";
@@ -21,6 +20,9 @@ const SKIPPABLE_AFTER_MS = 800;
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
+/** Check-ins whose ceremony already played, so coming back from sharing doesn't press the stamp again. */
+const celebrated = new Set<number>();
+
 /**
  * The stamp ceremony for a first visit, and the compact "+1 cup" tick for a
  * repeat one. The doodle card only appears on the first cup of the coffee
@@ -28,15 +30,17 @@ const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce
  */
 export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: boolean }) {
   const { t, language, ordinal } = useI18n();
-  const { switchTab } = useNavigation();
+  const { switchTab, push } = useNavigation();
   const { data: passport } = usePassport();
   const catalog = useCatalog();
   const doodle = useMyDoodle();
-  const [phase, setPhase] = useState<"pressing" | "settled">(reducedMotion() ? "settled" : "pressing");
+  const [replay] = useState(() => celebrated.has(checkIn.id));
+  const [phase, setPhase] = useState<"pressing" | "settled">(replay || reducedMotion() ? "settled" : "pressing");
   const [canSkip, setCanSkip] = useState(false);
 
   useEffect(() => {
-    hapticSuccess();
+    celebrated.add(checkIn.id);
+    if (!replay) hapticSuccess();
     if (phase === "settled") return;
     const skip = window.setTimeout(() => setCanSkip(true), SKIPPABLE_AFTER_MS);
     const settle = window.setTimeout(() => setPhase("settled"), 1600);
@@ -59,7 +63,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
   const upcoming = nextLevel(visits);
   const firstCupToday = !wasAwake;
   const done = () => switchTab("passport");
-  const share = () => void shareStamp(t("ceremony.shareText", { shop: checkIn.shop.name }));
+  const share = () => push({ name: "share", target: { checkInId: checkIn.id }, shopName: checkIn.shop.name });
 
   const doodleCard = firstCupToday ? (
     <div className="card ceremony__doodle">
