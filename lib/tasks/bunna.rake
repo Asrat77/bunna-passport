@@ -130,4 +130,20 @@ namespace :bunna do
 
     puts "Moved #{moved} blobs from #{from} to #{to}; #{missing} missing on #{from}; #{blobs.count} still on #{from}"
   end
+
+  desc "Render sample share cards (post and story) to a folder, default tmp/share_cards"
+  task :sample_share_cards, [ :dir ] => :environment do |_, args|
+    dir = Pathname(args[:dir].presence || Rails.root.join("tmp/share_cards"))
+    dir.mkpath
+    neighborhood = Neighborhood.new(name: "Piassa", name_am: "ፒያሳ")
+    shop = Shop.new(id: 17, name: "Tomoca", name_am: "ቶሞካ", neighborhood: neighborhood)
+    user = User.new(avatar_seed: "abebe")
+    check_in = CheckIn.new(shop: shop, user: user, occurred_at: Time.current)
+
+    ShareCard::FORMATS.each_key do |format|
+      path = dir.join("share-card-#{format}.png")
+      path.binwrite(ShareCard.new(check_in, format: format).to_png)
+      puts "Wrote #{path}"
+    end
+  end
 end
