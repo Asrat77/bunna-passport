@@ -1,4 +1,3 @@
-import { mdiShuffle } from "@mdi/js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/api/client";
@@ -10,6 +9,7 @@ import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { hapticSelection, hapticSuccess } from "@/telegram/haptics";
+import { bpShuffle } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./studio.css";
@@ -73,7 +73,7 @@ export function Studio() {
       <div className="section-head">
         <h2 className="section-title">{t("studio.pickAnother")}</h2>
         <button type="button" className="pill-button" onClick={() => setRound((r) => r + 1)}>
-          <Icon path={mdiShuffle} size={17} />
+          <Icon path={bpShuffle} size={17} />
           {t("studio.shuffle")}
         </button>
       </div>

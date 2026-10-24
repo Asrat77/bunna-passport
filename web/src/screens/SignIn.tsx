@@ -1,10 +1,10 @@
-import { mdiEyeOffOutline, mdiEyeOutline } from "@mdi/js";
 import { useState, type FormEvent } from "react";
 import { ApiRequestError } from "@/api/errors";
 import { useAuth } from "@/auth/AuthProvider";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
 import { PrimaryAction } from "@/telegram/buttons";
+import { bpEye, bpEyeOff } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./signin.css";
@@ -70,7 +70,7 @@ export function SignIn() {
               aria-label={t(reveal ? "auth.hidePassword" : "auth.showPassword")}
               onClick={() => setReveal(!reveal)}
             >
-              <Icon path={reveal ? mdiEyeOffOutline : mdiEyeOutline} size={20} />
+              <Icon path={reveal ? bpEyeOff : bpEye} size={20} />
             </button>
           </span>
         </label>

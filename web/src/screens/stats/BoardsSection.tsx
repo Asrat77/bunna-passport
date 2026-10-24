@@ -1,10 +1,10 @@
-import { mdiChevronDown } from "@mdi/js";
 import { useMemo, useState } from "react";
 import type { LeaderboardEntry, LeaderboardMetric } from "@/api/types";
 import { doodleSeedFor, useMyDoodle } from "@/data/me";
 import { useCatalog, useFriends, useLeaderboard, usePassport, useProfile } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
+import { bpChevronDown } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./boards.css";
@@ -82,7 +82,7 @@ export function BoardsSection() {
             <option value="cups">{t("boards.cups")}</option>
             <option value="shops">{t("boards.cafes")}</option>
           </select>
-          <Icon path={mdiChevronDown} size={16} />
+          <Icon path={bpChevronDown} size={16} />
         </label>
       </div>
 

@@ -1,4 +1,3 @@
-import { mdiCheck, mdiMapMarkerOutline, mdiShareVariantOutline } from "@mdi/js";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
 import { useCatalog, useReviews, useShop } from "@/data/queries";
@@ -14,6 +13,7 @@ import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { FilterChip, TagChip } from "@/ui/Chip";
+import { bpCheck, bpPin, bpShare } from "@/ui/glyphs";
 import { Icon } from "@/ui/Icon";
 import { StatStrip } from "@/ui/StatStrip";
 import "./shop.css";
@@ -116,7 +116,7 @@ function ShopBody({
         </span>
         {stamp ? (
           <button type="button" className="shop__share" onClick={() => push({ name: "share", target: { shopId: shop.id }, shopName: shop.name })}>
-            <Icon path={mdiShareVariantOutline} size={18} />
+            <Icon path={bpShare} size={18} />
             {t("shop.shareStamp")}
           </button>
         ) : null}
@@ -149,7 +149,7 @@ function ShopBody({
               <Step done={false}>{shop.landmark}</Step>
             </ol>
             <button type="button" className="getting-there__maps" onClick={() => openInMaps(shop)}>
-              <Icon path={mdiMapMarkerOutline} size={18} />
+              <Icon path={bpPin} size={18} />
               {t("shop.stepOpenMaps")}
             </button>
           </section>
@@ -175,7 +175,7 @@ function Step({ done, children }: { done: boolean; children: string }) {
   return (
     <li className={done ? "step step--done" : "step"}>
       <span className="step__mark" aria-hidden="true">
-        {done ? <Icon path={mdiCheck} size={14} /> : null}
+        {done ? <Icon path={bpCheck} size={14} /> : null}
       </span>
       {done ? <s>{children}</s> : children}
     </li>
