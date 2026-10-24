@@ -1,0 +1,60 @@
+.profile__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.profile__name {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.profile__handle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.profile__header .pill-button {
+  margin-top: 8px;
+}
+
+.settings {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings h2 {
+  margin: 0;
+}
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch);
+  font-size: 15px;
+}
+
+.settings__text {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+}
+
+.settings__text .muted {
+  font-size: 12.5px;
+}
+
+.settings__toggle input {
+  width: 46px;
+  height: 28px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}

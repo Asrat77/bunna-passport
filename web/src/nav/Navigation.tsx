@@ -12,6 +12,7 @@ export type Route =
   | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
   | { name: "share"; target: ShareTarget; shopName: string }
   | { name: "studio" }
+  | { name: "profile" }
   | { name: "invite"; token: string }
   | { name: "map" }
   | { name: "cafes"; query?: string; filter?: ShopFilter };
@@ -34,7 +35,7 @@ const isTab = (route: Route): route is { name: Tab } =>
 
 /**
  * A plain screen stack. Tabs sit at the bottom; Shop, Check in, the ceremony,
- * the Studio and All cafés push on top and come off with Telegram's BackButton.
+ * Profile, the Studio and All cafés push on top and come off with Telegram's BackButton.
  */
 export function NavigationProvider({ initial, children }: { initial: Route; children: ReactNode }) {
   const [stack, setStack] = useState<Route[]>([initial]);

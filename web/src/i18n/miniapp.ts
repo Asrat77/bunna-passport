@@ -232,6 +232,7 @@ export const miniappEn = {
   "passport.shareCupStatusHint": "Only that you've had one today. Never where or when.",
   "passport.dailyNudges": "Afternoon nudge from the bot",
   "passport.dailyNudgesHint": "One message on days you haven't had a cup yet.",
+  "profile.open": "Profile and settings",
 
   "boards.thisWeekIn": "This week in",
   "boards.place": "{place}.",
@@ -632,6 +633,7 @@ export const miniappAm: Record<MiniappKey, string> = {
   "passport.shareCupStatusHint": "ዛሬ መጠጣትዎን ብቻ። የትና መቼ በፍጹም።",
   "passport.dailyNudges": "ከሰዓት በኋላ ከቦቱ ማስታወሻ",
   "passport.dailyNudgesHint": "ቡና ባልጠጡበት ቀን አንድ መልዕክት ብቻ።",
+  "profile.open": "መገለጫ እና ቅንብሮች",
 
   "boards.thisWeekIn": "በዚህ ሳምንት በ",
   "boards.place": "{place}።",

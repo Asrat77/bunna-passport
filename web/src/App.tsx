@@ -14,6 +14,7 @@ import { Explore } from "./screens/Explore";
 import { Invite } from "./screens/Invite";
 import { MapScreen } from "./screens/map/MapScreen";
 import { Passport } from "./screens/passport/Passport";
+import { Profile } from "./screens/profile/Profile";
 import { Shop } from "./screens/Shop";
 import { SignIn } from "./screens/SignIn";
 import { Stats } from "./screens/Stats";
@@ -113,6 +114,8 @@ function Screens() {
       return <Ceremony checkIn={route.checkIn} wasAwake={route.wasAwake} />;
     case "share":
       return <ShareCard target={route.target} shopName={route.shopName} />;
+    case "profile":
+      return <Profile />;
     case "studio":
       return <Studio />;
     case "invite":
