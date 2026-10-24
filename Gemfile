@@ -43,7 +43,7 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.2"
 # image_processing 2.x no longer pulls in its libvips binding, so Active Storage needs it named here
-gem "ruby-vips"
+gem "ruby-vips", require: false
 
 # Store Active Storage files in Cloudflare R2, which speaks the S3 API
 gem "aws-sdk-s3", require: false
