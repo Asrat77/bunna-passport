@@ -1,6 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { api } from "@/api/client";
 import type { Neighborhood, Shop, User } from "@/api/types";
 import { useAuth } from "@/auth/AuthProvider";
 import { useMyDoodle } from "@/data/me";
@@ -9,11 +7,10 @@ import { coffeeWeeks } from "@/data/streak";
 import { Doodle } from "@/design/doodle/Doodle";
 import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
-import { languageNames, type Language } from "@/i18n/strings";
+import type { Language } from "@/i18n/strings";
 import { distanceMeters } from "@/lib/distance";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
-import { inTelegram } from "@/telegram/sdk";
 import { FilterChip } from "@/ui/Chip";
 import { Dock } from "@/ui/Dock";
 import { bpChevronLeft, bpChevronRight, bpEdit, bpStreak } from "@/ui/glyphs";
@@ -26,7 +23,7 @@ import "./passport.css";
 type Area = { neighborhood: Neighborhood; shops: Shop[]; stamped: number };
 
 export function Passport() {
-  const { t, language, setLanguage } = useI18n();
+  const { t, language } = useI18n();
   const { push } = useNavigation();
   const { firstName } = useAuth();
   const { data: profile } = useProfile();
@@ -86,16 +83,19 @@ export function Passport() {
   return (
     <main className="screen screen--with-dock passport">
       <header className="passport__header">
-        <Doodle
-          seed={doodle.seed}
-          mood={doodle.awake ? "awake" : "sleepy"}
-          size={64}
-          label={t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}
-        />
-        <div className="passport__who">
-          <span className="passport__name">{me?.display_name ?? firstName ?? ""}</span>
-          {me ? <span className="passport__handle">{handleLine(me, t, language)}</span> : null}
-        </div>
+        <button type="button" className="passport__profile" onClick={() => push({ name: "profile" })} aria-label={t("profile.open")}>
+          <Doodle
+            seed={doodle.seed}
+            mood={doodle.awake ? "awake" : "sleepy"}
+            size={64}
+            label={t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}
+          />
+          <span className="passport__who">
+            <span className="passport__name">{me?.display_name ?? firstName ?? ""}</span>
+            {me ? <span className="passport__handle">{handleLine(me, t, language)}</span> : null}
+          </span>
+          <Icon path={bpChevronRight} size={18} />
+        </button>
         <button type="button" className="pill-button" onClick={() => push({ name: "studio" })}>
           <Icon path={bpEdit} size={16} />
           {t("passport.editDoodle")}
@@ -193,124 +193,14 @@ export function Passport() {
         </>
       ) : null}
 
-      <Settings profile={me} language={language} setLanguage={setLanguage} />
       <Dock />
     </main>
   );
 }
 
-function handleLine(user: User, t: ReturnType<typeof useI18n>["t"], language: Language): string {
+export function handleLine(user: User, t: ReturnType<typeof useI18n>["t"], language: Language): string {
   const since = new Intl.DateTimeFormat(language === "am" ? "am-ET" : "en-GB", { month: "short", year: "numeric" }).format(
     new Date(user.joined_at),
   );
   return t("passport.handleLine", { handle: user.handle, trust: t(`trust.${user.trust_level}`), date: since });
-}
-
-/**
- * Profile and settings aren't designed yet, so the two settings the Mini App
- * needs live quietly under the passport: language, and whether friends see
- * your cup status on the boards (doodle privacy).
- */
-function Settings({
-  profile,
-  language,
-  setLanguage,
-}: {
-  profile: User | undefined;
-  language: Language;
-  setLanguage: (language: Language) => void;
-}) {
-  const { t } = useI18n();
-  const { signOut } = useAuth();
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-
-  async function toggleSharing(change: { shares_cup_status: boolean } | { shares_visits: boolean }) {
-    setSaving(true);
-    try {
-      const { data } = await api.updateProfile(change);
-      queryClient.setQueryData(["profile"], data);
-      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function toggleNudges(next: boolean) {
-    setSaving(true);
-    try {
-      const { data } = await api.updateProfile({ daily_nudges: next });
-      queryClient.setQueryData(["profile"], data);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <section className="card settings" aria-labelledby="settings-title">
-      <h2 id="settings-title" className="eyebrow">
-        {t("passport.settings")}
-      </h2>
-      <div className="settings__row">
-        <span>{t("passport.language")}</span>
-        <div className="segment" role="group" aria-label={t("passport.language")}>
-          {(["en", "am"] as const).map((code) => (
-            <button key={code} type="button" aria-pressed={language === code} onClick={() => setLanguage(code)} lang={code}>
-              {languageNames[code]}
-            </button>
-          ))}
-        </div>
-      </div>
-      {profile ? (
-        <label className="settings__row settings__toggle">
-          <span className="settings__text">
-            {t("passport.shareCupStatus")}
-            <span className="muted">{t("passport.shareCupStatusHint")}</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={profile.shares_cup_status}
-            disabled={saving}
-            onChange={(event) => void toggleSharing({ shares_cup_status: event.target.checked })}
-          />
-        </label>
-      ) : null}
-      {profile ? (
-        <label className="settings__row settings__toggle">
-          <span className="settings__text">
-            {t("passport.shareVisits")}
-            <span className="muted">{t("passport.shareVisitsHint")}</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={profile.shares_visits}
-            disabled={saving}
-            onChange={(event) => void toggleSharing({ shares_visits: event.target.checked })}
-          />
-        </label>
-      ) : null}
-      {profile && inTelegram ? (
-        <label className="settings__row settings__toggle">
-          <span className="settings__text">
-            {t("passport.dailyNudges")}
-            <span className="muted">{t("passport.dailyNudgesHint")}</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={profile.daily_nudges}
-            disabled={saving}
-            onChange={(event) => void toggleNudges(event.target.checked)}
-          />
-        </label>
-      ) : null}
-      {inTelegram ? null : (
-        <button type="button" className="link-button" onClick={() => void signOut()}>
-          {t("profile.signOut")}
-        </button>
-      )}
-    </section>
-  );
 }
