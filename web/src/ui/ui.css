@@ -305,6 +305,29 @@
   color: var(--faint);
 }
 
+/* Print: Bunna print icons, graphite or cream pencil by theme (Print.tsx). */
+.print {
+  display: block;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.print img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+.print__dark,
+:root[data-theme="dark"] .print__light {
+  display: none !important;
+}
+
+:root[data-theme="dark"] .print__dark {
+  display: block !important;
+}
+
 /* Dock */
 .dock {
   position: fixed;
