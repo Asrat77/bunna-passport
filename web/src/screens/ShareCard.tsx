@@ -1,4 +1,3 @@
-import { mdiDownload } from "@mdi/js";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, type ShareTarget } from "@/api/client";
@@ -7,6 +6,7 @@ import { canShareStory, saveStoryCard, shareCardToChat, shareCardToStory } from 
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { hapticSuccess } from "@/telegram/haptics";
+import { bpDownload } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./sharecard.css";
@@ -68,7 +68,7 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
           </button>
         ) : null}
         <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && void saveStoryCard(card.story_url).then(done)}>
-          <Icon path={mdiDownload} size={20} />
+          <Icon path={bpDownload} size={20} />
           {t("share.save")}
         </button>
         <p className="share-card__hint muted">{t("share.saveHint")}</p>

@@ -1,10 +1,10 @@
-import { mdiDotsVertical } from "@mdi/js";
 import type { PassportStamp, Shop } from "@/api/types";
 import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
 import { openStatus } from "@/lib/hours";
 import { formatMeters } from "@/lib/distance";
 import { shopMenu } from "@/lib/maps";
+import { bpMore } from "./glyphs";
 import { Icon } from "./Icon";
 
 type Props = {
@@ -53,7 +53,7 @@ export function ShopRow({ shop, stamp, distance, onOpen }: Props) {
         aria-label={t("shop.directions") + ": " + shop.name}
         onClick={() => void shopMenu(shop, { title: shop.name, openMaps: t("shop.directions"), cancel: t("common.cancel") })}
       >
-        <Icon path={mdiDotsVertical} size={20} />
+        <Icon path={bpMore} size={20} />
       </button>
     </div>
   );
