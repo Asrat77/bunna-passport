@@ -1,4 +1,4 @@
-import { mdiPencilOutline } from "@mdi/js";
+import { phPencilSimple } from "@/ui/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/api/client";
@@ -40,7 +40,7 @@ export function Profile() {
         <h1 className="profile__name">{profile?.display_name ?? firstName ?? ""}</h1>
         {profile ? <span className="profile__handle">{handleLine(profile, t, language)}</span> : null}
         <button type="button" className="pill-button" onClick={() => push({ name: "studio" })}>
-          <Icon path={mdiPencilOutline} size={16} />
+          <Icon path={phPencilSimple} size={16} />
           {t("passport.editDoodle")}
         </button>
       </header>

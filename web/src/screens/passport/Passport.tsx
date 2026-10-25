@@ -1,4 +1,4 @@
-import { mdiChevronLeft, mdiChevronRight, mdiFire, mdiPencilOutline } from "@mdi/js";
+import { phCaretLeft, phCaretRight, phFire, phPencilSimple } from "@/ui/icons";
 import { useMemo, useState } from "react";
 import type { Neighborhood, Shop, User } from "@/api/types";
 import { useAuth } from "@/auth/AuthProvider";
@@ -94,10 +94,10 @@ export function Passport() {
             <span className="passport__name">{me?.display_name ?? firstName ?? ""}</span>
             {me ? <span className="passport__handle">{handleLine(me, t, language)}</span> : null}
           </span>
-          <Icon path={mdiChevronRight} size={18} />
+          <Icon path={phCaretRight} size={18} />
         </button>
         <button type="button" className="pill-button" onClick={() => push({ name: "studio" })}>
-          <Icon path={mdiPencilOutline} size={16} />
+          <Icon path={phPencilSimple} size={16} />
           {t("passport.editDoodle")}
         </button>
       </header>
@@ -124,7 +124,7 @@ export function Passport() {
           <span className="counter__value counter__value--cups mono">{me?.verified_check_ins_count ?? "–"}</span>
           <span className="counter__foot">
             <span className="counter__flame">
-              <Icon path={mdiFire} size={16} />
+              <Icon path={phFire} size={16} />
             </span>
             {weeks === 0
               ? t("passport.noStreak")
@@ -174,7 +174,7 @@ export function Passport() {
           {pages.length > 1 ? (
             <div className="page-turn">
               <button type="button" className="pill-button" disabled={page === 0} onClick={() => setPageIndex(page - 1)} aria-label={t("passport.prevPage")}>
-                <Icon path={mdiChevronLeft} size={20} />
+                <Icon path={phCaretLeft} size={20} />
               </button>
               <span className="mono muted">
                 {page + 1} / {pages.length}
@@ -186,7 +186,7 @@ export function Passport() {
                 onClick={() => setPageIndex(page + 1)}
                 aria-label={t("passport.nextPage")}
               >
-                <Icon path={mdiChevronRight} size={20} />
+                <Icon path={phCaretRight} size={20} />
               </button>
             </div>
           ) : null}

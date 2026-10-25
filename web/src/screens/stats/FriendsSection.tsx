@@ -1,4 +1,4 @@
-import { mdiAccountPlus, mdiRefresh } from "@mdi/js";
+import { phArrowClockwise, phUserPlus } from "@/ui/icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
@@ -103,7 +103,7 @@ function InviteCard() {
   return (
     <section className="card invite-card" aria-labelledby="invite-card-title">
       <h2 id="invite-card-title" className="invite-card__title">
-        <Icon path={mdiAccountPlus} size={20} />
+        <Icon path={phUserPlus} size={20} />
         {t("friends.inviteTitle")}
       </h2>
       <p className="invite-card__body muted">{t(latest ? "friends.inviteBody" : "friends.inviteBodyNoStamp")}</p>
@@ -129,7 +129,7 @@ function InviteCard() {
       <div className="invite-card__foot">
         {note ? <span className="invite-card__note" role="status">{note}</span> : <span />}
         <button type="button" className="link-button invite-card__rotate" disabled={rotate.isPending} onClick={() => rotate.mutate()}>
-          <Icon path={mdiRefresh} size={16} />
+          <Icon path={phArrowClockwise} size={16} />
           {t("friends.newLink")}
         </button>
       </div>

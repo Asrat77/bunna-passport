@@ -1,4 +1,4 @@
-import { mdiArrowRight, mdiCheck } from "@mdi/js";
+import { phArrowRight, phCheck } from "@/ui/icons";
 import { useEffect, useState } from "react";
 import type { CheckIn } from "@/api/types";
 import { useMyDoodle } from "@/data/me";
@@ -70,7 +70,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
       <div className="ceremony__faces" aria-label={t("doodle.mineAwake")} role="img">
         <Doodle seed={doodle.seed} mood="sleepy" size={52} decorative />
         <span className="ceremony__arrow" aria-hidden="true">
-          <Icon path={mdiArrowRight} size={20} />
+          <Icon path={phArrowRight} size={20} />
         </span>
         <span className="ceremony__awake">
           <span className="ceremony__awake-sleepy">
@@ -92,7 +92,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
     return (
       <main className="screen screen--glow ceremony ceremony--cup" data-phase={phase}>
         <div className="ceremony__tick" aria-hidden="true">
-          <Icon path={mdiCheck} size={56} />
+          <Icon path={phCheck} size={56} />
         </div>
         <Headline first={t("ceremony.cupTitle")} second={t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })} align="center" />
         {toNext && upcoming ? (
