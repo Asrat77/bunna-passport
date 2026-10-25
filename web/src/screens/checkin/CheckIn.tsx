@@ -1,3 +1,4 @@
+import { mdiCameraOutline, mdiCoffee, mdiCoffeeOutline, mdiPlus } from "@mdi/js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@/api/client";
@@ -16,10 +17,8 @@ import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { hapticError, hapticSelection } from "@/telegram/haptics";
 import { onDesktopTelegram } from "@/telegram/platform";
 import { AddChip, FilterChip } from "@/ui/Chip";
-import { bpCamera, bpPlus } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
-import { Print } from "@/ui/Print";
 import { Radar } from "./Radar";
 import "./checkin.css";
 
@@ -211,7 +210,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     {t(`checkin.drink.${key}`)}
                   </FilterChip>
                 ))}
-                <AddChip pressed={noteOpen} onClick={() => setNoteOpen((open) => !open)} icon={<Icon path={bpPlus} size={16} />}>
+                <AddChip pressed={noteOpen} onClick={() => setNoteOpen((open) => !open)} icon={<Icon path={mdiPlus} size={16} />}>
                   {t("checkin.addNote")}
                 </AddChip>
               </div>
@@ -241,7 +240,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     aria-pressed={rating === n}
                     onClick={() => setRating((r) => (r === n ? null : n))}
                   >
-                    <Print name="cup" size={32} state={rating !== null && n <= rating ? "print" : "sketch"} />
+                    <Icon path={rating !== null && n <= rating ? mdiCoffee : mdiCoffeeOutline} size={22} />
                   </button>
                 ))}
               </div>
@@ -252,7 +251,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                 aria-label={photo ? t("checkin.photoAdded") : t("shop.addPhoto")}
                 onClick={() => photoInput.current?.click()}
               >
-                <Icon path={bpCamera} size={21} />
+                <Icon path={mdiCameraOutline} size={21} />
               </button>
               <input
                 ref={photoInput}

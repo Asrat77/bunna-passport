@@ -117,13 +117,8 @@ Rules:
 
 ### 2.4 Iconography, imagery, and shape
 
-- Icons are **Bunna print**: flat brand colour printed slightly off-register,
-  ink shadows, and the doodle avatar's graphite pencil line. Prints
-  (`web/src/ui/Print.tsx`) are for 24 px and up: the pencil **sketch** marks an
-  inactive tab, an empty rating cup or a tile not picked, and the full
-  **print** marks the active or chosen one. Dock icons are 28 px. Below 24 px,
-  one-colour glyphs (`web/src/ui/glyphs.ts`, @mdi/js format, through `Icon`)
-  carry utility marks: search, chevrons, more. No emoji as interface icons.
+- Single icon set: **Material Community Icons**, outline by default and filled
+  for active navigation. No emoji as interface icons.
 - Photography is the hero: shop photos edge-to-edge in cards with a subtle
   warm-tone overlay for text legibility. Never stretch, never letterbox; crop
   center-weighted.

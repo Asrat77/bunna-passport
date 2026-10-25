@@ -97,6 +97,22 @@
   border-color: var(--primary);
 }
 
-.tile[aria-busy="true"] .print {
+.tile[aria-busy="true"] .tile__chip {
   animation: pulse 1.2s ease-in-out infinite;
+}
+
+.tile__chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile__chip--accent {
+  background: var(--accent-soft);
+  color: var(--accent);
 }

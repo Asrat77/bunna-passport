@@ -1,3 +1,4 @@
+import { mdiPencilOutline } from "@mdi/js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/api/client";
@@ -11,7 +12,6 @@ import { languageNames } from "@/i18n/strings";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl } from "@/telegram/buttons";
 import { inTelegram } from "@/telegram/sdk";
-import { bpEdit } from "@/ui/glyphs";
 import { Icon } from "@/ui/Icon";
 import { handleLine } from "../passport/Passport";
 import "./profile.css";
@@ -40,7 +40,7 @@ export function Profile() {
         <h1 className="profile__name">{profile?.display_name ?? firstName ?? ""}</h1>
         {profile ? <span className="profile__handle">{handleLine(profile, t, language)}</span> : null}
         <button type="button" className="pill-button" onClick={() => push({ name: "studio" })}>
-          <Icon path={bpEdit} size={16} />
+          <Icon path={mdiPencilOutline} size={16} />
           {t("passport.editDoodle")}
         </button>
       </header>

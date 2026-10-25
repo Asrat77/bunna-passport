@@ -1,3 +1,4 @@
+import { mdiCrosshairsGps, mdiKettleSteamOutline, mdiMagnify, mdiMapOutline, mdiPlusCircleOutline } from "@mdi/js";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { rankShops, type ShopFilter } from "@/data/nearby";
@@ -9,10 +10,8 @@ import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { Dock } from "@/ui/Dock";
-import { bpSearch } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
-import { Print } from "@/ui/Print";
 import { ShopRow } from "@/ui/ShopRow";
 import "./explore.css";
 
@@ -88,25 +87,33 @@ export function Explore() {
           enterKeyHint="search"
         />
         <span className="search__icon" aria-hidden="true">
-          <Icon path={bpSearch} size={21} />
+          <Icon path={mdiMagnify} size={21} />
         </span>
       </label>
 
       <div className="tiles" role="group" aria-label={t("explore.quickFilters")}>
         <button type="button" className="tile" aria-busy={location.status === "locating" || undefined} onClick={() => void location.refresh()}>
-          <Print name="near-me" size={36} state="sketch" />
+          <span className="tile__chip">
+            <Icon path={mdiCrosshairsGps} size={19} />
+          </span>
           {t("explore.tileNearMe")}
         </button>
         <button type="button" className="tile" onClick={() => push({ name: "map" })}>
-          <Print name="map" size={36} state="sketch" />
+          <span className="tile__chip">
+            <Icon path={mdiMapOutline} size={19} />
+          </span>
           {t("explore.tileMap")}
         </button>
         <button type="button" className="tile" aria-pressed={filter === "jebena"} onClick={() => toggle("jebena")}>
-          <Print name="jebena" size={36} state={filter === "jebena" ? "print" : "sketch"} />
+          <span className="tile__chip tile__chip--accent">
+            <Icon path={mdiKettleSteamOutline} size={19} />
+          </span>
           {t("explore.tileJebena")}
         </button>
         <button type="button" className="tile" aria-pressed={filter === "notYet"} onClick={() => toggle("notYet")}>
-          <Print name="not-yet" size={36} state={filter === "notYet" ? "print" : "sketch"} />
+          <span className="tile__chip">
+            <Icon path={mdiPlusCircleOutline} size={19} />
+          </span>
           {t("explore.tileNotYet")}
         </button>
       </div>

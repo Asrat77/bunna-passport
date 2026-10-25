@@ -1,3 +1,4 @@
+import { mdiAccountPlus, mdiRefresh } from "@mdi/js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
@@ -10,7 +11,6 @@ import { addisCoffeeDay, shiftDay } from "@/lib/coffeeDay";
 import { shareInviteLink } from "@/lib/invite";
 import { useNavigation } from "@/nav/Navigation";
 import { hapticSuccess } from "@/telegram/haptics";
-import { bpAddFriend, bpRefresh } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./friends.css";
@@ -103,7 +103,7 @@ function InviteCard() {
   return (
     <section className="card invite-card" aria-labelledby="invite-card-title">
       <h2 id="invite-card-title" className="invite-card__title">
-        <Icon path={bpAddFriend} size={20} />
+        <Icon path={mdiAccountPlus} size={20} />
         {t("friends.inviteTitle")}
       </h2>
       <p className="invite-card__body muted">{t(latest ? "friends.inviteBody" : "friends.inviteBodyNoStamp")}</p>
@@ -129,7 +129,7 @@ function InviteCard() {
       <div className="invite-card__foot">
         {note ? <span className="invite-card__note" role="status">{note}</span> : <span />}
         <button type="button" className="link-button invite-card__rotate" disabled={rotate.isPending} onClick={() => rotate.mutate()}>
-          <Icon path={bpRefresh} size={16} />
+          <Icon path={mdiRefresh} size={16} />
           {t("friends.newLink")}
         </button>
       </div>
