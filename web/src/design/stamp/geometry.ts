@@ -30,7 +30,7 @@ export const LAYOUT = {
   date: { y: 156, size: 12, letterSpacing: 2 },
 } as const;
 
-/** Clay follows the theme's primary ink; metals mirror LEVEL_PAINT in Seal. */
+/** Clay follows the theme's primary ink; metals use the face tone of LEVEL_METAL in Seal. */
 export const INK: Record<InkLevel, string> = {
   clay: "var(--primary)",
   bronze: "#8C5A2B",

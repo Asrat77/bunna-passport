@@ -32,7 +32,7 @@ type Outcome = { kind: "rejected"; code: RejectionCode; shop: string } | { kind:
  * twice. Only the tap is needed; drink, note, rating and photo are optional.
  */
 export function CheckIn({ shopId }: { shopId?: number }) {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { back, replace } = useNavigation();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -180,7 +180,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     setSelectedId(shop.id);
                   }}
                 >
-                  <Seal name={shop.name} nameAm={shop.name_am} level={stamp?.level ?? null} size={46} amharic={language === "am"} decorative />
+                  <Seal name={shop.name} level={stamp?.level ?? null} size={46} decorative />
                   <span className="candidate__text">
                     <span className="candidate__name">{shop.name}</span>
                     <span className="candidate__meta">
