@@ -1,4 +1,4 @@
-import { mdiCoffee } from "@mdi/js";
+import { phCoffeeFill } from "@/ui/icons";
 
 /** The pin images the café layer draws, keyed by MapLibre image id. */
 export const PIN_STAMPED = "bunna-pin-stamped";
@@ -49,13 +49,13 @@ export function drawPin(colours: PinColours, stamped: boolean, ratio: number): I
   context.stroke(drop);
   context.setLineDash([]);
 
-  // mdi icons are drawn on a 24-unit grid.
+  // Phosphor icons are drawn on a 256-unit grid.
   const size = 15;
   context.save();
   context.translate(cx - size / 2, cy - size / 2);
-  context.scale(size / 24, size / 24);
+  context.scale(size / 256, size / 256);
   context.fillStyle = stamped ? colours.onPrimary : colours.muted;
-  context.fill(new Path2D(mdiCoffee));
+  context.fill(new Path2D(phCoffeeFill));
   context.restore();
 
   return context.getImageData(0, 0, canvas.width, canvas.height);

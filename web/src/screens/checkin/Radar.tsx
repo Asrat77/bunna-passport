@@ -1,4 +1,4 @@
-import { mdiAlertOutline, mdiCheck } from "@mdi/js";
+import { phCheck, phWarning } from "@/ui/icons";
 import { ACCURACY_LIMIT_METERS, CHECK_IN_RANGE_METERS, bearing, type Candidate } from "@/data/checkin";
 import { useI18n } from "@/i18n/context";
 import { formatMeters, type Coordinate } from "@/lib/distance";
@@ -95,7 +95,7 @@ export function Radar({ fix, candidates, selectedId }: { fix: Fix; candidates: C
         </text>
       </svg>
       <span className={good ? "radar__accuracy mono" : "radar__accuracy radar__accuracy--weak mono"}>
-        <Icon path={good ? mdiCheck : mdiAlertOutline} size={14} />
+        <Icon path={good ? phCheck : phWarning} size={14} />
         {t(good ? "checkin.goodSignal" : "checkin.weakSignal", { meters: fix.accuracyMeters })}
       </span>
     </div>

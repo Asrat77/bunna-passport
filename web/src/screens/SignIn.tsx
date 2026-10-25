@@ -1,4 +1,4 @@
-import { mdiEyeOffOutline, mdiEyeOutline } from "@mdi/js";
+import { phEye, phEyeSlash } from "@/ui/icons";
 import { useState, type FormEvent } from "react";
 import { ApiRequestError } from "@/api/errors";
 import { useAuth } from "@/auth/AuthProvider";
@@ -70,7 +70,7 @@ export function SignIn() {
               aria-label={t(reveal ? "auth.hidePassword" : "auth.showPassword")}
               onClick={() => setReveal(!reveal)}
             >
-              <Icon path={reveal ? mdiEyeOffOutline : mdiEyeOutline} size={20} />
+              <Icon path={reveal ? phEyeSlash : phEye} size={20} />
             </button>
           </span>
         </label>

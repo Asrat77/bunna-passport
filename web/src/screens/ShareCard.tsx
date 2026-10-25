@@ -1,4 +1,4 @@
-import { mdiDownload } from "@mdi/js";
+import { phDownloadSimple } from "@/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, type ShareTarget } from "@/api/client";
@@ -68,7 +68,7 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
           </button>
         ) : null}
         <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && void saveStoryCard(card.story_url).then(done)}>
-          <Icon path={mdiDownload} size={20} />
+          <Icon path={phDownloadSimple} size={20} />
           {t("share.save")}
         </button>
         <p className="share-card__hint muted">{t("share.saveHint")}</p>

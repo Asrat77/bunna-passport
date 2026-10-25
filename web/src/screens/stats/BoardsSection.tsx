@@ -1,4 +1,4 @@
-import { mdiChevronDown } from "@mdi/js";
+import { phCaretDown } from "@/ui/icons";
 import { useMemo, useState } from "react";
 import type { LeaderboardEntry, LeaderboardMetric } from "@/api/types";
 import { doodleSeedFor, useMyDoodle } from "@/data/me";
@@ -82,7 +82,7 @@ export function BoardsSection() {
             <option value="cups">{t("boards.cups")}</option>
             <option value="shops">{t("boards.cafes")}</option>
           </select>
-          <Icon path={mdiChevronDown} size={16} />
+          <Icon path={phCaretDown} size={16} />
         </label>
       </div>
 

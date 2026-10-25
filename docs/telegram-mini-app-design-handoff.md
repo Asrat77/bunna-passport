@@ -71,7 +71,7 @@ On launch, call `setHeaderColor`, `setBackgroundColor` and `setBottomBarColor` w
 - **Corner radii:** cards 20–24px, tiles 17px, primary buttons 18px, chips, search and dock fully rounded.
 - **Borders:** 1px `--border` on every card.
 - **Shadows:** only on the dock, the floating CTA and the passport page (`0 10–14px 28–32px var(--shadow)`).
-- **Icons:** outline, stroke 2, 20–22px. Use Material Community Icons where the mobile app does (DESIGN.md §2.4). The canvas hand-draws look-alikes.
+- **Icons:** outline, 20–22px. Use Phosphor, regular weight (DESIGN.md §2.4). The canvas hand-draws look-alikes.
 
 ## Components
 

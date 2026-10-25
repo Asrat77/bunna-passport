@@ -1,4 +1,4 @@
-import { mdiCameraOutline, mdiCoffee, mdiCoffeeOutline, mdiPlus } from "@mdi/js";
+import { phCamera, phCoffee, phCoffeeFill, phPlus } from "@/ui/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@/api/client";
@@ -210,7 +210,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     {t(`checkin.drink.${key}`)}
                   </FilterChip>
                 ))}
-                <AddChip pressed={noteOpen} onClick={() => setNoteOpen((open) => !open)} icon={<Icon path={mdiPlus} size={16} />}>
+                <AddChip pressed={noteOpen} onClick={() => setNoteOpen((open) => !open)} icon={<Icon path={phPlus} size={16} />}>
                   {t("checkin.addNote")}
                 </AddChip>
               </div>
@@ -240,7 +240,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     aria-pressed={rating === n}
                     onClick={() => setRating((r) => (r === n ? null : n))}
                   >
-                    <Icon path={rating !== null && n <= rating ? mdiCoffee : mdiCoffeeOutline} size={22} />
+                    <Icon path={rating !== null && n <= rating ? phCoffeeFill : phCoffee} size={22} />
                   </button>
                 ))}
               </div>
@@ -251,7 +251,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                 aria-label={photo ? t("checkin.photoAdded") : t("shop.addPhoto")}
                 onClick={() => photoInput.current?.click()}
               >
-                <Icon path={mdiCameraOutline} size={21} />
+                <Icon path={phCamera} size={21} />
               </button>
               <input
                 ref={photoInput}

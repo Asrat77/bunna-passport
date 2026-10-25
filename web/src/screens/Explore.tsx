@@ -1,4 +1,4 @@
-import { mdiCrosshairsGps, mdiKettleSteamOutline, mdiMagnify, mdiMapOutline, mdiPlusCircleOutline } from "@mdi/js";
+import { phCoffeeBean, phCrosshair, phMagnifyingGlass, phMapTrifold, phPlusCircle } from "@/ui/icons";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { rankShops, type ShopFilter } from "@/data/nearby";
@@ -87,32 +87,32 @@ export function Explore() {
           enterKeyHint="search"
         />
         <span className="search__icon" aria-hidden="true">
-          <Icon path={mdiMagnify} size={21} />
+          <Icon path={phMagnifyingGlass} size={21} />
         </span>
       </label>
 
       <div className="tiles" role="group" aria-label={t("explore.quickFilters")}>
         <button type="button" className="tile" aria-busy={location.status === "locating" || undefined} onClick={() => void location.refresh()}>
           <span className="tile__chip">
-            <Icon path={mdiCrosshairsGps} size={19} />
+            <Icon path={phCrosshair} size={19} />
           </span>
           {t("explore.tileNearMe")}
         </button>
         <button type="button" className="tile" onClick={() => push({ name: "map" })}>
           <span className="tile__chip">
-            <Icon path={mdiMapOutline} size={19} />
+            <Icon path={phMapTrifold} size={19} />
           </span>
           {t("explore.tileMap")}
         </button>
         <button type="button" className="tile" aria-pressed={filter === "jebena"} onClick={() => toggle("jebena")}>
           <span className="tile__chip tile__chip--accent">
-            <Icon path={mdiKettleSteamOutline} size={19} />
+            <Icon path={phCoffeeBean} size={19} />
           </span>
           {t("explore.tileJebena")}
         </button>
         <button type="button" className="tile" aria-pressed={filter === "notYet"} onClick={() => toggle("notYet")}>
           <span className="tile__chip">
-            <Icon path={mdiPlusCircleOutline} size={19} />
+            <Icon path={phPlusCircle} size={19} />
           </span>
           {t("explore.tileNotYet")}
         </button>

@@ -1,12 +1,12 @@
-import { mdiCoffeeOutline, mdiCompassOutline, mdiPassport, mdiChartBar } from "@mdi/js";
+import { phChartBar, phCoffee, phCompass, phStamp } from "./icons";
 import { useI18n } from "@/i18n/context";
 import { useNavigation, type Tab } from "@/nav/Navigation";
 import { Icon } from "./Icon";
 
 const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "tab.stats" }[] = [
-  { tab: "explore", icon: mdiCompassOutline, label: "tab.explore" },
-  { tab: "passport", icon: mdiPassport, label: "tab.passport" },
-  { tab: "stats", icon: mdiChartBar, label: "tab.stats" },
+  { tab: "explore", icon: phCompass, label: "tab.explore" },
+  { tab: "passport", icon: phStamp, label: "tab.passport" },
+  { tab: "stats", icon: phChartBar, label: "tab.stats" },
 ];
 
 /**
@@ -41,7 +41,7 @@ export function Dock() {
         aria-label={compact ? t("checkin.action") : undefined}
         onClick={() => push({ name: "checkin" })}
       >
-        <Icon path={mdiCoffeeOutline} size={23} />
+        <Icon path={phCoffee} size={23} />
         {compact ? null : t("checkin.action")}
       </button>
     </div>

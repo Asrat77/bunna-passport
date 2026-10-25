@@ -1,4 +1,4 @@
-import { mdiChevronDown, mdiChevronLeft, mdiChevronRight, mdiMagnify } from "@mdi/js";
+import { phCaretDown, phCaretLeft, phCaretRight, phMagnifyingGlass } from "@/ui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { OpaqueId } from "@/api/types";
 import { catalogStats, findShops, type ShopSort } from "@/data/nearby";
@@ -151,7 +151,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
           enterKeyHint="search"
         />
         <span className="search__icon" aria-hidden="true">
-          <Icon path={mdiMagnify} size={21} />
+          <Icon path={phMagnifyingGlass} size={21} />
         </span>
       </label>
 
@@ -184,7 +184,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
               </option>
             ))}
           </select>
-          <Icon path={mdiChevronDown} size={16} />
+          <Icon path={phCaretDown} size={16} />
         </label>
         <label className="select-pill">
           <span className="visually-hidden">{t("cafes.sort")}</span>
@@ -193,7 +193,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
             <option value="name">{t("cafes.sortName")}</option>
             <option value="neighborhood">{t("cafes.sortArea")}</option>
           </select>
-          <Icon path={mdiChevronDown} size={16} />
+          <Icon path={phCaretDown} size={16} />
         </label>
       </div>
 
@@ -253,11 +253,11 @@ export function AllCafes({ route }: { route: CafesRoute }) {
       {pages > 1 ? (
         <nav className="pager" aria-label={t("cafes.pages")}>
           <button type="button" className="pager__step" disabled={page === 0} onClick={() => goTo(page - 1)} aria-label={t("cafes.previous")}>
-            <Icon path={mdiChevronLeft} size={22} />
+            <Icon path={phCaretLeft} size={22} />
           </button>
           <span className="pager__label mono">{t("cafes.page", { page: page + 1, pages })}</span>
           <button type="button" className="pager__step" disabled={page >= pages - 1} onClick={() => goTo(page + 1)} aria-label={t("cafes.next")}>
-            <Icon path={mdiChevronRight} size={22} />
+            <Icon path={phCaretRight} size={22} />
           </button>
         </nav>
       ) : null}

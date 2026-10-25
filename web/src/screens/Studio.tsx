@@ -1,4 +1,4 @@
-import { mdiShuffle } from "@mdi/js";
+import { phShuffle } from "@/ui/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/api/client";
@@ -73,7 +73,7 @@ export function Studio() {
       <div className="section-head">
         <h2 className="section-title">{t("studio.pickAnother")}</h2>
         <button type="button" className="pill-button" onClick={() => setRound((r) => r + 1)}>
-          <Icon path={mdiShuffle} size={17} />
+          <Icon path={phShuffle} size={17} />
           {t("studio.shuffle")}
         </button>
       </div>
