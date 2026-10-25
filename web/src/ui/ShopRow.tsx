@@ -25,7 +25,7 @@ export function ShopRow({ shop, stamp, distance, onOpen }: Props) {
   return (
     <div className="shop-row">
       <button type="button" className="shop-row__main" onClick={onOpen}>
-        <Seal name={shop.name} nameAm={shop.name_am} level={stamp?.level ?? null} size={50} amharic={language === "am"} decorative />
+        <Seal name={shop.name} level={stamp?.level ?? null} size={50} decorative />
         <span className="shop-row__text">
           <span className="shop-row__name">
             <span className="shop-row__latin">{shop.name}</span>

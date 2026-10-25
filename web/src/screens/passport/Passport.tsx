@@ -113,7 +113,7 @@ export function Passport() {
           <span className="counter__foot">
             <span className="seal-stack" aria-hidden="true">
               {(passport?.stamps ?? []).slice(0, 3).map((stamp) => (
-                <Seal key={stamp.id} name={stamp.shop.name} nameAm={stamp.shop.name_am} level={stamp.level} size={24} decorative />
+                <Seal key={stamp.id} name={stamp.shop.name} level={stamp.level} size={24} decorative />
               ))}
             </span>
             {t("passport.differentCafes")}

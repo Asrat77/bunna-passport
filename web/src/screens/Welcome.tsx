@@ -68,7 +68,7 @@ function Ticket({ shop, level, rotation, style }: { shop: Shop; level: StampLeve
   const { t } = useI18n();
   return (
     <div className={level ? "ticket" : "ticket ticket--missing"} style={{ ...style, transform: `rotate(${rotation}deg)` }}>
-      <Seal name={shop.name} nameAm={shop.name_am} level={level} size={40} decorative />
+      <Seal name={shop.name} level={level} size={40} decorative />
       <span className="ticket__text">
         <span className="ticket__name">{shop.name}</span>
         <span className="ticket__meta mono">{level ? shop.neighborhood.name : t("shop.notYet")}</span>
@@ -110,7 +110,7 @@ function Metals() {
       <div className="metals__row">
         {levels.map((level) => (
           <span key={level} className="metals__seal">
-            <Seal name="Bunna" nameAm="ቡና" level={level} size={52} decorative />
+            <Seal name="Bunna" level={level} size={52} decorative />
             <span className="mono">{t(`level.${level}`)}</span>
           </span>
         ))}

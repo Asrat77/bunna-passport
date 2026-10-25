@@ -23,6 +23,7 @@ const ICONS = [
   "check",
   "coffee",
   "coffee-bean",
+  "coffee-bean-fill",
   "coffee-fill",
   "compass",
   "crosshair",

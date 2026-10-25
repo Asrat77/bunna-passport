@@ -25,12 +25,18 @@ export function nextLevel(visits: number): StampLevel | null {
 }
 
 /**
- * Metals read as metals in either theme, so these are fixed rather than
- * themed. Each paper is dark enough to carry the light ink printed on it.
+ * Each level is a struck metal: a light-to-dark face, and a deep tone for the
+ * debossed bean. Metals read as metals in either theme, so these are fixed
+ * rather than themed. `face` stays the flat colour the ink stamp prints in.
  */
-export const LEVEL_PAINT: Record<StampLevel, { paper: string; ink: string }> = {
-  bronze: { paper: "#8C5A2B", ink: "#FDF1E4" },
-  silver: { paper: "#71757A", ink: "#FFFFFF" },
-  gold: { paper: "#A8811A", ink: "#FFF8DC" },
-  diamond: { paper: "#2A6F7F", ink: "#E6FAFF" },
+export type Metal = { light: string; face: string; dark: string; deep: string };
+
+export const LEVEL_METAL: Record<StampLevel, Metal> = {
+  bronze: { light: "#E7B07C", face: "#B4723D", dark: "#6E3F1C", deep: "#47260F" },
+  silver: { light: "#FBFCFD", face: "#C4CAD1", dark: "#858E98", deep: "#454C55" },
+  gold: { light: "#FCEAA6", face: "#DDAE3E", dark: "#9A7414", deep: "#5C4306" },
+  diamond: { light: "#DDF8FB", face: "#6FC5D2", dark: "#2A7E8E", deep: "#11434F" },
 };
+
+/** Pips under the bean, one per level reached, so tiers differ beyond colour. */
+export const LEVEL_PIPS: Record<StampLevel, number> = { bronze: 1, silver: 2, gold: 3, diamond: 4 };
