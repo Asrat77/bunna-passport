@@ -1,11 +1,12 @@
+import { mdiCoffeeOutline, mdiCompassOutline, mdiPassport, mdiChartBar } from "@mdi/js";
 import { useI18n } from "@/i18n/context";
 import { useNavigation, type Tab } from "@/nav/Navigation";
-import { Print, type PrintName } from "./Print";
+import { Icon } from "./Icon";
 
-const TABS: { tab: Tab; icon: PrintName; label: "tab.explore" | "tab.passport" | "tab.stats" }[] = [
-  { tab: "explore", icon: "explore", label: "tab.explore" },
-  { tab: "passport", icon: "passport", label: "tab.passport" },
-  { tab: "stats", icon: "stats", label: "tab.stats" },
+const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "tab.stats" }[] = [
+  { tab: "explore", icon: mdiCompassOutline, label: "tab.explore" },
+  { tab: "passport", icon: mdiPassport, label: "tab.passport" },
+  { tab: "stats", icon: mdiChartBar, label: "tab.stats" },
 ];
 
 /**
@@ -29,7 +30,7 @@ export function Dock() {
             aria-current={tab === current ? "page" : undefined}
             onClick={() => switchTab(tab)}
           >
-            <Print name={icon} size={28} state={tab === current ? "print" : "sketch"} />
+            <Icon path={icon} size={21} />
             {t(label)}
           </button>
         ))}
@@ -40,7 +41,7 @@ export function Dock() {
         aria-label={compact ? t("checkin.action") : undefined}
         onClick={() => push({ name: "checkin" })}
       >
-        <Print name="check-in" size={28} inverse />
+        <Icon path={mdiCoffeeOutline} size={23} />
         {compact ? null : t("checkin.action")}
       </button>
     </div>

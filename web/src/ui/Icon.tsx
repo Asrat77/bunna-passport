@@ -1,6 +1,6 @@
 /**
- * One-colour utility glyphs (DESIGN.md §2.4) from ui/glyphs.ts, one path each in
- * the @mdi/js format. Illustrated icons for 24 px and up are Print.
+ * Material Community Icons (DESIGN.md §2.4), drawn from @mdi/js paths so only
+ * the icons used end up in the bundle.
  */
 export function Icon({ path, size = 22, label }: { path: string; size?: number; label?: string }) {
   return (

@@ -1,3 +1,4 @@
+import { mdiArrowRight, mdiCheck } from "@mdi/js";
 import { useEffect, useState } from "react";
 import type { CheckIn } from "@/api/types";
 import { useMyDoodle } from "@/data/me";
@@ -10,10 +11,8 @@ import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { PrimaryAction, SecondaryAction } from "@/telegram/buttons";
 import { hapticSuccess } from "@/telegram/haptics";
-import { bpArrowRight } from "@/ui/glyphs";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
-import { Print } from "@/ui/Print";
 import "./ceremony.css";
 
 /** Skippable from 0.8 s; everything has landed by about 1.6 s (DESIGN.md §6.2). */
@@ -71,7 +70,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
       <div className="ceremony__faces" aria-label={t("doodle.mineAwake")} role="img">
         <Doodle seed={doodle.seed} mood="sleepy" size={52} decorative />
         <span className="ceremony__arrow" aria-hidden="true">
-          <Icon path={bpArrowRight} size={20} />
+          <Icon path={mdiArrowRight} size={20} />
         </span>
         <span className="ceremony__awake">
           <span className="ceremony__awake-sleepy">
@@ -93,7 +92,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
     return (
       <main className="screen screen--glow ceremony ceremony--cup" data-phase={phase}>
         <div className="ceremony__tick" aria-hidden="true">
-          <Print name="check-ceremony" size={96} large />
+          <Icon path={mdiCheck} size={56} />
         </div>
         <Headline first={t("ceremony.cupTitle")} second={t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })} align="center" />
         {toNext && upcoming ? (
