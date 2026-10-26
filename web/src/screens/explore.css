@@ -1,3 +1,42 @@
+/* Explore in Mocha dither (docs/DESIGN.md §2.2.1). */
+
+html.mocha-page,
+html.mocha-page body {
+  background: var(--mocha-bg);
+}
+
+.explore {
+  position: relative;
+  isolation: isolate;
+  gap: 0;
+  padding-top: 24px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.explore > * + * {
+  margin-top: 16px;
+}
+
+/* Full width, 240px tall, painted behind everything else in the screen. */
+.explore__dither {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  object-position: top;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+.explore > .explore__dither + * {
+  margin-top: 0;
+}
+
 .greeting {
   display: flex;
   align-items: center;
@@ -6,8 +45,8 @@
 
 .greeting__doodle {
   border-radius: 50%;
-  min-width: var(--touch);
-  min-height: var(--touch);
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,33 +54,44 @@
 
 .greeting__text {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .greeting__hello {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
+  color: var(--mocha-header-ink);
 }
 
 .greeting__mood {
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 14px;
+  color: var(--mocha-header-ink-muted);
+}
+
+/* The headline lands on the dark part of the dither. */
+.explore > .headline {
+  margin-top: 140px;
 }
 
 .search {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   height: 52px;
-  padding: 0 8px 0 18px;
-  border-radius: 999px;
+  padding: 0 16px 0 18px;
+  border-radius: 16px;
   background: var(--raised);
-  border: 1px solid var(--border);
+}
+
+.explore > .search {
+  margin-top: 18px;
 }
 
 .search:focus-within {
-  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1.5px var(--mocha-surface-active);
 }
 
 .search input {
@@ -50,7 +100,7 @@
   border: 0;
   background: none;
   outline: none;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .search input::-webkit-search-cancel-button {
@@ -58,61 +108,60 @@
 }
 
 .search__icon {
-  width: 38px;
-  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--muted);
 }
 
-.tiles {
+.pills {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 8px;
-  border-radius: 24px;
-  background: var(--raised);
-  border: 1px solid var(--border);
+  gap: 6px;
 }
 
-.tile {
-  height: 88px;
-  border-radius: var(--radius-tile);
-  background: var(--sunken);
+.explore > .pills {
+  margin-top: 10px;
+}
+
+.pill {
+  height: 44px;
+  border-radius: 22px;
+  background: var(--raised);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 12.5px;
+  gap: 6px;
+  padding: 0 6px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 1.2;
-  text-align: center;
-  padding: 0 4px;
-  border: 2px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.tile[aria-pressed="true"] {
-  border-color: var(--primary);
+.pill[aria-pressed="true"] {
+  background: var(--mocha-surface-active);
+  color: var(--primary);
 }
 
-.tile[aria-busy="true"] .tile__chip {
+.pill[aria-busy="true"] svg {
   animation: pulse 1.2s ease-in-out infinite;
 }
 
-.tile__chip {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* The 44px "See all" target already adds air above the title. */
+.explore > .section-head {
+  margin-top: 14px;
+  align-items: baseline;
 }
 
-.tile__chip--accent {
-  background: var(--accent-soft);
-  color: var(--accent);
+.explore .section-head .link-button {
+  min-height: 44px;
+}
+
+.explore .section-title {
+  letter-spacing: -0.01em;
+}
+
+.explore > .shop-list {
+  margin-top: 0;
 }

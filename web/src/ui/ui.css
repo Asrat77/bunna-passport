@@ -444,3 +444,101 @@
     animation: none;
   }
 }
+
+/* One-line headline (Explore): tight Latin tracking, Ethiopic keeps its room. */
+.headline--one-line {
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+:lang(am) .headline--one-line {
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+/* Flat shop rows (Explore, Mocha): dividers instead of cards. */
+.shop-list--flat {
+  gap: 0;
+}
+
+.shop-list--flat > li + li {
+  border-top: 1px solid var(--border);
+}
+
+.shop-list--flat .skeleton {
+  border-radius: 16px;
+  margin: 6px 0;
+}
+
+.shop-row--flat {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.shop-row--flat .shop-row__main {
+  gap: 14px;
+  padding: 13px 0;
+}
+
+.shop-row--flat .shop-row__text {
+  gap: 3px;
+}
+
+.shop-row--flat .shop-row__am {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-row--flat .shop-row__where {
+  font-size: 14px;
+}
+
+.shop-row--flat .shop-row__standing {
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.shop-row--flat .shop-row__standing--new {
+  color: var(--primary);
+}
+
+.shop-row--flat .shop-row__distance {
+  font-size: 15px;
+}
+
+.shop-row--flat .shop-row__menu {
+  width: 28px;
+}
+
+.stamp-ring {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-ring--bronze {
+  border-color: var(--mocha);
+  background: rgba(169, 80, 58, 0.18);
+  color: var(--mocha-light);
+}
+
+.stamp-ring--silver {
+  border-color: var(--mocha-silver);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--mocha-silver);
+}
+
+.stamp-ring--empty {
+  border-style: dashed;
+  border-color: var(--mocha-stamp-empty);
+  color: var(--mocha-stamp-empty-icon);
+}
