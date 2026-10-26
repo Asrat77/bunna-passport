@@ -305,7 +305,7 @@
   color: var(--faint);
 }
 
-/* Dock */
+/* Dock (Mocha on every screen, docs/DESIGN.md §2.2.1) */
 .dock {
   position: fixed;
   left: 0;
@@ -314,63 +314,56 @@
   z-index: 30;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 30px var(--gutter) calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, transparent, var(--surface) 40%);
+  /* Full-width bar; the row inside stays within the 480px column. */
+  padding: 14px max(14px, calc((100% - 480px) / 2 + 14px)) max(14px, calc(env(safe-area-inset-bottom) + 4px));
+  background: var(--mocha-bar);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--mocha-divider);
 }
 
 .dock__tabs {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 5px;
-  border-radius: 999px;
-  background: var(--raised);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 28px var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .dock__tab {
-  height: 52px;
-  border-radius: 999px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
+  background: var(--mocha-surface);
+  border: 1px solid var(--mocha-surface-active);
+  color: var(--mocha-text-2);
 }
 
 .dock__tab[aria-current="page"] {
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 600;
+  width: 76px;
+  border-radius: 16px;
+  border-color: transparent;
+  background: var(--mocha-surface-active);
+  color: var(--mocha-text);
 }
 
 .dock__checkin {
-  height: 62px;
-  padding: 0 20px 0 16px;
-  border-radius: 999px;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--primary);
-  color: var(--on-primary);
-  font-size: 15px;
-  font-weight: 700;
-  box-shadow: 0 10px 24px var(--shadow);
-  white-space: nowrap;
+  justify-content: center;
+  background: var(--mocha-text);
+  color: var(--mocha-bg);
 }
 
-.dock__checkin--round {
-  width: 62px;
-  padding: 0;
-  justify-content: center;
+.dock :focus-visible {
+  outline-color: var(--mocha-light);
 }
 
 /* Status and empty states */
