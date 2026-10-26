@@ -93,13 +93,17 @@ Rules:
   differentiate by artwork and metal tones (§6.3), not by inventing new
   semantic colors.
 
-### 2.2.1 Mocha dither (native Explore and tab dock)
+### 2.2.1 Mocha dither (Explore and the dock)
 
-The native app's Explore screen and its tab dock use a fixed dark palette,
-"Mocha dither", in both OS modes. The dithered white-to-mocha header is an
+Explore and the navigation dock use a fixed dark palette, "Mocha dither", in
+both phone themes, in the Telegram Mini App (`web/`) and the native app
+(`mobile/`). The dithered white-to-mocha header is an
 illustration, not a surface, so the screen under it can't switch to paper.
-Tokens live in `mobile/src/design/tokens.ts` as `mochaTokens`, and `mocha`
-maps them onto the shared roles above so themed components follow along.
+In the Mini App the tokens are the `--mocha-*` variables in
+`web/src/styles/tokens.css`, and the `.mocha` class maps them onto the shared
+roles, the same way `.paper` pins the passport to light. Natively they are
+`mochaTokens` in `mobile/src/design/tokens.ts`, and `mocha` does the mapping.
+On Explore, Telegram's header is set to white so it runs into the dither art.
 
 | Token | Hex | Use |
 |---|---|---|
@@ -119,17 +123,20 @@ maps them onto the shared roles above so themed components follow along.
 
 Layout rules:
 - Header: `mobile/assets/images/dither-mocha-240.png`, full width, 240pt tall,
-  with the white extended under the status bar. Native image views have no
-  nearest-neighbour filter, so the 1x/2x/3x files are pre-scaled with nearest
-  neighbour. Re-export all three if the art changes.
+  with the white extended under the status bar (`web/src/assets/` in the
+  Mini App, drawn with `image-rendering: pixelated`). Native image views have
+  no nearest-neighbour filter, so the 1x/2x/3x files are pre-scaled with
+  nearest neighbour. Re-export all three if the art changes.
 - Headline on one line, Geist SemiBold 31, tight tracking (-0.04em); Amharic
   uses Noto Sans Ethiopic with the §2.3 line height.
 - Search: `surface`, no border, radius 16, height 52. Quick actions: four
   equal pills, height 44, radius 22, 16pt icon next to the label.
-- Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt.
+- Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt:
+  the metal coin `Seal` in the Mini App, a mocha/silver/dashed ring natively.
   Distance is set in Geist Mono Medium. The second name shows only when it is
-  in the other script.
-- Dock: full width, blurred (iOS) with `rgba(11,10,9,0.82)` over it and a 1px
+  in the other script. "Open" isn't repeated on every row; only closing soon
+  and closed show.
+- Dock: full width, blurred (iOS natively; everywhere in the Mini App) with `rgba(11,10,9,0.82)` over it and a 1px
   top border. The active tab is a 76×50 rectangle (radius 16), the others are
   50pt circles, and check-in is a 52pt `text`-coloured circle with a dark plus.
   The dock floats, so scrolling screens pad by `useDockClearance()`.

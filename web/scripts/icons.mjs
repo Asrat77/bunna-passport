@@ -32,6 +32,7 @@ const ICONS = [
   "eye",
   "eye-slash",
   "fire",
+  "house",
   "magnifying-glass",
   "map-pin",
   "map-trifold",

@@ -1,23 +1,23 @@
-import { phChartBar, phCoffee, phCompass, phStamp } from "./icons";
+import { phChartBar, phHouse, phPlus, phStamp } from "./icons";
 import { useI18n } from "@/i18n/context";
 import { useNavigation, type Tab } from "@/nav/Navigation";
 import { Icon } from "./Icon";
 
 const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "tab.stats" }[] = [
-  { tab: "explore", icon: phCompass, label: "tab.explore" },
+  { tab: "explore", icon: phHouse, label: "tab.explore" },
   { tab: "passport", icon: phStamp, label: "tab.passport" },
   { tab: "stats", icon: phChartBar, label: "tab.stats" },
 ];
 
 /**
- * The navigation dock: three labelled tabs in a raised pill and the Check in
- * control to the right, a pill with its label on Explore and Passport and a
- * circle on Stats.
+ * The navigation dock, in Mocha on every screen (docs/DESIGN.md §2.2.1): a
+ * full-width blurred bar with icon tabs on the left, the current one widened
+ * into a rounded rectangle, and Check in as a light circle on the right.
+ * Tab names stay as the accessible labels.
  */
 export function Dock() {
   const { t } = useI18n();
   const { tab: current, switchTab, push } = useNavigation();
-  const compact = current === "stats";
 
   return (
     <div className="dock">
@@ -27,22 +27,16 @@ export function Dock() {
             key={tab}
             type="button"
             className="dock__tab"
+            aria-label={t(label)}
             aria-current={tab === current ? "page" : undefined}
             onClick={() => switchTab(tab)}
           >
-            <Icon path={icon} size={21} />
-            {t(label)}
+            <Icon path={icon} size={20} />
           </button>
         ))}
       </nav>
-      <button
-        type="button"
-        className={compact ? "dock__checkin dock__checkin--round" : "dock__checkin"}
-        aria-label={compact ? t("checkin.action") : undefined}
-        onClick={() => push({ name: "checkin" })}
-      >
-        <Icon path={phCoffee} size={23} />
-        {compact ? null : t("checkin.action")}
+      <button type="button" className="dock__checkin" aria-label={t("checkin.action")} onClick={() => push({ name: "checkin" })}>
+        <Icon path={phPlus} size={22} />
       </button>
     </div>
   );

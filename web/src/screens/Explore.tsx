@@ -1,14 +1,18 @@
 import { phCoffeeBean, phCrosshair, phMagnifyingGlass, phMapTrifold, phPlusCircle } from "@/ui/icons";
-import { useMemo, useState } from "react";
+import { miniApp } from "@telegram-apps/sdk-react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { rankShops, type ShopFilter } from "@/data/nearby";
 import { useMyDoodle } from "@/data/me";
 import { useCatalog, useProfile } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
+import dither from "@/assets/dither-mocha-240.png";
 import { Doodle } from "@/design/doodle/Doodle";
+import { mochaChrome, palette } from "@/design/palette";
 import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
+import { useScheme } from "@/telegram/theme";
 import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
@@ -16,6 +20,28 @@ import { ShopRow } from "@/ui/ShopRow";
 import "./explore.css";
 
 const PREVIEW_COUNT = 5;
+
+/**
+ * Explore is Mocha in both phone themes (docs/DESIGN.md §2.2.1). Telegram's
+ * header goes white to run into the dither art, the rest of its chrome goes
+ * Mocha, and both go back to the app surface on the way out.
+ */
+function useMochaChrome() {
+  const scheme = useScheme();
+  useEffect(() => {
+    miniApp.setHeaderColor.ifAvailable(mochaChrome.header);
+    miniApp.setBackgroundColor.ifAvailable(mochaChrome.background);
+    miniApp.setBottomBarColor.ifAvailable(mochaChrome.background);
+    document.documentElement.classList.add("mocha-page");
+    return () => {
+      const { surface } = palette[scheme];
+      miniApp.setHeaderColor.ifAvailable(surface);
+      miniApp.setBackgroundColor.ifAvailable(surface);
+      miniApp.setBottomBarColor.ifAvailable(surface);
+      document.documentElement.classList.remove("mocha-page");
+    };
+  }, [scheme]);
+}
 
 export function Explore() {
   const { t } = useI18n();
@@ -28,6 +54,7 @@ export function Explore() {
   const location = useLocation();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ShopFilter>("all");
+  useMochaChrome();
 
   const ranked = useMemo(
     () =>
@@ -56,7 +83,9 @@ export function Explore() {
   const name = firstName ?? profile?.display_name ?? "";
 
   return (
-    <main className="screen screen--with-dock explore">
+    <main className="screen screen--with-dock explore mocha">
+      <img className="explore__dither" src={dither} alt="" aria-hidden="true" />
+
       <div className="greeting">
         <button
           type="button"
@@ -75,6 +104,8 @@ export function Explore() {
       <Headline
         first={t(doodle.awake ? "explore.titleNext" : "explore.titleFirst")}
         second={t(doodle.awake ? "explore.titleNextB" : "explore.titleFirstB")}
+        size={31}
+        oneLine
       />
 
       <label className="search">
@@ -87,33 +118,25 @@ export function Explore() {
           enterKeyHint="search"
         />
         <span className="search__icon" aria-hidden="true">
-          <Icon path={phMagnifyingGlass} size={21} />
+          <Icon path={phMagnifyingGlass} size={20} />
         </span>
       </label>
 
-      <div className="tiles" role="group" aria-label={t("explore.quickFilters")}>
-        <button type="button" className="tile" aria-busy={location.status === "locating" || undefined} onClick={() => void location.refresh()}>
-          <span className="tile__chip">
-            <Icon path={phCrosshair} size={19} />
-          </span>
+      <div className="pills" role="group" aria-label={t("explore.quickFilters")}>
+        <button type="button" className="pill" aria-busy={location.status === "locating" || undefined} onClick={() => void location.refresh()}>
+          <Icon path={phCrosshair} size={16} />
           {t("explore.tileNearMe")}
         </button>
-        <button type="button" className="tile" onClick={() => push({ name: "map" })}>
-          <span className="tile__chip">
-            <Icon path={phMapTrifold} size={19} />
-          </span>
+        <button type="button" className="pill" onClick={() => push({ name: "map" })}>
+          <Icon path={phMapTrifold} size={16} />
           {t("explore.tileMap")}
         </button>
-        <button type="button" className="tile" aria-pressed={filter === "jebena"} onClick={() => toggle("jebena")}>
-          <span className="tile__chip tile__chip--accent">
-            <Icon path={phCoffeeBean} size={19} />
-          </span>
+        <button type="button" className="pill" aria-pressed={filter === "jebena"} onClick={() => toggle("jebena")}>
+          <Icon path={phCoffeeBean} size={16} />
           {t("explore.tileJebena")}
         </button>
-        <button type="button" className="tile" aria-pressed={filter === "notYet"} onClick={() => toggle("notYet")}>
-          <span className="tile__chip">
-            <Icon path={phPlusCircle} size={19} />
-          </span>
+        <button type="button" className="pill" aria-pressed={filter === "notYet"} onClick={() => toggle("notYet")}>
+          <Icon path={phPlusCircle} size={16} />
           {t("explore.tileNotYet")}
         </button>
       </div>
@@ -132,9 +155,9 @@ export function Explore() {
       ) : null}
 
       {catalog.isPending ? (
-        <div className="shop-list" aria-label={t("explore.loading")}>
+        <div className="shop-list shop-list--flat" aria-label={t("explore.loading")}>
           {[0, 1, 2].map((n) => (
-            <div key={n} className="skeleton" style={{ height: 76 }} />
+            <div key={n} className="skeleton" style={{ height: 74 }} />
           ))}
         </div>
       ) : catalog.isError && !catalog.data ? (
@@ -150,10 +173,16 @@ export function Explore() {
           {searching ? <><br />{t("explore.noResultsHint")}</> : null}
         </p>
       ) : (
-        <ul className="shop-list">
+        <ul className="shop-list shop-list--flat">
           {visible.map(({ shop, distance }) => (
             <li key={shop.id}>
-              <ShopRow shop={shop} stamp={stamps.get(shop.id)} distance={distance} onOpen={() => push({ name: "shop", id: shop.id })} />
+              <ShopRow
+                shop={shop}
+                stamp={stamps.get(shop.id)}
+                distance={distance}
+                variant="flat"
+                onOpen={() => push({ name: "shop", id: shop.id })}
+              />
             </li>
           ))}
         </ul>

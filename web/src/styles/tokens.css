@@ -35,6 +35,25 @@
   --radius-button: 18px;
   --shadow-float: 0 12px 30px var(--shadow);
 
+  /*
+   * Mocha dither (docs/DESIGN.md §2.2.1): Explore and the dock in both
+   * phone themes. Named here so the dock can use them on any screen.
+   */
+  --mocha-bg: #0b0a09;
+  --mocha-surface: #171413;
+  --mocha-surface-active: #2a2421;
+  --mocha-divider: #221e1c;
+  --mocha-text: #f7f3ef;
+  --mocha-text-2: #a8a09a;
+  --mocha-text-3: #8e8781;
+  --mocha: #a9503a;
+  --mocha-light: #d4917a;
+  --mocha-silver: #cfc9c4;
+  --mocha-header-ink: #0b0a09;
+  --mocha-header-ink-muted: #5a524d;
+  --mocha-stamp-empty: #3a3431;
+  --mocha-bar: rgba(11, 10, 9, 0.82);
+
   color-scheme: light;
 }
 
@@ -76,4 +95,31 @@
   --border: #ded0bf;
   --border-strong: #bca995;
   color: var(--ink);
+}
+
+/*
+ * Explore wears Mocha whatever the phone's theme: the dithered header is
+ * artwork, so the screen under it can't flip to paper. Mapping Mocha onto the
+ * shared roles keeps shared components (notices, skeletons, links) in step.
+ */
+.mocha {
+  --surface: var(--mocha-bg);
+  --raised: var(--mocha-surface);
+  --sunken: var(--mocha-surface-active);
+  --ink: var(--mocha-text);
+  --muted: var(--mocha-text-2);
+  --faint: var(--mocha-text-3);
+  --primary: var(--mocha-light);
+  --on-primary: var(--mocha-bg);
+  --primary-soft: var(--mocha-surface-active);
+  --border: var(--mocha-divider);
+  --border-strong: var(--mocha-stamp-empty);
+  --shadow: rgba(0, 0, 0, 0.5);
+  /* Not-yet seals: the dashed ring and bean would sink into near-black. */
+  --seal-empty-fill: var(--mocha-surface-active);
+  --seal-empty-ring: var(--mocha-text-3);
+  --seal-empty-bean: var(--mocha-text);
+  background: var(--surface);
+  color: var(--ink);
+  color-scheme: dark;
 }
