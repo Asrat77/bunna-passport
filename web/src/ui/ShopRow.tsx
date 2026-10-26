@@ -1,23 +1,33 @@
-import { phDotsThreeVertical } from "./icons";
+import { phCoffeeBean, phDotsThreeVertical } from "./icons";
 import type { PassportStamp, Shop } from "@/api/types";
 import { isEthiopic } from "@/design/script";
+import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
 import { openStatus } from "@/lib/hours";
 import { formatMeters } from "@/lib/distance";
 import { shopMenu } from "@/lib/maps";
 import { Icon } from "./Icon";
-import { StampRing } from "./StampRing";
 
 type Props = {
   shop: Shop;
   stamp: PassportStamp | undefined;
   distance: number | null;
   onOpen: () => void;
-  /** "flat" is Explore's Mocha row: divider-separated, no card. */
+  /** "flat" is Explore's Mocha row: divider-separated, no card, a ring for the stamp. */
   variant?: "card" | "flat";
 };
 
-/** A shop in a list: stamp ring, bilingual name, where, standing, distance, menu. */
+/** Mocha's 48px stamp ring: bronze, silver, or dashed when not visited yet. */
+function StampRing({ level }: { level: PassportStamp["level"] | null }) {
+  const tone = level === null ? "empty" : level === "bronze" ? "bronze" : "silver";
+  return (
+    <span className={`stamp-ring stamp-ring--${tone}`} aria-hidden="true">
+      <Icon path={phCoffeeBean} size={20} />
+    </span>
+  );
+}
+
+/** A shop in a list: seal, bilingual name, where, standing, distance, menu. */
 export function ShopRow({ shop, stamp, distance, onOpen, variant = "card" }: Props) {
   const { t, language } = useI18n();
   const flat = variant === "flat";
@@ -42,7 +52,7 @@ export function ShopRow({ shop, stamp, distance, onOpen, variant = "card" }: Pro
   return (
     <div className={flat ? "shop-row shop-row--flat" : "shop-row"}>
       <button type="button" className="shop-row__main" onClick={onOpen}>
-        <StampRing level={stamp?.level ?? null} />
+        {flat ? <StampRing level={stamp?.level ?? null} /> : <Seal name={shop.name} level={stamp?.level ?? null} size={50} decorative />}
         <span className="shop-row__text">
           <span className="shop-row__name">
             <span className={isEthiopic(shop.name) ? "shop-row__latin ethiopic" : "shop-row__latin"}>{shop.name}</span>

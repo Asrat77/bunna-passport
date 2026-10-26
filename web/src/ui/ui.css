@@ -508,6 +508,8 @@
 }
 
 .stamp-ring {
+  width: 48px;
+  height: 48px;
   flex: none;
   border-radius: 50%;
   border: 1.5px solid;
@@ -518,30 +520,18 @@
 
 .stamp-ring--bronze {
   border-color: var(--mocha);
-  background: rgba(169, 80, 58, 0.14);
-  color: var(--mocha);
-}
-
-.stamp-ring--silver {
-  border-color: var(--stamp-ring-silver);
-  background: var(--stamp-ring-silver-fill);
-  color: var(--stamp-ring-silver);
-}
-
-.stamp-ring--empty {
-  border-style: dashed;
-  border-color: var(--border-strong);
-  color: var(--faint);
-}
-
-/* On dark grounds the bean lifts to mocha-light and silver to its light tone. */
-:root[data-theme="dark"] .stamp-ring--bronze,
-.mocha .stamp-ring--bronze {
   background: rgba(169, 80, 58, 0.18);
   color: var(--mocha-light);
 }
 
-.mocha .stamp-ring--empty {
+.stamp-ring--silver {
+  border-color: var(--mocha-silver);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--mocha-silver);
+}
+
+.stamp-ring--empty {
+  border-style: dashed;
   border-color: var(--mocha-stamp-empty);
   color: var(--mocha-stamp-empty-icon);
 }
