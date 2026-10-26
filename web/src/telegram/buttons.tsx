@@ -5,7 +5,7 @@ import {
   useSignal,
 } from "@telegram-apps/sdk-react";
 import { useEffect, useRef } from "react";
-import { palette } from "@/design/palette";
+import { mochaPalette, palette } from "@/design/palette";
 import { useScheme } from "./theme";
 import "./buttons.css";
 
@@ -14,6 +14,11 @@ type ActionProps = {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+};
+
+type PrimaryProps = ActionProps & {
+  /** On a Mocha screen the button is Mocha in both phone themes. */
+  mocha?: boolean;
 };
 
 /** Keeps the latest handler without re-subscribing on every render. */
@@ -28,23 +33,23 @@ function useLatest<T>(value: T) {
  * BottomButton; in older clients and the plain website it falls back to the
  * 56px in-page button drawn on the canvas.
  */
-export function PrimaryAction({ text, onClick, disabled = false, loading = false }: ActionProps) {
+export function PrimaryAction({ text, onClick, disabled = false, loading = false, mocha = false }: PrimaryProps) {
   const scheme = useScheme();
   const native = useSignal(mainButton.setParams.isAvailable);
   const handler = useLatest(onClick);
 
   useEffect(() => {
     if (!native) return;
-    const { primary, onPrimary } = palette[scheme];
+    const { action, onAction } = mocha ? mochaPalette : palette[scheme];
     mainButton.setParams({
       text,
-      backgroundColor: primary,
-      textColor: onPrimary,
+      backgroundColor: action,
+      textColor: onAction,
       isVisible: true,
       isEnabled: !disabled,
       isLoaderVisible: loading,
     });
-  }, [native, scheme, text, disabled, loading]);
+  }, [native, scheme, mocha, text, disabled, loading]);
 
   useEffect(() => {
     if (!native) return;
