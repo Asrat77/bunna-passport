@@ -11,3 +11,6 @@ export const palette: Record<ColorScheme, { surface: Hex; primary: Hex; onPrimar
   light: { surface: "#F6F0E6", primary: "#872F1D", onPrimary: "#FFF8ED" },
   dark: { surface: "#17100C", primary: "#F0A05D", onPrimary: "#25130A" },
 };
+
+/** Telegram chrome on Explore: white over the dither header, Mocha below. */
+export const mochaChrome = { header: "#FFFFFF", background: "#0B0A09" } as const satisfies Record<string, Hex>;
