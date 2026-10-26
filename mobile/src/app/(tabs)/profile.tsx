@@ -7,6 +7,7 @@ import { useAuth } from "@/auth/context";
 import { Button } from "@/design/components/Button";
 import { EmptyState } from "@/design/components/EmptyState";
 import { Text } from "@/design/components/Text";
+import { useDockClearance } from "@/design/dock";
 import { useTheme } from "@/design/theme";
 import { radius, space, touchTarget } from "@/design/tokens";
 import { pendingCount } from "@/features/checkin/queue";
@@ -23,6 +24,7 @@ const TRUST_LADDER: Record<string, { next: string; need: number } | null> = {
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
+  const dockClearance = useDockClearance();
   const { t, language, setLanguage } = useI18n();
   const router = useRouter();
   const { user, signedIn, signOut, refreshProfile } = useAuth();
@@ -59,7 +61,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: touchTarget }}
+        contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: dockClearance + space.lg }}
       >
         <View>
           <Text role="caption" color="primary" weight="bold">

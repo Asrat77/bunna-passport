@@ -9,8 +9,9 @@ import { Chip } from "@/design/components/Chip";
 import { EmptyState } from "@/design/components/EmptyState";
 import { SkeletonBlock } from "@/design/components/Skeleton";
 import { Text } from "@/design/components/Text";
+import { useDockClearance } from "@/design/dock";
 import { useTheme } from "@/design/theme";
-import { radius, space, touchTarget } from "@/design/tokens";
+import { radius, space } from "@/design/tokens";
 import { useI18n } from "@/i18n/context";
 
 type Entry = {
@@ -164,6 +165,7 @@ function BoardRow({
 
 export default function BoardsScreen() {
   const { colors } = useTheme();
+  const dockClearance = useDockClearance();
   const { t } = useI18n();
   const { user } = useAuth();
 
@@ -222,7 +224,7 @@ export default function BoardsScreen() {
           />
         )}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: space.lg, gap: space.sm, paddingBottom: touchTarget }}
+        contentContainerStyle={{ padding: space.lg, gap: space.sm, paddingBottom: dockClearance + space.lg }}
         ListHeaderComponent={
           <View style={{ gap: space.lg, marginBottom: space.lg }}>
             <View>
