@@ -1,6 +1,5 @@
 import { phCoffeeBean, phCrosshair, phMagnifyingGlass, phMapTrifold, phPlusCircle } from "@/ui/icons";
-import { miniApp } from "@telegram-apps/sdk-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { rankShops, type ShopFilter } from "@/data/nearby";
 import { useMyDoodle } from "@/data/me";
@@ -8,11 +7,10 @@ import { useCatalog, useProfile } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import dither from "@/assets/dither-mocha-240.png";
 import { Doodle } from "@/design/doodle/Doodle";
-import { mochaChrome, palette } from "@/design/palette";
 import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
-import { useScheme } from "@/telegram/theme";
+import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
@@ -21,28 +19,7 @@ import "./explore.css";
 
 const PREVIEW_COUNT = 5;
 
-/**
- * Explore is Mocha in both phone themes (docs/DESIGN.md §2.2.1). Telegram's
- * header goes white to run into the dither art, the rest of its chrome goes
- * Mocha, and both go back to the app surface on the way out.
- */
-function useMochaChrome() {
-  const scheme = useScheme();
-  useEffect(() => {
-    miniApp.setHeaderColor.ifAvailable(mochaChrome.header);
-    miniApp.setBackgroundColor.ifAvailable(mochaChrome.background);
-    miniApp.setBottomBarColor.ifAvailable(mochaChrome.background);
-    document.documentElement.classList.add("mocha-page");
-    return () => {
-      const { surface } = palette[scheme];
-      miniApp.setHeaderColor.ifAvailable(surface);
-      miniApp.setBackgroundColor.ifAvailable(surface);
-      miniApp.setBottomBarColor.ifAvailable(surface);
-      document.documentElement.classList.remove("mocha-page");
-    };
-  }, [scheme]);
-}
-
+/** Explore is Mocha in both phone themes (docs/DESIGN.md §2.2.1). */
 export function Explore() {
   const { t } = useI18n();
   const { push } = useNavigation();

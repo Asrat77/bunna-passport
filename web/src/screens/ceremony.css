@@ -1,16 +1,40 @@
+/* The ceremony in Mocha dither, under Explore's header (docs/DESIGN.md §2.2.1). */
 .ceremony {
+  position: relative;
+  isolation: isolate;
   align-items: center;
   text-align: center;
-  padding-top: 24px;
+  padding-top: 40px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
+.ceremony > * {
+  width: 100%;
+}
+
+/* Full width, 240px tall, painted behind the rest, as on Explore. */
+.ceremony__dither {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  height: 240px;
+  object-fit: cover;
+  object-position: top;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The stamp lands on passport paper, whichever theme the phone is in. */
 .ceremony__disc {
   position: relative;
   width: 268px;
   height: 268px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--accent-soft);
+  background: #f6f0e6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,8 +65,8 @@
   bottom: 26px;
   padding: 6px 11px;
   border-radius: 99px;
-  background: var(--primary);
-  color: var(--on-primary);
+  background: var(--mocha);
+  color: var(--mocha-text);
   font-size: 12px;
   font-weight: 500;
   transform: rotate(6deg);
@@ -75,6 +99,7 @@
   color: var(--muted);
 }
 
+/* Flat Mocha surfaces: no outline, the search field's radius. */
 .ceremony__progress,
 .ceremony__doodle {
   width: 100%;
@@ -82,6 +107,8 @@
   align-items: center;
   gap: 14px;
   padding: 12px 16px 12px 12px;
+  border-radius: 16px;
+  background: var(--raised);
   text-align: left;
 }
 
@@ -152,12 +179,17 @@
   opacity: 0;
 }
 
+/* The tick sits where the dither runs into Mocha, ringed like a dock tab. */
 .ceremony__tick {
-  width: 112px;
-  height: 112px;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  margin-top: 112px;
+  margin-bottom: 8px;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--mocha-surface);
+  border: 1px solid var(--mocha-surface-active);
+  color: var(--mocha-light);
   display: flex;
   align-items: center;
   justify-content: center;
