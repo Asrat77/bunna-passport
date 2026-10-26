@@ -13,7 +13,7 @@ type Props = {
   stamp: PassportStamp | undefined;
   distance: number | null;
   onOpen: () => void;
-  /** "flat" is Explore's Mocha row: divider-separated, no card. */
+  /** "flat" is the Mocha row on Explore and All cafés: divider-separated, no card. */
   variant?: "card" | "flat";
 };
 
