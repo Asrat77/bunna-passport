@@ -1,4 +1,4 @@
-import { phCoffeeBean, phDotsThreeVertical } from "./icons";
+import { phDotsThreeVertical } from "./icons";
 import type { PassportStamp, Shop } from "@/api/types";
 import { isEthiopic } from "@/design/script";
 import { Seal } from "@/design/seal/Seal";
@@ -13,19 +13,9 @@ type Props = {
   stamp: PassportStamp | undefined;
   distance: number | null;
   onOpen: () => void;
-  /** "flat" is Explore's Mocha row: divider-separated, no card, a ring for the stamp. */
+  /** "flat" is Explore's Mocha row: divider-separated, no card. */
   variant?: "card" | "flat";
 };
-
-/** Mocha's 48px stamp ring: bronze, silver, or dashed when not visited yet. */
-function StampRing({ level }: { level: PassportStamp["level"] | null }) {
-  const tone = level === null ? "empty" : level === "bronze" ? "bronze" : "silver";
-  return (
-    <span className={`stamp-ring stamp-ring--${tone}`} aria-hidden="true">
-      <Icon path={phCoffeeBean} size={20} />
-    </span>
-  );
-}
 
 /** A shop in a list: seal, bilingual name, where, standing, distance, menu. */
 export function ShopRow({ shop, stamp, distance, onOpen, variant = "card" }: Props) {
@@ -52,7 +42,7 @@ export function ShopRow({ shop, stamp, distance, onOpen, variant = "card" }: Pro
   return (
     <div className={flat ? "shop-row shop-row--flat" : "shop-row"}>
       <button type="button" className="shop-row__main" onClick={onOpen}>
-        {flat ? <StampRing level={stamp?.level ?? null} /> : <Seal name={shop.name} level={stamp?.level ?? null} size={50} decorative />}
+        <Seal name={shop.name} level={stamp?.level ?? null} size={flat ? 48 : 50} decorative />
         <span className="shop-row__text">
           <span className="shop-row__name">
             <span className={isEthiopic(shop.name) ? "shop-row__latin ethiopic" : "shop-row__latin"}>{shop.name}</span>

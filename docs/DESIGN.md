@@ -131,7 +131,8 @@ Layout rules:
   uses Noto Sans Ethiopic with the §2.3 line height.
 - Search: `surface`, no border, radius 16, height 52. Quick actions: four
   equal pills, height 44, radius 22, 16pt icon next to the label.
-- Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt.
+- Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt:
+  the metal coin `Seal` in the Mini App, a mocha/silver/dashed ring natively.
   Distance is set in Geist Mono Medium. The second name shows only when it is
   in the other script. "Open" isn't repeated on every row; only closing soon
   and closed show.

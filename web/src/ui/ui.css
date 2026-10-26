@@ -506,32 +506,3 @@
 .shop-row--flat .shop-row__menu {
   width: 28px;
 }
-
-.stamp-ring {
-  width: 48px;
-  height: 48px;
-  flex: none;
-  border-radius: 50%;
-  border: 1.5px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stamp-ring--bronze {
-  border-color: var(--mocha);
-  background: rgba(169, 80, 58, 0.18);
-  color: var(--mocha-light);
-}
-
-.stamp-ring--silver {
-  border-color: var(--mocha-silver);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--mocha-silver);
-}
-
-.stamp-ring--empty {
-  border-style: dashed;
-  border-color: var(--mocha-stamp-empty);
-  color: var(--mocha-stamp-empty-icon);
-}
