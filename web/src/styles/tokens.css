@@ -115,6 +115,10 @@
   --border: var(--mocha-divider);
   --border-strong: var(--mocha-stamp-empty);
   --shadow: rgba(0, 0, 0, 0.5);
+  /* Not-yet seals: the dashed ring and bean would sink into near-black. */
+  --seal-empty-fill: var(--mocha-surface-active);
+  --seal-empty-ring: var(--mocha-text-3);
+  --seal-empty-bean: var(--mocha-text);
   background: var(--surface);
   color: var(--ink);
   color-scheme: dark;

@@ -40,8 +40,18 @@ export function Seal({ name, level, size, rotation = 0, label, decorative = fals
   if (!level) {
     return (
       <svg {...svgProps}>
-        <circle cx="50" cy="50" r="47" fill="var(--raised)" stroke="var(--border-strong)" strokeWidth={2.5} strokeDasharray="6 5" strokeLinecap="round" />
-        <path d={phCoffeeBean} transform={small ? BEAN_SMALL : BEAN} fill="var(--faint)" opacity={0.7} />
+        {/* A surface can lift these with --seal-empty-* where the defaults sink, as Mocha does. */}
+        <circle
+          cx="50"
+          cy="50"
+          r="47"
+          fill="var(--seal-empty-fill, var(--raised))"
+          stroke="var(--seal-empty-ring, var(--border-strong))"
+          strokeWidth={2.5}
+          strokeDasharray="6 5"
+          strokeLinecap="round"
+        />
+        <path d={phCoffeeBean} transform={small ? BEAN_SMALL : BEAN} fill="var(--seal-empty-bean, var(--faint))" opacity={0.7} />
       </svg>
     );
   }
