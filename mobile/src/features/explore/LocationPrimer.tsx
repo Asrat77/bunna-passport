@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Modal, View } from "react-native";
 import { Button } from "@/design/components/Button";
 import { Chip } from "@/design/components/Chip";
@@ -13,13 +13,15 @@ import { readFix, useLocationPermission } from "@/location/useLocation";
 type Props = {
   origin: Coordinate | null;
   onOrigin: (origin: Coordinate | null) => void;
+  /** Draws the trigger in place of the default chip; the primer flow is unchanged. */
+  renderTrigger?: (trigger: { active: boolean; onPress?: () => void }) => ReactNode;
 };
 
 /**
  * "Near me" as a primed, in-context permission ask — never an OS dialog at
  * launch (docs/DESIGN.md §4.2). Denial is a supported state, not a dead end.
  */
-export function LocationPrimer({ origin, onOrigin }: Props) {
+export function LocationPrimer({ origin, onOrigin, renderTrigger }: Props) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const { permission, request } = useLocationPermission();
@@ -56,18 +58,22 @@ export function LocationPrimer({ origin, onOrigin }: Props) {
 
   return (
     <>
-      <Chip
-        label={t("explore.nearMe")}
-        selected={origin !== null}
-        onPress={busy ? undefined : onPress}
-        icon={
-          <MaterialCommunityIcons
-            name={origin ? "crosshairs-gps" : "crosshairs"}
-            size={16}
-            color={origin ? colors.onPrimary : colors.ink}
-          />
-        }
-      />
+      {renderTrigger ? (
+        renderTrigger({ active: origin !== null, onPress: busy ? undefined : onPress })
+      ) : (
+        <Chip
+          label={t("explore.nearMe")}
+          selected={origin !== null}
+          onPress={busy ? undefined : onPress}
+          icon={
+            <MaterialCommunityIcons
+              name={origin ? "crosshairs-gps" : "crosshairs"}
+              size={16}
+              color={origin ? colors.onPrimary : colors.ink}
+            />
+          }
+        />
+      )}
 
       <Modal
         visible={showPrimer}

@@ -100,6 +100,8 @@ export const mochaTokens = {
   /** Red text on dark — passes 4.5:1 on bg and surface. */
   mochaLight: "#D4917A",
   silver: "#CFC9C4",
+  /** The dither header's white, extended under the status bar. */
+  headerPaper: "#FFFFFF",
   /** Greeting text on the white part of the dither header. */
   headerInk: "#0B0A09",
   headerInkMuted: "#5A524D",

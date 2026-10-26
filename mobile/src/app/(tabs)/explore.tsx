@@ -1,19 +1,28 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Chip } from "@/design/components/Chip";
+import {
+  FlatList,
+  Pressable,
+  TextInput,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 import { EmptyState } from "@/design/components/EmptyState";
 import { Seal } from "@/design/components/Seal";
-import { ShopCard } from "@/design/components/ShopCard";
-import { ShopCardSkeleton } from "@/design/components/Skeleton";
 import { Text } from "@/design/components/Text";
-import { useTheme } from "@/design/theme";
-import { radius, space, touchTarget } from "@/design/tokens";
+import { useDockClearance } from "@/design/dock";
+import { ThemeOverride, useTheme } from "@/design/theme";
+import { mocha, radius, space } from "@/design/tokens";
 import { fonts } from "@/design/typography";
 import type { CachedShop } from "@/db/shops";
+import { BeanIcon } from "@/features/explore/BeanIcon";
+import { DITHER_HEIGHT, DitherHeader } from "@/features/explore/DitherHeader";
 import { LocationPrimer } from "@/features/explore/LocationPrimer";
+import { QuickAction } from "@/features/explore/QuickAction";
+import { ShopRow, ShopRowDivider, ShopRowSkeleton } from "@/features/explore/ShopRow";
 import { BOLE_CENTER, MAPBOX_STYLE_URL, mapStyleConfig } from "@/features/explore/mapStyle";
 import { ShopPeek } from "@/features/explore/ShopPeek";
 import { useCatalog } from "@/features/explore/useCatalog";
@@ -40,22 +49,52 @@ function relativeTime(date: Date | null, t: ReturnType<typeof useI18n>["t"]): st
   return t("common.daysAgo", { count: Math.floor(hours / 24) });
 }
 
+/** Thousands separators without leaning on Intl, which Hermes only partly ships. */
+function groupDigits(value: number): string {
+  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/** Explore always wears Mocha (docs/DESIGN.md §2.2.1), whatever the OS mode. */
 export default function ExploreScreen() {
+  return (
+    <ThemeOverride scheme="dark" colors={mocha}>
+      <Explore />
+    </ThemeOverride>
+  );
+}
+
+function Explore() {
   const { colors, scheme } = useTheme();
   const { t } = useI18n();
   const router = useRouter();
+  const dockClearance = useDockClearance();
 
-  const [mode, setMode] = useState<ViewMode>("map");
+  const [mode, setMode] = useState<ViewMode>("list");
   const [query, setQuery] = useState("");
   const [onlyUnstamped, setOnlyUnstamped] = useState(false);
+  const [onlyJebena, setOnlyJebena] = useState(false);
   const [origin, setOrigin] = useState<Coordinate | null>(null);
   const [peeked, setPeeked] = useState<CachedShop | null>(null);
+  const [focused, setFocused] = useState(false);
+  // Dark status-bar icons while the white top of the header is under them.
+  const [overHeader, setOverHeader] = useState(true);
 
-  const { shops, loading, syncing, syncedAt, online, refresh } = useCatalog({
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+
+  const { shops: catalog, loading, syncing, syncedAt, online, refresh } = useCatalog({
     query,
     origin,
     onlyUnstamped,
   });
+  const shops = useMemo(
+    () => (onlyJebena ? catalog.filter((shop) => shop.attributes.jebena_service) : catalog),
+    [catalog, onlyJebena],
+  );
 
   const styleConfig = useMemo(() => mapStyleConfig(scheme), [scheme]);
   const freshness = relativeTime(syncedAt, t);
@@ -65,79 +104,31 @@ export default function ExploreScreen() {
     [router],
   );
 
+  const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setOverHeader(event.nativeEvent.contentOffset.y < DITHER_HEIGHT / 3);
+  }, []);
+
   const searching = query.trim().length > 0;
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
-      <View
-        style={{
-          paddingHorizontal: space.lg,
-          paddingTop: space.sm,
-          paddingBottom: space.md,
-          gap: space.md,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <View>
-            <Text role="caption" color="primary" weight="bold">
-              BUNNA PASSPORT
-            </Text>
-            <Text role="title">{t("tab.explore")}</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              padding: 4,
-              borderRadius: radius.full,
-              backgroundColor: colors.surfaceSunken,
-            }}
-          >
-            {(["map", "list"] as const).map((option) => {
-              const selected = mode === option;
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => setMode(option)}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={option === "map" ? t("explore.map") : t("explore.list")}
-                  style={{
-                    minWidth: 48,
-                    height: 40,
-                    borderRadius: radius.full,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: selected ? colors.surfaceRaised : "transparent",
-                    boxShadow: selected ? `0 3px 8px ${colors.shadow}` : undefined,
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name={option === "map" ? "map-outline" : "format-list-bulleted"}
-                    size={20}
-                    color={selected ? colors.primary : colors.inkMuted}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+  const header = (
+    <View>
+      <DitherHeader />
 
+      <View style={{ paddingHorizontal: 20 }}>
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: space.sm,
-            minHeight: touchTarget,
-            paddingHorizontal: space.lg,
-            borderRadius: radius.lg,
+            marginTop: 18,
+            height: 52,
+            borderRadius: 16,
             borderCurve: "continuous",
             backgroundColor: colors.surfaceRaised,
-            borderWidth: 1,
-            borderColor: colors.border,
-            boxShadow: `0 4px 12px ${colors.shadow}`,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            paddingLeft: 18,
+            paddingRight: 16,
           }}
         >
-          <MaterialCommunityIcons name="magnify" size={20} color={colors.inkMuted} />
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -147,6 +138,7 @@ export default function ExploreScreen() {
             returnKeyType="search"
             style={{
               flex: 1,
+              minWidth: 0,
               color: colors.ink,
               // One field for both scripts: the Ethiopic face also carries Latin.
               fontFamily: fonts.bodyEthiopic,
@@ -163,195 +155,263 @@ export default function ExploreScreen() {
             >
               <MaterialCommunityIcons name="close-circle" size={20} color={colors.inkMuted} />
             </Pressable>
-          ) : null}
+          ) : (
+            <MaterialCommunityIcons name="magnify" size={20} color={colors.inkMuted} />
+          )}
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: space.sm }}
-        >
-          <LocationPrimer origin={origin} onOrigin={setOrigin} />
-          <Chip
-            label={t("explore.notStamped")}
+
+        <View style={{ marginTop: 10, flexDirection: "row", gap: 6 }}>
+          <LocationPrimer
+            origin={origin}
+            onOrigin={setOrigin}
+            renderTrigger={({ active, onPress }) => (
+              <QuickAction
+                label={t("explore.nearMe")}
+                selected={active}
+                onPress={onPress}
+                icon={(color) => (
+                  <MaterialCommunityIcons
+                    name={active ? "crosshairs-gps" : "crosshairs"}
+                    size={16}
+                    color={color}
+                  />
+                )}
+              />
+            )}
+          />
+          <QuickAction
+            label={mode === "map" ? t("explore.list") : t("explore.map")}
+            onPress={() => setMode((current) => (current === "map" ? "list" : "map"))}
+            icon={(color) => (
+              <MaterialCommunityIcons
+                name={mode === "map" ? "format-list-bulleted" : "map-outline"}
+                size={16}
+                color={color}
+              />
+            )}
+          />
+          <QuickAction
+            label={t("explore.jebena")}
+            selected={onlyJebena}
+            onPress={() => setOnlyJebena((value) => !value)}
+            icon={(color) => <BeanIcon size={16} color={color} />}
+          />
+          <QuickAction
+            label={t("explore.notYet")}
             selected={onlyUnstamped}
             onPress={() => setOnlyUnstamped((value) => !value)}
+            icon={(color) => (
+              <MaterialCommunityIcons name="plus-circle-outline" size={16} color={color} />
+            )}
           />
-        </ScrollView>
-      </View>
-
-      {/* Offline / freshness */}
-      {!online ? (
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: space.sm,
-            marginHorizontal: space.lg,
-            marginBottom: space.sm,
-            padding: space.md,
-            borderRadius: radius.md,
-            backgroundColor: colors.primarySoft,
-          }}
-        >
-          <MaterialCommunityIcons name="cloud-off-outline" size={16} color={colors.caution} />
-          <Text role="caption" color="ink">
-            {t("offline.banner")}
-          </Text>
         </View>
+
+        {!online ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: space.sm,
+              marginTop: space.md,
+              padding: space.md,
+              borderRadius: 16,
+              backgroundColor: colors.surfaceRaised,
+            }}
+          >
+            <MaterialCommunityIcons name="cloud-off-outline" size={16} color={colors.primary} />
+            <Text role="caption" color="ink" style={{ flex: 1 }}>
+              {t("offline.banner")}
+            </Text>
+          </View>
+        ) : null}
+
+        {mode === "list" ? (
+          <View
+            style={{
+              marginTop: 24,
+              marginBottom: 4,
+              flexDirection: "row",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: space.md,
+            }}
+          >
+            <Text role="heading" style={{ fontSize: 18, letterSpacing: -0.18 }}>
+              {origin ? t("explore.closest") : t("explore.allShops")}
+            </Text>
+            {!loading ? (
+              <Text role="label" color="inkMuted">
+                {syncing
+                  ? t("common.loading")
+                  : t("explore.shopCount", { count: groupDigits(shops.length) })}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      {focused ? (
+        <StatusBar style={mode === "map" || overHeader ? "dark" : "light"} />
       ) : null}
 
       {mode === "map" ? (
-        <View
-          style={{
-            flex: 1,
-            marginHorizontal: space.md,
-            marginBottom: space.sm,
-            borderRadius: radius.xl,
-            borderCurve: "continuous",
-            overflow: "hidden",
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
-          {MAPBOX_TOKEN ? (
-            <Mapbox.MapView
-              style={{ flex: 1 }}
-              styleURL={MAPBOX_STYLE_URL}
-              logoEnabled={false}
-              attributionEnabled
-              compassEnabled={false}
-              scaleBarEnabled={false}
-            >
-              <Mapbox.StyleImport id="basemap" existing config={styleConfig} />
-              <Mapbox.Camera
-                centerCoordinate={origin ? [origin.longitude, origin.latitude] : BOLE_CENTER}
-                zoomLevel={origin ? 14.2 : 13.5}
-                animationMode="flyTo"
-                animationDuration={500}
-              />
-              {origin ? (
-                <Mapbox.MarkerView coordinate={[origin.longitude, origin.latitude]} allowOverlap>
-                  <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      backgroundColor: colors.positive,
-                      borderWidth: 4,
-                      borderColor: colors.surfaceRaised,
-                      boxShadow: `0 2px 8px ${colors.shadow}`,
-                    }}
-                  />
-                </Mapbox.MarkerView>
-              ) : null}
-              {shops.map((shop) => (
-                <Mapbox.MarkerView
-                  key={shop.id}
-                  coordinate={[shop.longitude, shop.latitude]}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  allowOverlap={false}
-                  isSelected={peeked?.id === shop.id}
-                >
-                  <Pressable
-                    onPress={() => setPeeked(shop)}
-                    accessibilityRole="button"
-                    accessibilityLabel={shop.name}
-                    hitSlop={8}
-                  >
-                    <Seal
-                      name={shop.name}
-                      nameAm={shop.name_am}
-                      level={shop.stamp_level}
-                      size="pin"
+        <>
+          {header}
+          <View
+            style={{
+              flex: 1,
+              marginTop: space.lg,
+              marginHorizontal: 20,
+              marginBottom: dockClearance + space.md,
+              borderRadius: 16,
+              borderCurve: "continuous",
+              overflow: "hidden",
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            {MAPBOX_TOKEN ? (
+              <Mapbox.MapView
+                style={{ flex: 1 }}
+                styleURL={MAPBOX_STYLE_URL}
+                logoEnabled={false}
+                attributionEnabled
+                compassEnabled={false}
+                scaleBarEnabled={false}
+              >
+                <Mapbox.StyleImport id="basemap" existing config={styleConfig} />
+                <Mapbox.Camera
+                  centerCoordinate={origin ? [origin.longitude, origin.latitude] : BOLE_CENTER}
+                  zoomLevel={origin ? 14.2 : 13.5}
+                  animationMode="flyTo"
+                  animationDuration={500}
+                />
+                {origin ? (
+                  <Mapbox.MarkerView coordinate={[origin.longitude, origin.latitude]} allowOverlap>
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: colors.positive,
+                        borderWidth: 4,
+                        borderColor: colors.surfaceRaised,
+                        boxShadow: `0 2px 8px ${colors.shadow}`,
+                      }}
                     />
-                  </Pressable>
-                </Mapbox.MarkerView>
-              ))}
-            </Mapbox.MapView>
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                padding: space.xl,
-                backgroundColor: colors.mapLand,
-              }}
-            >
-              <MaterialCommunityIcons name="map-outline" size={48} color={colors.primary} />
-              <Text role="heading" align="center" style={{ marginTop: space.md }}>
-                {t("explore.map")}
-              </Text>
-              <Text role="caption" color="inkMuted" align="center" style={{ marginTop: space.xs }}>
-                {isExpoGo ? t("explore.mapDevBuildOnly") : "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN"}
-              </Text>
-            </View>
-          )}
-
-          {/* Count / freshness chip, dismissible by tapping through to list */}
-          {!loading ? (
-            <View
-              style={{
-                position: "absolute",
-                top: space.md,
-                left: space.lg,
-                right: space.lg,
-                alignItems: "center",
-              }}
-              pointerEvents="none"
-            >
+                  </Mapbox.MarkerView>
+                ) : null}
+                {shops.map((shop) => (
+                  <Mapbox.MarkerView
+                    key={shop.id}
+                    coordinate={[shop.longitude, shop.latitude]}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    allowOverlap={false}
+                    isSelected={peeked?.id === shop.id}
+                  >
+                    <Pressable
+                      onPress={() => setPeeked(shop)}
+                      accessibilityRole="button"
+                      accessibilityLabel={shop.name}
+                      hitSlop={8}
+                    >
+                      <Seal
+                        name={shop.name}
+                        nameAm={shop.name_am}
+                        level={shop.stamp_level}
+                        size="pin"
+                      />
+                    </Pressable>
+                  </Mapbox.MarkerView>
+                ))}
+              </Mapbox.MapView>
+            ) : (
               <View
                 style={{
-                  paddingHorizontal: space.lg,
-                  paddingVertical: space.sm,
-                  borderRadius: radius.full,
-                  backgroundColor: colors.surfaceRaised,
-                  borderWidth: 1,
-                  borderColor: colors.border,
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: space.xl,
+                  backgroundColor: colors.mapLand,
                 }}
               >
-                <Text role="caption" color="inkMuted">
-                  {syncing
-                    ? t("common.loading")
-                    : freshness
-                      ? t("explore.updatedAgo", { ago: freshness })
-                      : t("explore.shopsInAddis", { count: shops.length })}
+                <MaterialCommunityIcons name="map-outline" size={48} color={colors.primary} />
+                <Text role="heading" align="center" style={{ marginTop: space.md }}>
+                  {t("explore.map")}
+                </Text>
+                <Text role="caption" color="inkMuted" align="center" style={{ marginTop: space.xs }}>
+                  {isExpoGo ? t("explore.mapDevBuildOnly") : "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN"}
                 </Text>
               </View>
-            </View>
-          ) : null}
-
-          {peeked ? (
-            <ShopPeek
-              shop={peeked}
-              onClose={() => setPeeked(null)}
-              onOpen={() => {
-                const shop = peeked;
-                setPeeked(null);
-                openShop(shop);
-              }}
-            />
-          ) : null}
-        </View>
+            )}
+  
+            {/* Count / freshness chip, dismissible by tapping through to list */}
+            {!loading ? (
+              <View
+                style={{
+                  position: "absolute",
+                  top: space.md,
+                  left: space.lg,
+                  right: space.lg,
+                  alignItems: "center",
+                }}
+                pointerEvents="none"
+              >
+                <View
+                  style={{
+                    paddingHorizontal: space.lg,
+                    paddingVertical: space.sm,
+                    borderRadius: radius.full,
+                    backgroundColor: colors.surfaceRaised,
+                  }}
+                >
+                  <Text role="caption" color="inkMuted">
+                    {syncing
+                      ? t("common.loading")
+                      : freshness
+                        ? t("explore.updatedAgo", { ago: freshness })
+                        : t("explore.shopsInAddis", { count: shops.length })}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+  
+            {peeked ? (
+              <ShopPeek
+                shop={peeked}
+                onClose={() => setPeeked(null)}
+                onOpen={() => {
+                  const shop = peeked;
+                  setPeeked(null);
+                  openShop(shop);
+                }}
+              />
+            ) : null}
+          </View>
+        </>
       ) : (
         <FlatList
           data={shops}
           keyExtractor={(shop) => String(shop.id)}
-          renderItem={({ item }) => <ShopCard shop={item} onPress={openShop} />}
-          contentContainerStyle={{
-            paddingHorizontal: space.lg,
-            gap: space.sm,
-            // Clears the check-in pill and the tab bar.
-            paddingBottom: touchTarget * 3,
-          }}
+          renderItem={({ item }) => <ShopRow shop={item} onPress={openShop} />}
+          ItemSeparatorComponent={ShopRowDivider}
+          ListHeaderComponent={header}
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={64}
+          contentContainerStyle={{ paddingBottom: dockClearance + space.lg }}
           refreshing={syncing}
           onRefresh={() => refresh(true)}
           ListEmptyComponent={
             loading ? (
-              <View style={{ gap: space.md }}>
-                <ShopCardSkeleton />
-                <ShopCardSkeleton />
-                <ShopCardSkeleton />
+              <View>
+                <ShopRowSkeleton />
+                <ShopRowSkeleton />
+                <ShopRowSkeleton />
               </View>
             ) : searching ? (
               <EmptyState
@@ -372,6 +432,6 @@ export default function ExploreScreen() {
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
