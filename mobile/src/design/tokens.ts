@@ -81,6 +81,54 @@ const dark: Palette = {
 
 export const palettes: Record<ColorScheme, Palette> = { light, dark };
 
+/**
+ * "Mocha dither" (DESIGN.md §2.2.1). Explore and the tab dock wear it in both
+ * OS modes: the dithered header is a fixed illustration, so the screen under
+ * it cannot flip to paper. The Palette keys map Mocha onto the shared roles so
+ * themed components (Text, Chip, EmptyState, sheets) follow it unchanged.
+ */
+export const mochaTokens = {
+  bg: "#0B0A09",
+  surface: "#171413",
+  surfaceActive: "#2A2421",
+  divider: "#221E1C",
+  text: "#F7F3EF",
+  text2: "#A8A09A",
+  text3: "#8E8781",
+  /** Bronze stamps. */
+  mocha: "#A9503A",
+  /** Red text on dark — passes 4.5:1 on bg and surface. */
+  mochaLight: "#D4917A",
+  silver: "#CFC9C4",
+  /** Greeting text on the white part of the dither header. */
+  headerInk: "#0B0A09",
+  headerInkMuted: "#5A524D",
+  avatarInk: "#ECD3C8",
+  stampEmptyRing: "#3A3431",
+  stampEmptyIcon: "#5E5753",
+  bronzeFill: "rgba(169, 80, 58, 0.18)",
+  silverFill: "rgba(255, 255, 255, 0.06)",
+  /** Dock background; sits over a blur. */
+  barBg: "rgba(11, 10, 9, 0.82)",
+} as const;
+
+export const mocha: Palette = {
+  ...dark,
+  surface: mochaTokens.bg,
+  surfaceRaised: mochaTokens.surface,
+  surfaceSunken: mochaTokens.surfaceActive,
+  ink: mochaTokens.text,
+  inkMuted: mochaTokens.text2,
+  inkFaint: mochaTokens.text3,
+  primary: mochaTokens.mochaLight,
+  onPrimary: mochaTokens.bg,
+  primarySoft: mochaTokens.surfaceActive,
+  border: mochaTokens.divider,
+  borderStrong: mochaTokens.stampEmptyRing,
+  shadow: "rgba(0, 0, 0, 0.5)",
+  scrim: "rgba(0, 0, 0, 0.66)",
+};
+
 /** 4dp grid. */
 export const space = {
   xs: 4,

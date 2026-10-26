@@ -15,6 +15,8 @@ export const fonts = {
   bodyEthiopic: "NotoSansEthiopic_400Regular",
   bodyEthiopicMedium: "NotoSansEthiopic_500Medium",
   bodyEthiopicBold: "NotoSansEthiopic_700Bold",
+  /** Distances and other figures that should not jitter. Latin only. */
+  monoLatin: "GeistMono-Medium",
 } as const;
 
 export type TypeRole =

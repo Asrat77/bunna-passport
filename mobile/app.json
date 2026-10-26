@@ -42,6 +42,7 @@
             "./assets/fonts/Geist-Medium.ttf",
             "./assets/fonts/Geist-SemiBold.ttf",
             "./assets/fonts/Geist-Bold.ttf",
+            "./assets/fonts/GeistMono-Medium.ttf",
             "node_modules/@expo-google-fonts/noto-sans-ethiopic/400Regular/NotoSansEthiopic_400Regular.ttf",
             "node_modules/@expo-google-fonts/noto-sans-ethiopic/500Medium/NotoSansEthiopic_500Medium.ttf",
             "node_modules/@expo-google-fonts/noto-sans-ethiopic/700Bold/NotoSansEthiopic_700Bold.ttf",
