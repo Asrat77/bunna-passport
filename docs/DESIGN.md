@@ -93,6 +93,47 @@ Rules:
   differentiate by artwork and metal tones (§6.3), not by inventing new
   semantic colors.
 
+### 2.2.1 Mocha dither (native Explore and tab dock)
+
+The native app's Explore screen and its tab dock use a fixed dark palette,
+"Mocha dither", in both OS modes. The dithered white-to-mocha header is an
+illustration, not a surface, so the screen under it can't switch to paper.
+Tokens live in `mobile/src/design/tokens.ts` as `mochaTokens`, and `mocha`
+maps them onto the shared roles above so themed components follow along.
+
+| Token | Hex | Use |
+|---|---|---|
+| `bg` | `#0B0A09` | Screen background |
+| `surface` | `#171413` | Search field, pills, inactive tab circles |
+| `surface-active` | `#2A2421` | Active tab, selected pill, tab circle border |
+| `divider` | `#221E1C` | 1px row dividers, dock top border |
+| `text` | `#F7F3EF` | Primary text; check-in button fill |
+| `text-2` | `#A8A09A` | Secondary text, inactive tab icons |
+| `text-3` | `#8E8781` | Tertiary text, placeholders, "4 cups · Bronze" |
+| `mocha` | `#A9503A` | Bronze stamp ring (fill at 18% alpha) |
+| `mocha-light` | `#D4917A` | Red text on dark: headline accent, "Not stamped yet" |
+| `silver` | `#CFC9C4` | Silver stamp ring and icon |
+| `header-ink` | `#0B0A09` | Greeting name on the header's white |
+| `header-ink-muted` | `#5A524D` | Greeting subline on the header's white |
+| `stamp-empty-ring` | `#3A3431` | Dashed ring for a shop not visited yet |
+
+Layout rules:
+- Header: `mobile/assets/images/dither-mocha-240.png`, full width, 240pt tall,
+  with the white extended under the status bar. Native image views have no
+  nearest-neighbour filter, so the 1x/2x/3x files are pre-scaled with nearest
+  neighbour. Re-export all three if the art changes.
+- Headline on one line, Geist SemiBold 31, tight tracking (-0.04em); Amharic
+  uses Noto Sans Ethiopic with the §2.3 line height.
+- Search: `surface`, no border, radius 16, height 52. Quick actions: four
+  equal pills, height 44, radius 22, 16pt icon next to the label.
+- Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt.
+  Distance is set in Geist Mono Medium. The second name shows only when it is
+  in the other script.
+- Dock: full width, blurred (iOS) with `rgba(11,10,9,0.82)` over it and a 1px
+  top border. The active tab is a 76×50 rectangle (radius 16), the others are
+  50pt circles, and check-in is a 52pt `text`-coloured circle with a dark plus.
+  The dock floats, so scrolling screens pad by `useDockClearance()`.
+
 ### 2.3 Typography
 
 Two type roles, each with a Latin + Ethiopic pairing that ships in the app
