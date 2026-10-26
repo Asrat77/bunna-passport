@@ -83,7 +83,12 @@ Light mode (default):
 
 Dark mode (“Dark Roast”) mirrors the same roles: `surface #17100C`,
 `surface-raised #211812`, `ink #F7EBDD`, `primary #F0A05D` (amber-shifted so it
-passes 4.5:1 on dark), `accent #F3B542`. Every pairing in both modes must pass
+passes 4.5:1 on dark), `accent #F3B542`. In the Telegram Mini App, Dark Roast
+takes its neutrals and red from Mocha (§2.2.1) so the dark screens match
+Explore: `surface #0B0A09`, `surface-raised #171413`, `ink #F7F3EF`,
+`primary #D4917A`, cards without outlines, the main button in `text` with
+dark type, and selected chips as `surface-active` with `primary` text.
+`accent #F3B542` stays for cups and streaks. Every pairing in both modes must pass
 WCAG AA 4.5:1 for text and 3:1 for large text/icons — verify with tooling, not
 by eye.
 
@@ -93,7 +98,7 @@ Rules:
   differentiate by artwork and metal tones (§6.3), not by inventing new
   semantic colors.
 
-### 2.2.1 Mocha dither (Explore and the dock)
+### 2.2.1 Mocha dither (Explore, the check-in ceremony and the dock)
 
 Explore and the navigation dock use a fixed dark palette, "Mocha dither", in
 both phone themes, in the Telegram Mini App (`web/`) and the native app
@@ -136,6 +141,11 @@ Layout rules:
   Distance is set in Geist Mono Medium. The second name shows only when it is
   in the other script. "Open" isn't repeated on every row; only closing soon
   and closed show.
+- Check-in ceremony (Mini App): the same dither header in both phone themes.
+  The "+1 cup" tick is a 96pt `surface` circle with a `surface-active` ring
+  and a `mocha-light` check, sitting where the dither meets `bg`; a new stamp
+  presses onto a passport-paper disc instead. The area ring and doodle cards
+  are flat `surface` blocks (radius 16), and Done is `text` with dark type.
 - Dock: full width, blurred (iOS natively; everywhere in the Mini App) with `rgba(11,10,9,0.82)` over it and a 1px
   top border. The active tab is a 76×50 rectangle (radius 16), the others are
   50pt circles, and check-in is a 52pt `text`-coloured circle with a dark plus.
