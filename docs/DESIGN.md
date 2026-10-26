@@ -132,6 +132,8 @@ Layout rules:
 - Search: `surface`, no border, radius 16, height 52. Quick actions: four
   equal pills, height 44, radius 22, 16pt icon next to the label.
 - Shop rows are flat, with 1px `divider` lines and no cards. Stamp mark is 48pt.
+  In the Mini App that ring (`web/src/ui/StampRing.tsx`) is the café's logo in
+  every list (Explore, All cafés, Check in), with a darker silver on paper.
   Distance is set in Geist Mono Medium. The second name shows only when it is
   in the other script. "Open" isn't repeated on every row; only closing soon
   and closed show.

@@ -7,7 +7,6 @@ import type { RejectionCode } from "@/api/types";
 import { candidatesAround, newIdempotencyKey } from "@/data/checkin";
 import { useCatalog, useProfile } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
-import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
 import { formatMeters } from "@/lib/distance";
 import { openLocationSettings } from "@/location/locate";
@@ -19,6 +18,7 @@ import { onDesktopTelegram } from "@/telegram/platform";
 import { AddChip, FilterChip } from "@/ui/Chip";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
+import { StampRing } from "@/ui/StampRing";
 import { Radar } from "./Radar";
 import "./checkin.css";
 
@@ -180,7 +180,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                     setSelectedId(shop.id);
                   }}
                 >
-                  <Seal name={shop.name} level={stamp?.level ?? null} size={46} decorative />
+                  <StampRing level={stamp?.level ?? null} size={46} />
                   <span className="candidate__text">
                     <span className="candidate__name">{shop.name}</span>
                     <span className="candidate__meta">
