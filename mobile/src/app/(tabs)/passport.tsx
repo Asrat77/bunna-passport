@@ -9,8 +9,9 @@ import { ProgressRing } from "@/design/components/ProgressRing";
 import { Seal, visitsToNextLevel } from "@/design/components/Seal";
 import { ShopCard } from "@/design/components/ShopCard";
 import { Text } from "@/design/components/Text";
+import { useDockClearance } from "@/design/dock";
 import { useTheme } from "@/design/theme";
-import { radius, space, touchTarget } from "@/design/tokens";
+import { radius, space } from "@/design/tokens";
 import { listShops, neighborhoodProgress, type CachedShop, type NeighborhoodProgress } from "@/db/shops";
 import { useI18n } from "@/i18n/context";
 
@@ -91,6 +92,7 @@ function PlaceRow({ shop, onPress }: { shop: CachedShop; onPress: (shop: CachedS
 
 export default function PassportScreen() {
   const { colors } = useTheme();
+  const dockClearance = useDockClearance();
   const { t, language } = useI18n();
   const router = useRouter();
   const { signedIn, user } = useAuth();
@@ -147,7 +149,7 @@ export default function PassportScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: touchTarget }}
+        contentContainerStyle={{ padding: space.lg, gap: space.xl, paddingBottom: dockClearance + space.lg }}
       >
         <View>
           <Text role="caption" color="primary" weight="bold">
