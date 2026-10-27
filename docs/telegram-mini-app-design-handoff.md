@@ -118,15 +118,15 @@ Three cells in a raised card, separated by 1px dividers. The value is in mono wi
 
 ### Seal (small)
 
-This is the existing mobile `Seal.tsx`, unchanged: twin rings, leaf cuts, initials, and the bronze, silver, gold and diamond paints. Unstamped seals have a dashed outline. **Use it only at 60px or smaller:** lists, candidate cards, counters.
+A struck metal coin per level (bronze, silver, gold, diamond) with a debossed Phosphor coffee bean and one pip per level; no initials. Unstamped seals have a dashed outline. **Use it only at 60px or smaller:** lists, candidate cards, counters.
 
 ### InkStamp (hero stamp)
 
 This is the passport stamp, and the owner cares about it most. Copy the geometry exactly from `InkStamp.dc.html` (viewBox 232):
-- **Rings:** r110 (stroke 4), r104 (1.2), r72 (2).
-- **Ring text:** "BUNNA PASSPORT · ቡና ፓስፖርት · ADDIS ABABA · " in Geist Mono 12.5, letter-spacing 2.6, on a circular path of r86.
-- **Centre:** shop name in Geist 700 at `min(25, 138 / (len × 0.7 + 0.2))` px, y = 102. Under it, the Amharic name and neighbourhood in Noto Serif Ethiopic 700 at 16, y = 125. Then a rule from x 80 to 152 at y = 137, and the date in mono 12 at y = 156.
-- **Ink:** `clay` uses `--primary`. Metals are fixed: bronze `#8C5A2B`, silver `#71757A`, gold `#A8811A`, diamond `#2A6F7F`. `none` uses `--border-strong` with dashed rings (`9 7` outer, `4 5` inner).
+- **Rings:** r110 (stroke 4), r104 (1.2), a dotted r77 (0.8), r72 (2).
+- **Ring text:** two centred arcs, placed glyph by glyph so the share card matches: "BUNNA PASSPORT" over the top (Geist Mono 12.5, spacing 4, on r86) and "ቡና ፓስፖርት" under the bottom, upright (15.5, spacing 4, hanging from r95). A dot sits at three and nine o'clock.
+- **Centre:** a small Phosphor coffee bean at the top. The shop name in Geist 700 is one line at y = 102 when it fits at 17px or more (up to 25). Otherwise it breaks at the space that best balances two lines (up to 20px, second line on y = 114), and anything still too long at 10px is cut with an ellipsis. Under it, the Amharic name and neighbourhood in Noto Serif Ethiopic 700 at up to 16 (never below 11), then a rule from x 80 to 152 and the date in mono 12. `web/src/design/stamp/geometry.ts` holds the exact numbers.
+- **Ink:** `clay` uses `--primary`. Metals are fixed: bronze `#8C5A2B`, silver `#5E6A78`, gold `#A8811A`, diamond `#2A6F7F`. `none` is the empty slot: `--border-strong` dashed rings (`9 7` outer, `4 5` inner), no ring band, and the words in `--faint`.
 - **Ink texture:** an SVG filter. Fractal-noise speckle masks the ink at about 70% coverage, then a low-frequency displacement adds wobble. Seed it from the shop name so it's stable.
 - **Rotation:** deterministic per stamp, within about ±12°.
 

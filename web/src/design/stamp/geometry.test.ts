@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
 import shared from "./__fixtures__/stamp-geometry.json";
-import { inkNoiseSeed, nameFontSize, stampDate, stampRotation } from "./geometry";
+import { amharicFontSize, inkNoiseSeed, nameBaselines, nameLayout, ringGlyphs, stampDate, stampRotation } from "./geometry";
 
 describe("ink stamp geometry", () => {
-  it("shrinks long names to fit the inner ring", () => {
-    expect(nameFontSize("TOMOCA")).toBe(25);
-    expect(nameFontSize("ALEM BUNNA HOUSE")).toBeCloseTo(138 / (16 * 0.7 + 0.2));
+  it("prints short names large on one line", () => {
+    expect(nameLayout("TOMOCA")).toEqual({ lines: ["TOMOCA"], size: 25 });
+  });
+
+  it("breaks longer names over two balanced lines instead of shrinking them", () => {
+    expect(nameLayout("KALDI'S COFFEE")).toEqual({ lines: ["KALDI'S", "COFFEE"], size: 20 });
+    expect(nameLayout("GARDEN OF COFFEE BOLE ATLAS BRANCH").lines[1]).toMatch(/…$/);
+    expect(nameLayout("GARDEN OF COFFEE BOLE ATLAS BRANCH").size).toBe(10);
+  });
+
+  it("keeps the ring band's glyphs on their arcs", () => {
+    for (const glyph of ringGlyphs()) {
+      const r = Math.hypot(glyph.x - 116, glyph.y - 116);
+      expect([86, 95].some((arc) => Math.abs(arc - r) < 0.05)).toBe(true);
+    }
   });
 
   it("seeds the ink texture from the shop name, as the canvas does", () => {
@@ -28,9 +40,15 @@ describe("ink stamp geometry", () => {
   // The server-rendered share card (app/models/share_card/ink_stamp.rb) checks
   // the same fixture, so the card prints the stamp the ceremony showed.
   it("matches the fixture the share card renderer is tested against", () => {
-    for (const [name, size] of Object.entries(shared.nameFontSize)) {
-      expect(nameFontSize(name.toUpperCase())).toBe(size);
+    for (const [name, { lines, size, baselines }] of Object.entries(shared.nameLayout)) {
+      const layout = nameLayout(name.toUpperCase());
+      expect(layout).toEqual({ lines, size });
+      expect(nameBaselines(layout)).toEqual(baselines);
     }
+    for (const [text, size] of Object.entries(shared.amharicFontSize)) {
+      expect(amharicFontSize(text)).toBe(size);
+    }
+    expect(ringGlyphs()).toEqual(shared.ringGlyphs);
     for (const [name, seed] of Object.entries(shared.inkNoiseSeed)) {
       expect(inkNoiseSeed(name)).toBe(seed);
     }

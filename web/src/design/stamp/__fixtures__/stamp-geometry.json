@@ -1,12 +1,231 @@
 {
- "nameFontSize": {
-  "Tomoca": 25,
-  "Kaldi's Coffee": 13.800000000000002,
-  "Alem Bunna": 19.166666666666668,
-  "ቶሞካ": 25,
-  "Garden of Coffee Bole Atlas Branch": 5.750000000000001,
-  "A": 25
+ "nameLayout": {
+  "Tomoca": {
+   "lines": [
+    "TOMOCA"
+   ],
+   "size": 25,
+   "baselines": [
+    102
+   ]
+  },
+  "Kaldi's Coffee": {
+   "lines": [
+    "KALDI'S",
+    "COFFEE"
+   ],
+   "size": 20,
+   "baselines": [
+    91,
+    114
+   ]
+  },
+  "Alem Bunna": {
+   "lines": [
+    "ALEM BUNNA"
+   ],
+   "size": 17.77777777777778,
+   "baselines": [
+    102
+   ]
+  },
+  "ቶሞካ": {
+   "lines": [
+    "ቶሞካ"
+   ],
+   "size": 25,
+   "baselines": [
+    102
+   ]
+  },
+  "Garden of Coffee Bole Atlas Branch": {
+   "lines": [
+    "GARDEN OF COFFEE",
+    "BOLE ATLAS BRAN…"
+   ],
+   "size": 10,
+   "baselines": [
+    102.5,
+    114
+   ]
+  },
+  "A": {
+   "lines": [
+    "A"
+   ],
+   "size": 25,
+   "baselines": [
+    102
+   ]
+  },
+  "Moyee Coffee": {
+   "lines": [
+    "MOYEE",
+    "COFFEE"
+   ],
+   "size": 20,
+   "baselines": [
+    91,
+    114
+   ]
+  },
+  "Supercalifragilisticcafe": {
+   "lines": [
+    "SUPERCALIFRAGILIS…"
+   ],
+   "size": 10,
+   "baselines": [
+    102
+   ]
+  }
  },
+ "amharicFontSize": {
+  "ቶሞካ · ፒያሳ": 16,
+  "ጋርደን ኦፍ ኮፊ ቦሌ አትላስ · ቦሌ": 11,
+  "ዓለም ቡና · ካዛንቺስ": 13.025210084033612
+ },
+ "ringGlyphs": [
+  {
+   "char": "B",
+   "x": 50.31,
+   "y": 60.49,
+   "rotate": -49.8,
+   "size": 12.5
+  },
+  {
+   "char": "U",
+   "x": 58.3,
+   "y": 52.23,
+   "rotate": -42.14,
+   "size": 12.5
+  },
+  {
+   "char": "N",
+   "x": 67.32,
+   "y": 45.11,
+   "rotate": -34.48,
+   "size": 12.5
+  },
+  {
+   "char": "N",
+   "x": 77.2,
+   "y": 39.25,
+   "rotate": -26.82,
+   "size": 12.5
+  },
+  {
+   "char": "A",
+   "x": 87.78,
+   "y": 34.76,
+   "rotate": -19.15,
+   "size": 12.5
+  },
+  {
+   "char": "P",
+   "x": 110.25,
+   "y": 30.19,
+   "rotate": -3.83,
+   "size": 12.5
+  },
+  {
+   "char": "A",
+   "x": 121.75,
+   "y": 30.19,
+   "rotate": 3.83,
+   "size": 12.5
+  },
+  {
+   "char": "S",
+   "x": 133.13,
+   "y": 31.72,
+   "rotate": 11.49,
+   "size": 12.5
+  },
+  {
+   "char": "S",
+   "x": 144.22,
+   "y": 34.76,
+   "rotate": 19.15,
+   "size": 12.5
+  },
+  {
+   "char": "P",
+   "x": 154.8,
+   "y": 39.25,
+   "rotate": 26.82,
+   "size": 12.5
+  },
+  {
+   "char": "O",
+   "x": 164.68,
+   "y": 45.11,
+   "rotate": 34.48,
+   "size": 12.5
+  },
+  {
+   "char": "R",
+   "x": 173.7,
+   "y": 52.23,
+   "rotate": 42.14,
+   "size": 12.5
+  },
+  {
+   "char": "T",
+   "x": 181.69,
+   "y": 60.49,
+   "rotate": 49.8,
+   "size": 12.5
+  },
+  {
+   "char": "ቡ",
+   "x": 71.82,
+   "y": 200.1,
+   "rotate": 27.71,
+   "size": 15.5
+  },
+  {
+   "char": "ና",
+   "x": 84.37,
+   "y": 205.58,
+   "rotate": 19.45,
+   "size": 15.5
+  },
+  {
+   "char": "ፓ",
+   "x": 109.75,
+   "y": 210.79,
+   "rotate": 3.77,
+   "size": 15.5
+  },
+  {
+   "char": "ስ",
+   "x": 123.26,
+   "y": 210.72,
+   "rotate": -4.38,
+   "size": 15.5
+  },
+  {
+   "char": "ፖ",
+   "x": 137.08,
+   "y": 208.63,
+   "rotate": -12.82,
+   "size": 15.5
+  },
+  {
+   "char": "ር",
+   "x": 149.66,
+   "y": 204.84,
+   "rotate": -20.75,
+   "size": 15.5
+  },
+  {
+   "char": "ት",
+   "x": 161.13,
+   "y": 199.6,
+   "rotate": -28.36,
+   "size": 15.5
+  }
+ ],
  "inkNoiseSeed": {
   "Tomoca": 86,
   "Kaldi's Coffee": 69,
