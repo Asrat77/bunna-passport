@@ -11,6 +11,11 @@
   font-family: var(--font-sans);
 }
 
+/* The real map: a little taller than the sketch so 250 m has room. */
+.radar__map {
+  height: 240px;
+}
+
 .radar__sweep {
   transform-origin: 179px 96px;
   animation: sweep 3.2s linear infinite;

@@ -1,7 +1,4 @@
-import "maplibre-gl/dist/maplibre-gl.css";
 import * as maplibregl from "maplibre-gl";
-import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
-import { Protocol } from "pmtiles";
 import { useEffect, useRef, useState } from "react";
 import type { FeatureCollection } from "geojson";
 import type { OpaqueId, Shop } from "@/api/types";
@@ -10,26 +7,25 @@ import { useStampsByShop } from "@/data/stamps";
 import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
-import { drawPin, PIN_OPEN, PIN_STAMPED } from "./pins";
+import { Icon } from "@/ui/Icon";
+import { phCrosshair } from "@/ui/icons";
+import { addPinImages, LOCATE_ZOOM, pinColours, pixelRatio, prepareMapLibre, RANGE, rangeFeatures, showRange } from "./layers";
+import { CLUSTER_PREFIX, drawCluster, PIN_OPEN, PIN_STAMPED } from "./pins";
 
 const ADDIS: [number, number] = [38.7578, 9.0301];
 const CAFES = "cafes";
 const CLUSTERS = "cafe-clusters";
 const PINS = "cafe-pins";
-let protocolAdded = false;
-
-// MapLibre finds its worker next to its own module, which Vite moves when it
-// bundles it (and pre-bundles it in dev), so point it at the emitted copy.
-// Without a worker no tile is ever parsed and only the background shows.
-maplibregl.setWorkerUrl(workerUrl);
 
 /**
  * The shop map: self-hosted Addis tiles through the pmtiles:// protocol, the
- * cafés and your position. Zoomed out, nearby cafés gather into one bubble
- * that fills with the primary colour as you stamp them; zoomed in, each is a
- * cup pin (filled once stamped, dashed until then) with its name. Cafés are
+ * cafés and your position. Zoomed out, nearby cafés gather into a pill that
+ * says how many ("☕ 24"); zoomed in, each is a small Mocha cup disc, ticked
+ * once you've been, with its name. Cafés are
  * map layers rather than DOM markers, so a thousand of them stay smooth and
- * MapLibre drops the names that would collide. A new style URL (the phone
+ * MapLibre drops the names that would collide. Round you sits the check-in
+ * range, the circle a café has to be inside for its stamp to count, and the
+ * locate button brings you back to it. A new style URL (the phone
  * switching light or dark) restyles the same map, so the view stays put.
  */
 export default function ShopMap({ styleUrl }: { styleUrl: string }) {
@@ -37,22 +33,22 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   const { push } = useNavigation();
   const catalog = useCatalog();
   const stamps = useStampsByShop();
-  const { fix } = useLocation();
+  const { fix, status, refresh } = useLocation();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const appliedStyle = useRef(styleUrl);
   const cafes = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const range = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const rangeLabel = useRef(t("map.range"));
   const openShop = useRef(push);
   const centred = useRef(false);
   const [failed, setFailed] = useState(false);
   openShop.current = push;
+  rangeLabel.current = t("map.range");
 
   useEffect(() => {
     if (!container.current) return;
-    if (!protocolAdded) {
-      maplibregl.addProtocol("pmtiles", new Protocol().tile);
-      protocolAdded = true;
-    }
+    prepareMapLibre();
     try {
       map.current = new maplibregl.Map({
         container: container.current,
@@ -68,7 +64,16 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
         if (!("sourceId" in event) && !("tile" in event)) setFailed(true);
       });
       // setStyle drops our layers and images with the old style, so add them each time.
-      instance.on("style.load", () => showCafes(instance, cafes.current));
+      instance.on("style.load", () => {
+        showRange(instance, range.current, rangeLabel.current);
+        showCafes(instance, cafes.current);
+      });
+      // Cluster pills are drawn per count the first time a count shows up.
+      instance.on("styleimagemissing", ({ id }) => {
+        if (!id.startsWith(CLUSTER_PREFIX) || instance.hasImage(id)) return;
+        const ratio = pixelRatio();
+        instance.addImage(id, drawCluster(pinColours(), id.slice(CLUSTER_PREFIX.length), ratio), { pixelRatio: ratio });
+      });
       instance.on("click", PINS, (event) => {
         const id = event.features?.[0]?.properties?.id;
         if (id != null) openShop.current({ name: "shop", id: Number(id) });
@@ -111,17 +116,42 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
     element.className = "map-you";
     element.setAttribute("aria-label", t("map.you"));
     const you = new maplibregl.Marker({ element }).setLngLat([fix.longitude, fix.latitude]).addTo(instance);
+    range.current = rangeFeatures(fix);
+    instance.getSource<maplibregl.GeoJSONSource>(RANGE)?.setData(range.current);
     if (!centred.current) {
       centred.current = true;
-      instance.flyTo({ center: [fix.longitude, fix.latitude], zoom: 15.5, speed: 0.8 });
+      instance.flyTo({ center: [fix.longitude, fix.latitude], zoom: LOCATE_ZOOM, speed: 0.8 });
     }
     return () => {
       you.remove();
     };
   }, [fix, t]);
 
+  // Fly to the last fix straight away, then again if a fresh one has moved.
+  async function locateMe() {
+    const instance = map.current;
+    if (!instance) return;
+    if (fix) instance.flyTo({ center: [fix.longitude, fix.latitude], zoom: Math.max(instance.getZoom(), LOCATE_ZOOM) });
+    centred.current = true;
+    const next = await refresh();
+    if (next) instance.flyTo({ center: [next.longitude, next.latitude], zoom: Math.max(instance.getZoom(), LOCATE_ZOOM) });
+  }
+
   if (failed) return <p className="notice">{t("map.unavailable")}</p>;
-  return <div ref={container} className="map-screen__map" />;
+  return (
+    <div className="map-screen__frame">
+      <div ref={container} className="map-screen__map" />
+      <button
+        type="button"
+        className="map-locate"
+        aria-label={t("map.locate")}
+        aria-busy={status === "locating" || undefined}
+        onClick={() => void locateMe()}
+      >
+        <Icon path={phCrosshair} size={22} />
+      </button>
+    </div>
+  );
 }
 
 function cafeFeatures(shops: Shop[], stamps: ReadonlyMap<OpaqueId, unknown>, language: string): FeatureCollection {
@@ -139,72 +169,28 @@ function cafeFeatures(shops: Shop[], stamps: ReadonlyMap<OpaqueId, unknown>, lan
   };
 }
 
-/** The café source, its pin images and the four layers that draw it. */
+/** The café source, its pin images and the two layers that draw it. */
 function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
-  const tokens = getComputedStyle(document.documentElement);
-  const token = (name: string) => tokens.getPropertyValue(name).trim();
-  const colours = {
-    primary: token("--primary"),
-    onPrimary: token("--on-primary"),
-    raised: token("--raised"),
-    muted: token("--muted"),
-    faint: token("--faint"),
-    shadow: token("--shadow"),
-  };
-  const ratio = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
-  for (const [id, stamped] of [[PIN_STAMPED, true], [PIN_OPEN, false]] as const) {
-    if (instance.hasImage(id)) instance.removeImage(id);
-    instance.addImage(id, drawPin(colours, stamped, ratio), { pixelRatio: ratio });
-  }
+  const colours = pinColours();
+  addPinImages(instance, colours);
 
   instance.addSource(CAFES, {
     type: "geojson",
     data,
     cluster: true,
-    clusterRadius: 56,
+    clusterRadius: 48,
     clusterMaxZoom: 15,
-    clusterProperties: { stamped: ["+", ["case", ["get", "stamped"], 1, 0]] },
   });
 
-  const share: maplibregl.ExpressionSpecification = ["/", ["get", "stamped"], ["get", "point_count"]];
-  const size: maplibregl.ExpressionSpecification = ["step", ["get", "point_count"], 15, 10, 19, 50, 24, 200, 30];
-  instance.addLayer({
-    id: `${CLUSTERS}-glow`,
-    type: "circle",
-    source: CAFES,
-    filter: ["has", "point_count"],
-    paint: {
-      "circle-radius": ["+", size, 7],
-      "circle-color": colours.primary,
-      "circle-opacity": 0.16,
-      "circle-blur": 0.4,
-    },
-  });
   instance.addLayer({
     id: CLUSTERS,
-    type: "circle",
-    source: CAFES,
-    filter: ["has", "point_count"],
-    paint: {
-      "circle-radius": size,
-      "circle-color": ["interpolate", ["linear"], share, 0, colours.raised, 1, colours.primary],
-      "circle-stroke-width": 2.5,
-      "circle-stroke-color": colours.primary,
-    },
-  });
-  instance.addLayer({
-    id: `${CLUSTERS}-count`,
     type: "symbol",
     source: CAFES,
     filter: ["has", "point_count"],
     layout: {
-      "text-field": ["get", "point_count_abbreviated"],
-      "text-font": ["Noto Sans Medium"],
-      "text-size": ["step", ["get", "point_count"], 12, 50, 13, 200, 15],
-      "text-allow-overlap": true,
-    },
-    paint: {
-      "text-color": ["case", [">", share, 0.5], colours.onPrimary, colours.primary],
+      "icon-image": ["concat", CLUSTER_PREFIX, ["get", "point_count_abbreviated"]],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
   });
   instance.addLayer({
@@ -214,21 +200,20 @@ function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
     filter: ["!", ["has", "point_count"]],
     layout: {
       "icon-image": ["case", ["get", "stamped"], PIN_STAMPED, PIN_OPEN],
-      "icon-anchor": "bottom",
-      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.75, 17, 1.1],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.8, 17, 1],
       "icon-allow-overlap": true,
       "symbol-sort-key": ["case", ["get", "stamped"], 1, 0],
       "text-field": ["step", ["zoom"], "", 15, ["get", "name"]],
       "text-font": ["Noto Sans Medium"],
       "text-size": ["interpolate", ["linear"], ["zoom"], 15, 11, 18, 13],
       "text-anchor": "top",
-      "text-offset": [0, 0.3],
+      "text-offset": [0, 1.1],
       "text-max-width": 9,
       "text-optional": true,
     },
     paint: {
-      "text-color": ["case", ["get", "stamped"], colours.primary, token("--ink")],
-      "text-halo-color": token("--surface"),
+      "text-color": colours.ink,
+      "text-halo-color": colours.surface,
       "text-halo-width": 1.5,
     },
   });
