@@ -10,7 +10,7 @@ import { useStampsByShop } from "@/data/stamps";
 import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
-import { drawPin, PIN_OPEN, PIN_STAMPED } from "./pins";
+import { CLUSTER_PREFIX, drawCluster, drawPin, PIN_OPEN, PIN_STAMPED, type PinColours } from "./pins";
 
 const ADDIS: [number, number] = [38.7578, 9.0301];
 const CAFES = "cafes";
@@ -25,9 +25,9 @@ maplibregl.setWorkerUrl(workerUrl);
 
 /**
  * The shop map: self-hosted Addis tiles through the pmtiles:// protocol, the
- * cafés and your position. Zoomed out, nearby cafés gather into one bubble
- * that fills with the primary colour as you stamp them; zoomed in, each is a
- * cup pin (filled once stamped, dashed until then) with its name. Cafés are
+ * cafés and your position. Zoomed out, nearby cafés gather into a pill that
+ * says how many ("☕ 24"); zoomed in, each is a small Mocha cup disc, ticked
+ * once you've been, with its name. Cafés are
  * map layers rather than DOM markers, so a thousand of them stay smooth and
  * MapLibre drops the names that would collide. A new style URL (the phone
  * switching light or dark) restyles the same map, so the view stays put.
@@ -69,6 +69,12 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
       });
       // setStyle drops our layers and images with the old style, so add them each time.
       instance.on("style.load", () => showCafes(instance, cafes.current));
+      // Cluster pills are drawn per count the first time a count shows up.
+      instance.on("styleimagemissing", ({ id }) => {
+        if (!id.startsWith(CLUSTER_PREFIX) || instance.hasImage(id)) return;
+        const ratio = pixelRatio();
+        instance.addImage(id, drawCluster(pinColours(), id.slice(CLUSTER_PREFIX.length), ratio), { pixelRatio: ratio });
+      });
       instance.on("click", PINS, (event) => {
         const id = event.features?.[0]?.properties?.id;
         if (id != null) openShop.current({ name: "shop", id: Number(id) });
@@ -139,19 +145,30 @@ function cafeFeatures(shops: Shop[], stamps: ReadonlyMap<OpaqueId, unknown>, lan
   };
 }
 
-/** The café source, its pin images and the four layers that draw it. */
-function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
+/** The map's colours for this theme, read from the CSS tokens. */
+function pinColours(): PinColours {
   const tokens = getComputedStyle(document.documentElement);
   const token = (name: string) => tokens.getPropertyValue(name).trim();
-  const colours = {
-    primary: token("--primary"),
-    onPrimary: token("--on-primary"),
+  return {
+    mocha: token("--mocha"),
+    onMocha: token("--mocha-text"),
     raised: token("--raised"),
-    muted: token("--muted"),
-    faint: token("--faint"),
+    ink: token("--ink"),
+    border: token("--border-strong"),
+    badge: token("--ink"),
+    surface: token("--surface"),
     shadow: token("--shadow"),
   };
-  const ratio = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
+}
+
+function pixelRatio() {
+  return Math.max(2, Math.ceil(window.devicePixelRatio || 1));
+}
+
+/** The café source, its pin images and the two layers that draw it. */
+function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
+  const colours = pinColours();
+  const ratio = pixelRatio();
   for (const [id, stamped] of [[PIN_STAMPED, true], [PIN_OPEN, false]] as const) {
     if (instance.hasImage(id)) instance.removeImage(id);
     instance.addImage(id, drawPin(colours, stamped, ratio), { pixelRatio: ratio });
@@ -161,50 +178,19 @@ function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
     type: "geojson",
     data,
     cluster: true,
-    clusterRadius: 56,
+    clusterRadius: 48,
     clusterMaxZoom: 15,
-    clusterProperties: { stamped: ["+", ["case", ["get", "stamped"], 1, 0]] },
   });
 
-  const share: maplibregl.ExpressionSpecification = ["/", ["get", "stamped"], ["get", "point_count"]];
-  const size: maplibregl.ExpressionSpecification = ["step", ["get", "point_count"], 15, 10, 19, 50, 24, 200, 30];
-  instance.addLayer({
-    id: `${CLUSTERS}-glow`,
-    type: "circle",
-    source: CAFES,
-    filter: ["has", "point_count"],
-    paint: {
-      "circle-radius": ["+", size, 7],
-      "circle-color": colours.primary,
-      "circle-opacity": 0.16,
-      "circle-blur": 0.4,
-    },
-  });
   instance.addLayer({
     id: CLUSTERS,
-    type: "circle",
-    source: CAFES,
-    filter: ["has", "point_count"],
-    paint: {
-      "circle-radius": size,
-      "circle-color": ["interpolate", ["linear"], share, 0, colours.raised, 1, colours.primary],
-      "circle-stroke-width": 2.5,
-      "circle-stroke-color": colours.primary,
-    },
-  });
-  instance.addLayer({
-    id: `${CLUSTERS}-count`,
     type: "symbol",
     source: CAFES,
     filter: ["has", "point_count"],
     layout: {
-      "text-field": ["get", "point_count_abbreviated"],
-      "text-font": ["Noto Sans Medium"],
-      "text-size": ["step", ["get", "point_count"], 12, 50, 13, 200, 15],
-      "text-allow-overlap": true,
-    },
-    paint: {
-      "text-color": ["case", [">", share, 0.5], colours.onPrimary, colours.primary],
+      "icon-image": ["concat", CLUSTER_PREFIX, ["get", "point_count_abbreviated"]],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
   });
   instance.addLayer({
@@ -214,21 +200,20 @@ function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
     filter: ["!", ["has", "point_count"]],
     layout: {
       "icon-image": ["case", ["get", "stamped"], PIN_STAMPED, PIN_OPEN],
-      "icon-anchor": "bottom",
-      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.75, 17, 1.1],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 13, 0.8, 17, 1],
       "icon-allow-overlap": true,
       "symbol-sort-key": ["case", ["get", "stamped"], 1, 0],
       "text-field": ["step", ["zoom"], "", 15, ["get", "name"]],
       "text-font": ["Noto Sans Medium"],
       "text-size": ["interpolate", ["linear"], ["zoom"], 15, 11, 18, 13],
       "text-anchor": "top",
-      "text-offset": [0, 0.3],
+      "text-offset": [0, 1.1],
       "text-max-width": 9,
       "text-optional": true,
     },
     paint: {
-      "text-color": ["case", ["get", "stamped"], colours.primary, token("--ink")],
-      "text-halo-color": token("--surface"),
+      "text-color": colours.ink,
+      "text-halo-color": colours.surface,
       "text-halo-width": 1.5,
     },
   });
