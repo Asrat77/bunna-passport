@@ -36,7 +36,9 @@ const ICONS = [
   "magnifying-glass",
   "map-pin",
   "map-trifold",
+  "navigation-arrow",
   "pencil-simple",
+  "person-simple-walk",
   "plus",
   "plus-circle",
   "share-network",
@@ -44,6 +46,7 @@ const ICONS = [
   "stamp",
   "user-plus",
   "warning",
+  "x",
 ];
 
 const require = createRequire(import.meta.url);

@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
-import type { CatalogPage, LeaderboardMetric, LeaderboardScope, OpaqueId, Shop } from "@/api/types";
+import type { CatalogPage, LeaderboardMetric, LeaderboardScope, OpaqueId, ReviewSummary, Shop } from "@/api/types";
 import { useAuth } from "@/auth/AuthProvider";
 
 const CATALOG_KEY = "bunna.catalog";
@@ -56,12 +56,24 @@ export function useShop(id: OpaqueId) {
   return useQuery({ queryKey: ["shop", id], queryFn: async () => (await api.getShop(id)).data });
 }
 
-export function useReviews(id: OpaqueId, enabled: boolean) {
-  return useQuery({
+/** One fetch serves both the review list and its rating summary. */
+function reviewsQuery(id: OpaqueId) {
+  return {
     queryKey: ["reviews", id],
-    queryFn: async () => (await api.listReviews(id)).data,
-    enabled,
-  });
+    queryFn: async () => {
+      const { data, meta } = await api.listReviews(id);
+      return { reviews: data, summary: meta as ReviewSummary | undefined };
+    },
+  };
+}
+
+export function useReviews(id: OpaqueId, enabled: boolean) {
+  return useQuery({ ...reviewsQuery(id), enabled, select: (page) => page.reviews });
+}
+
+/** The average rating and how many rated, for the map's café card. */
+export function useReviewSummary(id: OpaqueId) {
+  return useQuery({ ...reviewsQuery(id), select: (page) => page.summary ?? null });
 }
 
 /** Recent check-ins, enough to count a weekly streak. */

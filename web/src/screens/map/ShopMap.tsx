@@ -1,14 +1,16 @@
 import * as maplibregl from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeatureCollection } from "geojson";
 import type { OpaqueId, Shop } from "@/api/types";
 import { useCatalog } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { useI18n } from "@/i18n/context";
+import { distanceMeters } from "@/lib/distance";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { Icon } from "@/ui/Icon";
 import { phCrosshair } from "@/ui/icons";
+import { CafeCard } from "./CafeCard";
 import { addPinImages, LOCATE_ZOOM, pinColours, pixelRatio, prepareMapLibre, RANGE, rangeFeatures, showRange } from "./layers";
 import { CLUSTER_PREFIX, drawCluster, PIN_OPEN, PIN_STAMPED } from "./pins";
 
@@ -16,6 +18,10 @@ const ADDIS: [number, number] = [38.7578, 9.0301];
 const CAFES = "cafes";
 const CLUSTERS = "cafe-clusters";
 const PINS = "cafe-pins";
+const SELECTED = "cafe-selected";
+/** Roughly the card's height: a pin lower than this would sit under it. */
+const CARD_CLEARANCE = 250;
+const NOTHING = -1;
 
 /**
  * The shop map: self-hosted Addis tiles through the pmtiles:// protocol, the
@@ -25,7 +31,8 @@ const PINS = "cafe-pins";
  * map layers rather than DOM markers, so a thousand of them stay smooth and
  * MapLibre drops the names that would collide. Round you sits the check-in
  * range, the circle a café has to be inside for its stamp to count, and the
- * locate button brings you back to it. A new style URL (the phone
+ * locate button brings you back to it. Tapping a café opens its card over the
+ * map's foot, with a ring round its pin; tapping the map away closes it. A new style URL (the phone
  * switching light or dark) restyles the same map, so the view stays put.
  */
 export default function ShopMap({ styleUrl }: { styleUrl: string }) {
@@ -40,10 +47,11 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   const cafes = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const range = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const rangeLabel = useRef(t("map.range"));
-  const openShop = useRef(push);
+  const selectedRef = useRef<number | null>(null);
   const centred = useRef(false);
   const [failed, setFailed] = useState(false);
-  openShop.current = push;
+  const [selected, setSelected] = useState<number | null>(null);
+  selectedRef.current = selected;
   rangeLabel.current = t("map.range");
 
   useEffect(() => {
@@ -66,7 +74,7 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
       // setStyle drops our layers and images with the old style, so add them each time.
       instance.on("style.load", () => {
         showRange(instance, range.current, rangeLabel.current);
-        showCafes(instance, cafes.current);
+        showCafes(instance, cafes.current, selectedRef.current);
       });
       // Cluster pills are drawn per count the first time a count shows up.
       instance.on("styleimagemissing", ({ id }) => {
@@ -75,8 +83,18 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
         instance.addImage(id, drawCluster(pinColours(), id.slice(CLUSTER_PREFIX.length), ratio), { pixelRatio: ratio });
       });
       instance.on("click", PINS, (event) => {
-        const id = event.features?.[0]?.properties?.id;
-        if (id != null) openShop.current({ name: "shop", id: Number(id) });
+        const feature = event.features?.[0];
+        if (!feature || feature.geometry.type !== "Point") return;
+        setSelected(Number(feature.properties.id));
+        // Bring the pin up if the card would cover it.
+        const coordinates = feature.geometry.coordinates as [number, number];
+        if (instance.project(coordinates).y > instance.getContainer().clientHeight - CARD_CLEARANCE) {
+          instance.easeTo({ center: coordinates, offset: [0, -CARD_CLEARANCE / 2] });
+        }
+      });
+      // A tap on the map itself, not a café, puts the card away.
+      instance.on("click", (event) => {
+        if (instance.queryRenderedFeatures(event.point, { layers: [PINS, CLUSTERS] }).length === 0) setSelected(null);
       });
       instance.on("click", CLUSTERS, async (event) => {
         const feature = event.features?.[0];
@@ -110,6 +128,15 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   }, [catalog.data, stamps, language]);
 
   useEffect(() => {
+    map.current?.getLayer(SELECTED) && map.current.setFilter(SELECTED, selectedFilter(selected));
+  }, [selected]);
+
+  const selectedShop = useMemo(
+    () => (selected === null ? undefined : catalog.data?.find((shop) => shop.id === selected)),
+    [catalog.data, selected],
+  );
+
+  useEffect(() => {
     const instance = map.current;
     if (!instance || !fix) return;
     const element = document.createElement("span");
@@ -141,7 +168,17 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   return (
     <div className="map-screen__frame">
       <div ref={container} className="map-screen__map" />
-      <button
+      {selectedShop ? (
+        <CafeCard
+          key={selectedShop.id}
+          shop={selectedShop}
+          stamp={stamps.get(selectedShop.id)}
+          distance={fix ? distanceMeters(fix, selectedShop) : null}
+          onOpen={() => push({ name: "shop", id: selectedShop.id })}
+          onClose={() => setSelected(null)}
+        />
+      ) : (
+        <button
         type="button"
         className="map-locate"
         aria-label={t("map.locate")}
@@ -150,6 +187,7 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
       >
         <Icon path={phCrosshair} size={22} />
       </button>
+      )}
     </div>
   );
 }
@@ -169,8 +207,13 @@ function cafeFeatures(shops: Shop[], stamps: ReadonlyMap<OpaqueId, unknown>, lan
   };
 }
 
-/** The café source, its pin images and the two layers that draw it. */
-function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
+/** Only the chosen café's pin, or none. */
+function selectedFilter(id: number | null): maplibregl.FilterSpecification {
+  return ["all", ["!", ["has", "point_count"]], ["==", ["get", "id"], id ?? NOTHING]];
+}
+
+/** The café source, its pin images, the chosen café's ring and the two layers that draw them. */
+function showCafes(instance: maplibregl.Map, data: FeatureCollection, selected: number | null) {
   const colours = pinColours();
   addPinImages(instance, colours);
 
@@ -182,6 +225,20 @@ function showCafes(instance: maplibregl.Map, data: FeatureCollection) {
     clusterMaxZoom: 15,
   });
 
+  // A soft Mocha halo under the pin whose card is open.
+  instance.addLayer({
+    id: SELECTED,
+    type: "circle",
+    source: CAFES,
+    filter: selectedFilter(selected),
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 13, 15, 17, 19],
+      "circle-color": colours.mocha,
+      "circle-opacity": 0.22,
+      "circle-stroke-color": colours.mocha,
+      "circle-stroke-width": 2,
+    },
+  });
   instance.addLayer({
     id: CLUSTERS,
     type: "symbol",
