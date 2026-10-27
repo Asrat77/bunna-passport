@@ -20,9 +20,9 @@ const BEAN_SMALL = "translate(30 30) scale(0.1563)";
 /**
  * The small stamp seal: a struck coin in the level's metal, with a debossed
  * coffee bean and one pip per level. The shop's name always sits beside the
- * seal, so the seal carries the level, not the name. Unearned seals are dashed
- * outlines, because visible absence is the completion hook. Below 32px the rim
- * detail and pips drop out. Use at 60px or smaller; the hero stamp is InkStamp.
+ * seal, so the seal carries the level, not the name. Unearned seals are blank
+ * coins with a stitched slot, because visible absence is the completion hook.
+ * Below 32px the rim detail, slot and pips drop out. Use at 60px or smaller; the hero stamp is InkStamp.
  */
 export function Seal({ name, level, size, rotation = 0, label, decorative = false }: Props) {
   const id = `seal${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -38,20 +38,27 @@ export function Seal({ name, level, size, rotation = 0, label, decorative = fals
   } as const;
 
   if (!level) {
+    // A blank, unstruck coin in the surface's own tones: the same rim and
+    // field as the metals, with a stitched slot and an outline bean where the
+    // strike will land. A surface can retune it with --seal-empty-*, as Mocha does.
+    const fill = "var(--seal-empty-fill, var(--border))";
+    const ring = "var(--seal-empty-ring, var(--border-strong))";
     return (
       <svg {...svgProps}>
-        {/* A surface can lift these with --seal-empty-* where the defaults sink, as Mocha does. */}
-        <circle
-          cx="50"
-          cy="50"
-          r="47"
-          fill="var(--seal-empty-fill, var(--raised))"
-          stroke="var(--seal-empty-ring, var(--border-strong))"
-          strokeWidth={2.5}
-          strokeDasharray="6 5"
-          strokeLinecap="round"
-        />
-        <path d={phCoffeeBean} transform={small ? BEAN_SMALL : BEAN} fill="var(--seal-empty-bean, var(--faint))" opacity={0.7} />
+        <defs>
+          <linearGradient id={`${id}e`} x1="0.2" y1="0.05" x2="0.8" y2="0.95">
+            <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.22} />
+            <stop offset="1" stopColor="#000000" stopOpacity={0.1} />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill={fill} />
+        <circle cx="50" cy="50" r="48" fill={`url(#${id}e)`} />
+        <circle cx="50" cy="50" r="47.5" fill="none" stroke={ring} strokeOpacity={0.55} strokeWidth={1} />
+        <circle cx="50" cy="50" r="40" fill={fill} stroke={ring} strokeOpacity={0.45} strokeWidth={1.4} />
+        {small ? null : (
+          <circle cx="50" cy="50" r="34" fill="none" stroke={ring} strokeWidth={1.4} strokeDasharray="3 3.2" strokeLinecap="round" />
+        )}
+        <path d={phCoffeeBean} transform={small ? BEAN_SMALL : BEAN} fill="var(--seal-empty-bean, var(--faint))" opacity={0.8} />
       </svg>
     );
   }

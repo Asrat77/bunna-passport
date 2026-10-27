@@ -82,6 +82,10 @@
   --glow: radial-gradient(140% 52% at 50% -6%, rgba(169, 80, 58, 0.34), rgba(169, 80, 58, 0) 72%);
   --action: var(--mocha-text);
   --on-action: var(--mocha-bg);
+  /* Not-yet seals: the blank coin would sink into near-black. */
+  --seal-empty-fill: var(--mocha-surface-active);
+  --seal-empty-ring: var(--mocha-text-3);
+  --seal-empty-bean: var(--mocha-text-2);
 
   color-scheme: dark;
 }
@@ -128,10 +132,10 @@
   --shadow: rgba(0, 0, 0, 0.5);
   --action: var(--mocha-text);
   --on-action: var(--mocha-bg);
-  /* Not-yet seals: the dashed ring and bean would sink into near-black. */
+  /* Not-yet seals: the blank coin would sink into near-black. */
   --seal-empty-fill: var(--mocha-surface-active);
   --seal-empty-ring: var(--mocha-text-3);
-  --seal-empty-bean: var(--mocha-text);
+  --seal-empty-bean: var(--mocha-text-2);
   background: var(--surface);
   color: var(--ink);
   color-scheme: dark;
