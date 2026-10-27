@@ -114,6 +114,8 @@ export const miniappEn = {
   "map.loading": "Loading the map…",
   "map.unavailable": "The map couldn't load here. The list still works.",
   "map.you": "You are here",
+  "map.locate": "Show where I am",
+  "map.range": "Check-in range",
 
   "shop.yourStamp": "YOUR STAMP",
   "shop.notYet": "Not yet",
@@ -516,6 +518,8 @@ export const miniappAm: Record<MiniappKey, string> = {
   "map.loading": "ካርታውን በመጫን ላይ…",
   "map.unavailable": "ካርታው እዚህ መጫን አልቻለም። ዝርዝሩ ግን ይሰራል።",
   "map.you": "እዚህ ነዎት",
+  "map.locate": "ያለሁበትን አሳይ",
+  "map.range": "ማህተም የሚገኝበት ክልል",
 
   "shop.yourStamp": "የእርስዎ ማህተም",
   "shop.notYet": "ገና ነው",

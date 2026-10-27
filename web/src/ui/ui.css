@@ -411,12 +411,43 @@
 }
 
 /* Map */
+.map-screen__frame {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 420px;
+}
+
 .map-screen__map {
   flex: 1;
-  min-height: 420px;
   border-radius: var(--radius-card);
   overflow: hidden;
   border: 1px solid var(--border);
+}
+
+/* Locate: a paper button in the map's corner, like the cluster pills. */
+.map-locate {
+  position: absolute;
+  right: 12px;
+  bottom: 36px;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--raised);
+  color: var(--mocha);
+  box-shadow: 0 2px 8px var(--shadow);
+  cursor: pointer;
+}
+
+.map-locate:active {
+  scale: 0.94;
+}
+
+.map-locate[aria-busy="true"] svg {
+  animation: pulse 1s ease-in-out infinite;
 }
 
 .map-you {
