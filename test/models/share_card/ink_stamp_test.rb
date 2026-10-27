@@ -4,9 +4,19 @@ class ShareCard::InkStampTest < ActiveSupport::TestCase
   # Shared with web/src/design/stamp/geometry.test.ts.
   SHARED = JSON.parse(Rails.root.join("web/src/design/stamp/__fixtures__/stamp-geometry.json").read)
 
-  test "sizes names as the Mini App does" do
-    SHARED["nameFontSize"].each do |name, size|
-      assert_in_delta size, ShareCard::InkStamp.name_font_size(name.upcase), 1e-9, name
+  test "lays out names as the Mini App does" do
+    SHARED["nameLayout"].each do |name, expected|
+      lines, size = ShareCard::InkStamp.name_layout(name.upcase)
+
+      assert_equal expected["lines"], lines, name
+      assert_in_delta expected["size"], size, 1e-9, name
+      assert_equal expected["baselines"], ShareCard::InkStamp.name_baselines(lines, size), name
+    end
+  end
+
+  test "sizes the Amharic line as the Mini App does" do
+    SHARED["amharicFontSize"].each do |text, size|
+      assert_in_delta size, ShareCard::InkStamp.amharic_font_size(text), 1e-9, text
     end
   end
 
@@ -26,22 +36,29 @@ class ShareCard::InkStampTest < ActiveSupport::TestCase
     assert_equal "21 OCT 2026", ShareCard::InkStamp.date(Time.zone.local(2026, 10, 21, 9, 30))
   end
 
-  test "lays the ring text along the circle, starting at the left and running over the top" do
+  test "places the ring glyphs as the Mini App does" do
     glyphs = ShareCard::InkStamp.ring_glyphs
-    first_char, first_x, first_y = glyphs.first
 
-    assert_equal ShareCard::InkStamp::RING_TEXT.length, glyphs.size
-    assert_equal "B", first_char
-    assert_in_delta 30, first_x, 1
-    assert_operator first_y, :<, 116
-    glyphs.each do |_, x, y, _|
-      assert_in_delta 86, Math.hypot(x - 116, y - 116), 0.05
+    assert_equal SHARED["ringGlyphs"].size, glyphs.size
+    SHARED["ringGlyphs"].zip(glyphs).each do |expected, (char, x, y, degrees, size)|
+      assert_equal expected["char"], char
+      assert_in_delta expected["x"], x, 0.011
+      assert_in_delta expected["y"], y, 0.011
+      assert_in_delta expected["rotate"], degrees, 0.011
+      assert_equal expected["size"], size
     end
   end
 
-  test "escapes shop names" do
-    svg = ShareCard::InkStamp.new(name: "Tom & Co <b>", amharic: "ቶሞካ", date: "1 JAN 2026").to_svg
+  test "prints an unearned stamp as an empty slot" do
+    svg = ShareCard::InkStamp.new(name: "Tomoca", amharic: "ቶሞካ", date: "YOUR STAMP", level: "none").to_svg
 
-    assert_includes svg, "TOM &amp; CO &lt;B&gt;"
+    assert_includes svg, %(stroke-dasharray="9 7")
+    assert_not_includes svg, "PASSPORT"
+  end
+
+  test "escapes shop names" do
+    svg = ShareCard::InkStamp.new(name: "Tom&Co<b>", amharic: "ቶሞካ", date: "1 JAN 2026").to_svg
+
+    assert_includes svg, "TOM&amp;CO&lt;B&gt;"
   end
 end
