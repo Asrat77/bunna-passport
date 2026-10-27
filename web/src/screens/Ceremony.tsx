@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { CheckIn } from "@/api/types";
 import { useMyDoodle } from "@/data/me";
 import { useCatalog, usePassport } from "@/data/queries";
+import dither from "@/assets/dither-mocha-240.png";
 import { Doodle } from "@/design/doodle/Doodle";
 import { nextLevel, visitsToNextLevel } from "@/design/seal/levels";
 import { InkStamp } from "@/design/stamp/InkStamp";
@@ -11,6 +12,7 @@ import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { PrimaryAction, SecondaryAction } from "@/telegram/buttons";
 import { hapticSuccess } from "@/telegram/haptics";
+import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./ceremony.css";
@@ -26,7 +28,8 @@ const celebrated = new Set<number>();
 /**
  * The stamp ceremony for a first visit, and the compact "+1 cup" tick for a
  * repeat one. The doodle card only appears on the first cup of the coffee
- * day, since that's the only time it wakes.
+ * day, since that's the only time it wakes. Both are Mocha in either phone
+ * theme, under the same dither header as Explore (docs/DESIGN.md §2.2.1).
  */
 export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: boolean }) {
   const { t, language, ordinal } = useI18n();
@@ -37,6 +40,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
   const [replay] = useState(() => celebrated.has(checkIn.id));
   const [phase, setPhase] = useState<"pressing" | "settled">(replay || reducedMotion() ? "settled" : "pressing");
   const [canSkip, setCanSkip] = useState(false);
+  useMochaChrome();
 
   useEffect(() => {
     celebrated.add(checkIn.id);
@@ -66,7 +70,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
   const share = () => push({ name: "share", target: { checkInId: checkIn.id }, shopName: checkIn.shop.name });
 
   const doodleCard = firstCupToday ? (
-    <div className="card ceremony__doodle">
+    <div className="ceremony__doodle">
       <div className="ceremony__faces" aria-label={t("doodle.mineAwake")} role="img">
         <Doodle seed={doodle.seed} mood="sleepy" size={52} decorative />
         <span className="ceremony__arrow" aria-hidden="true">
@@ -90,11 +94,17 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
 
   if (!checkIn.stamp_earned) {
     return (
-      <main className="screen screen--glow ceremony ceremony--cup" data-phase={phase}>
+      <main className="screen ceremony ceremony--cup mocha" data-phase={phase}>
+        <img className="ceremony__dither" src={dither} alt="" aria-hidden="true" />
         <div className="ceremony__tick" aria-hidden="true">
-          <Icon path={phCheck} size={56} />
+          <Icon path={phCheck} size={44} />
         </div>
-        <Headline first={t("ceremony.cupTitle")} second={t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })} align="center" />
+        <Headline
+          first={t("ceremony.cupTitle")}
+          second={t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })}
+          size={31}
+          align="center"
+        />
         {toNext && upcoming ? (
           <p className="ceremony__line">
             {toNext === 1
@@ -103,7 +113,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
           </p>
         ) : null}
         {doodleCard}
-        <PrimaryAction text={t("ceremony.done")} onClick={done} />
+        <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
       </main>
     );
   }
@@ -116,12 +126,13 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
 
   return (
     <main
-      className="screen screen--glow ceremony"
+      className="screen ceremony mocha"
       data-phase={phase}
       onClick={() => {
         if (canSkip && phase === "pressing") setPhase("settled");
       }}
     >
+      <img className="ceremony__dither" src={dither} alt="" aria-hidden="true" />
       <div className="ceremony__disc">
         <div className="ceremony__stamp">
           <InkStamp
@@ -138,7 +149,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
       </div>
 
       <div className="ceremony__words">
-        <Headline first={t("ceremony.stamped")} second={t("ceremony.where", { shop: checkIn.shop.name, area })} align="center" />
+        <Headline first={t("ceremony.stamped")} second={t("ceremony.where", { shop: checkIn.shop.name, area })} size={31} align="center" />
         <p className="ceremony__line">
           {nth ? t("ceremony.nth", { ordinal: ordinal(nth) }) : null}{" "}
           {toNext && upcoming
@@ -150,7 +161,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
       </div>
 
       {areaShops.length > 0 ? (
-        <div className="card ceremony__progress">
+        <div className="ceremony__progress">
           <svg width="52" height="52" viewBox="0 0 52 52" role="img" aria-label={`${t("ceremony.areaProgress", { stamped: areaStamped, total: areaShops.length })} ${t("ceremony.areaIn", { area })}`}>
             <circle cx="26" cy="26" r="22" fill="none" stroke="var(--sunken)" strokeWidth="6" />
             <circle
@@ -183,7 +194,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
 
       {phase === "pressing" && canSkip ? <span className="visually-hidden">{t("ceremony.tapToSkip")}</span> : null}
       <SecondaryAction text={t("ceremony.share")} onClick={share} />
-      <PrimaryAction text={t("ceremony.done")} onClick={done} />
+      <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
     </main>
   );
 }

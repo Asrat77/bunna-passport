@@ -21,7 +21,7 @@
   justify-content: center;
   gap: 10px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .action:disabled {
@@ -30,15 +30,20 @@
 }
 
 .action--primary {
-  background: var(--primary);
-  color: var(--on-primary);
-  box-shadow: 0 12px 28px var(--shadow);
+  background: var(--action);
+  color: var(--on-action);
 }
 
 .action--secondary {
   background: var(--raised);
   color: var(--ink);
   border: 1px solid var(--border);
+}
+
+/* Mocha surfaces are flat: no outline on the secondary button. */
+:root[data-theme="dark"] .action--secondary,
+.mocha .action--secondary {
+  border-color: transparent;
 }
 
 .action__spinner {

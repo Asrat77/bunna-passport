@@ -30,9 +30,9 @@
 
 .headline {
   margin: 4px 0 0;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
 }
 
 :lang(am) .headline {
@@ -68,6 +68,14 @@
   border: 1px solid var(--border);
 }
 
+/* Mocha surfaces have no outline (docs/DESIGN.md §2.2.1). */
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .notice:not(.notice--caution),
+.mocha .card,
+.mocha .notice:not(.notice--caution) {
+  border-color: transparent;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -95,6 +103,15 @@
   border-color: var(--ink);
   color: var(--surface);
   font-weight: 600;
+}
+
+/* Selected in dark reads like Explore's pills: a lifted surface and Mocha red, not a white slab. */
+:root[data-theme="dark"] .chip--filter[aria-pressed="true"],
+:root[data-theme="dark"] .segment button[aria-pressed="true"],
+:root[data-theme="dark"] .stats-switch button[aria-selected="true"] {
+  background: var(--mocha-surface-active);
+  border-color: transparent;
+  color: var(--primary);
 }
 
 .chip--tag {
@@ -440,9 +457,7 @@
 
 /* One-line headline (Explore): tight Latin tracking, Ethiopic keeps its room. */
 .headline--one-line {
-  font-weight: 600;
   line-height: 1.05;
-  letter-spacing: -0.04em;
   white-space: nowrap;
 }
 

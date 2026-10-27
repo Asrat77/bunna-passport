@@ -223,7 +223,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
       ) : null}
 
       {catalog.isPending ? (
-        <div className="shop-list" aria-label={t("explore.loading")}>
+        <div className="shop-list shop-list--flat" aria-label={t("explore.loading")}>
           {[0, 1, 2, 3].map((n) => (
             <div key={n} className="skeleton" style={{ height: 76 }} />
           ))}
@@ -241,10 +241,10 @@ export function AllCafes({ route }: { route: CafesRoute }) {
           {filters.query.trim() ? <><br />{t("explore.noResultsHint")}</> : null}
         </p>
       ) : (
-        <ul className="shop-list">
+        <ul className="shop-list shop-list--flat">
           {visible.map(({ shop, distance }) => (
             <li key={shop.id}>
-              <ShopRow shop={shop} stamp={stamps.get(shop.id)} distance={distance} onOpen={() => open(shop.id)} />
+              <ShopRow shop={shop} stamp={stamps.get(shop.id)} distance={distance} onOpen={() => open(shop.id)} variant="flat" />
             </li>
           ))}
         </ul>

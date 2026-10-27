@@ -7,10 +7,16 @@ export type ColorScheme = "light" | "dark";
 
 type Hex = `#${string}`;
 
-export const palette: Record<ColorScheme, { surface: Hex; primary: Hex; onPrimary: Hex }> = {
-  light: { surface: "#F6F0E6", primary: "#872F1D", onPrimary: "#FFF8ED" },
-  dark: { surface: "#17100C", primary: "#F0A05D", onPrimary: "#25130A" },
+type Chrome = { surface: Hex; action: Hex; onAction: Hex };
+
+/** Dark is Mocha's neutrals, so it matches the Mocha screens below. */
+export const palette: Record<ColorScheme, Chrome> = {
+  light: { surface: "#F6F0E6", action: "#872F1D", onAction: "#FFF8ED" },
+  dark: { surface: "#0B0A09", action: "#F7F3EF", onAction: "#0B0A09" },
 };
 
-/** Telegram chrome on Explore: white over the dither header, Mocha below. */
-export const mochaChrome = { header: "#FFFFFF", background: "#0B0A09" } as const satisfies Record<string, Hex>;
+/** Mocha screens (Explore, the ceremony) in either phone theme. */
+export const mochaPalette: Chrome = palette.dark;
+
+/** Telegram chrome on Mocha screens: white over the dither header, Mocha below. */
+export const mochaChrome = { header: "#FFFFFF", background: mochaPalette.surface } as const satisfies Record<string, Hex>;
