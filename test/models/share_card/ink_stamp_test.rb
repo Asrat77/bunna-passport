@@ -57,8 +57,8 @@ class ShareCard::InkStampTest < ActiveSupport::TestCase
   end
 
   test "escapes shop names" do
-    svg = ShareCard::InkStamp.new(name: "Tom & Co <b>", amharic: "ቶሞካ", date: "1 JAN 2026").to_svg
+    svg = ShareCard::InkStamp.new(name: "Tom&Co<b>", amharic: "ቶሞካ", date: "1 JAN 2026").to_svg
 
-    assert_includes svg, "TOM &amp; CO &lt;B&gt;"
+    assert_includes svg, "TOM&amp;CO&lt;B&gt;"
   end
 end
