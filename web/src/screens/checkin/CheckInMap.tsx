@@ -9,6 +9,8 @@ import { addPinImages, pinColours, prepareMapLibre, RANGE, rangeBounds, rangeFea
 import { PIN_OPEN, PIN_STAMPED } from "@/screens/map/pins";
 
 const CANDIDATES = "candidates";
+// Room at the top for the accuracy chip and the range's name.
+const PADDING = { top: 52, right: 16, bottom: 16, left: 16 };
 
 type Props = {
   fix: Fix;
@@ -47,7 +49,7 @@ export default function CheckInMap({ fix, candidates, selectedId, styleUrl, desc
         container: container.current,
         style: appliedStyle.current,
         bounds: rangeBounds(fix),
-        fitBoundsOptions: { padding: 20 },
+        fitBoundsOptions: { padding: PADDING },
         interactive: false,
         attributionControl: { compact: true },
       });
@@ -81,7 +83,7 @@ export default function CheckInMap({ fix, candidates, selectedId, styleUrl, desc
     if (!instance) return;
     range.current = rangeFeatures(fix);
     instance.getSource<maplibregl.GeoJSONSource>(RANGE)?.setData(range.current);
-    instance.fitBounds(rangeBounds(fix), { padding: 20, duration: 400 });
+    instance.fitBounds(rangeBounds(fix), { padding: PADDING, duration: 400 });
     const element = document.createElement("span");
     element.className = "map-you";
     element.setAttribute("aria-label", t("map.you"));
