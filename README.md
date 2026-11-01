@@ -65,12 +65,16 @@ and supply the bilingual name, neighborhood, landmark, and photo before adding
 it to `shops.csv`. Keep the visible OpenStreetMap attribution and ODbL notice in
 the app when publishing data derived from this queue.
 
-Do not copy Google Maps or Places listings into this catalog. The [Google Maps
-Platform terms](https://cloud.google.com/maps-platform/terms) prohibit bulk
-exports and saving business listings for use outside its services, and Places
-content cannot be combined with Bunna Passport's non-Google map. Google Maps
-may be consulted interactively only as a lead; do not copy its fields. Catalog
-facts must come from an allowed source or direct human verification.
+Google Maps is the catalog's source of truth. Scrape Addis coffee shops with
+[gosom/google-maps-scraper](https://github.com/gosom/google-maps-scraper) and
+convert its `results.csv` into `shops.csv`: the English part of the listing
+title becomes `name`, an Ethiopic part becomes `name_am` (otherwise the English
+name is reused), the address becomes `landmark`, the Google thumbnail becomes
+the photo, and each shop takes the nearest defined neighborhood within 2.5 km.
+Shops farther than that from every neighborhood stay out of the catalog until
+their neighborhood exists. Scraping Google Maps is against Google's terms of
+service and its listings carry no license for reuse; the project accepts that
+risk. Keep the scrape output and photos under `storage/local_seed_data/`.
 
 Create `storage/local_seed_data/shops.csv` with these required columns:
 
