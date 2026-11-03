@@ -135,7 +135,12 @@ same day as the machine it was protecting. The same thing happened to the
 earlier Azure deployment.
 
 Installed on the application host as `/usr/local/bin/bunna-backup-offsite`,
-scheduled nightly at 00:15 UTC, and configured from `/etc/bunna-backup.env`.
+scheduled nightly at 00:15 UTC in the `ubuntu` user's crontab, and configured
+from `/etc/bunna-backup.env`. It uploads to `r2backup:bunna-pass-backup` with
+the rclone config in `~ubuntu/.config/rclone` and stages archives in
+`~ubuntu/backups`. Pruning only looks at the bucket's top level, so
+`archive/` keeps copies that must outlive retention, such as the last Azure
+backup (2026-08-19), which was restored onto this host.
 Retention keeps every run for 14 days, then Mondays only for 12 weeks — about
 two dozen copies.
 
