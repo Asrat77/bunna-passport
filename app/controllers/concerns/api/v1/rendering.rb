@@ -47,7 +47,7 @@ module Api::V1::Rendering
     end
 
     # Where a friend lands from an invite: the bot's Mini App with the token
-    # as its start parameter, or this site when there's no bot yet.
+    # as its start parameter, or the Mini App on this site when there's no bot yet.
     def invite_url(user)
       token = user.invite_token!
       if (bot = ENV["TELEGRAM_BOT_USERNAME"].presence&.delete_prefix("@"))
@@ -55,7 +55,7 @@ module Api::V1::Rendering
         "https://t.me/#{[ bot, app ].compact.join('/')}?startapp=invite_#{token}"
       else
         base = ENV["PUBLIC_BASE_URL"].presence || request.base_url
-        "#{base.delete_suffix('/')}/?invite=#{token}"
+        "#{base.delete_suffix('/')}/app?invite=#{token}"
       end
     end
 

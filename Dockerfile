@@ -61,6 +61,21 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 
 
+# Build the Telegram Mini App (web/). Its VITE_ settings are public and get
+# compiled into the JavaScript, so they arrive as build arguments.
+FROM docker.io/library/node:20-slim AS web
+
+ARG VITE_MAP_STYLE_URL
+ARG VITE_MAP_STYLE_DARK_URL
+ARG VITE_SHARE_URL
+
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
+
 # Final stage for app image
 FROM base
 
@@ -72,6 +87,8 @@ USER 1000:1000
 # Copy built artifacts: gems, application
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
+COPY --chown=rails:rails --from=web /web/dist/assets /rails/public/app/assets
+COPY --chown=rails:rails --from=web /web/dist/index.html /rails/mini_app/index.html
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
