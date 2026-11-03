@@ -13,6 +13,7 @@ class MiniAppsControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_equal "no-cache", response.headers["Cache-Control"]
+      assert_nil response.headers["X-Frame-Options"], "Telegram's desktop and web clients frame the app"
       assert_includes response.body, "Bunna Passport"
     end
   end

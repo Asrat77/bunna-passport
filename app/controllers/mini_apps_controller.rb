@@ -9,6 +9,8 @@ class MiniAppsController < ActionController::API
     return head :not_found unless page.exist?
 
     response.headers["Cache-Control"] = "no-cache"
+    # Telegram Desktop and Telegram Web show Mini Apps in an iframe.
+    response.headers.delete("X-Frame-Options")
     send_file page, type: "text/html", disposition: "inline"
   end
 end
