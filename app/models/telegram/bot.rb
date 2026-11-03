@@ -52,7 +52,7 @@ class Telegram::Bot
   end
 
   def set_webhook(url:, secret_token:, allowed_updates: UPDATE_TYPES)
-    call("setWebhook", url: url, secret_token: secret_token, allowed_updates: allowed_updates)
+    call("setWebhook", { url: url, secret_token: secret_token, allowed_updates: allowed_updates })
   end
 
   def delete_webhook
@@ -60,12 +60,12 @@ class Telegram::Bot
   end
 
   def set_my_commands(commands)
-    call("setMyCommands", commands: commands)
+    call("setMyCommands", { commands: commands })
   end
 
   # The button beside the message box that opens the Mini App.
   def set_chat_menu_button(text:, url:)
-    call("setChatMenuButton", menu_button: { type: "web_app", text: text, web_app: { url: url } })
+    call("setChatMenuButton", { menu_button: { type: "web_app", text: text, web_app: { url: url } } })
   end
 
   private
