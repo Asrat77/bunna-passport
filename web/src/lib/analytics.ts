@@ -8,7 +8,7 @@ import type { User } from "@/api/types";
  * carry coordinates, notes, emails or Telegram names.
  */
 const KEY: string | undefined = import.meta.env.VITE_POSTHOG_KEY || undefined;
-const HOST: string = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+const HOST: string = import.meta.env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com";
 
 export type AnalyticsEvent =
   | "app_opened"
