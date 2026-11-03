@@ -8,7 +8,7 @@ class Api::V1::FriendsTest < ActionDispatch::IntegrationTest
     get api_v1_invite_path, headers: bearer_headers(inviter), as: :json
     assert_response :success
     token = response_json.dig("data", "token")
-    assert_equal "http://www.example.com/?invite=#{token}", response_json.dig("data", "url")
+    assert_equal "http://www.example.com/app?invite=#{token}", response_json.dig("data", "url")
 
     get api_v1_invite_preview_path(token), headers: bearer_headers(guest), as: :json
     assert_equal inviter.handle, response_json.dig("data", "inviter", "handle")

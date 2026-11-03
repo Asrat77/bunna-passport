@@ -46,11 +46,13 @@ env:
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
     # The bot's @username, printed as t.me/<name> on share cards. Optional.
-    # TELEGRAM_BOT_USERNAME: bunnapassportbot
+    TELEGRAM_BOT_USERNAME: bunnapassbot
     # Short name of a /newapp Mini App for invite links; unset uses the bot's Main Mini App.
     # TELEGRAM_MINI_APP_NAME: passport
     # Where the bot's "Open" buttons go. Defaults to PUBLIC_BASE_URL.
-    # TELEGRAM_MINI_APP_URL: https://bunna.example
+    TELEGRAM_MINI_APP_URL: https://<%= ENV.fetch("BUNNA_APP_HOST") %>/app
+    # The address Telegram and phones reach: share card links and the webhook.
+    PUBLIC_BASE_URL: https://<%= ENV.fetch("BUNNA_APP_HOST") %>
 
     # Canonical external host. Mailer links and host authorization both read it.
     BUNNA_APP_HOST: <%= ENV.fetch("BUNNA_APP_HOST") %>
@@ -96,9 +98,13 @@ builder:
   # developer's disk.
   remote: ssh://<%= ENV.fetch("BUNNA_DEPLOY_SSH_USER") %>@<%= ENV.fetch("BUNNA_DEPLOY_HOST") %>
 
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: 3.4.2
+  # Public Mini App settings, compiled into its JavaScript. See web/.env.example.
+  args:
+    VITE_MAP_STYLE_URL: <%= ENV.fetch("VITE_MAP_STYLE_URL", "") %>
+    VITE_MAP_STYLE_DARK_URL: <%= ENV.fetch("VITE_MAP_STYLE_DARK_URL", "") %>
+    VITE_SHARE_URL: <%= ENV.fetch("VITE_SHARE_URL", "") %>
+
+  # # Pass secrets to the Docker build process
   # secrets:
   #   - GITHUB_TOKEN
   #   - RAILS_MASTER_KEY
@@ -106,6 +112,10 @@ builder:
 # Cloud images disable root login, so Kamal connects as the provisioned user.
 ssh:
   user: <%= ENV.fetch("BUNNA_DEPLOY_SSH_USER") %>
+<% if ENV["BUNNA_DEPLOY_SSH_KEY"].present? %>
+  keys:
+    - <%= ENV["BUNNA_DEPLOY_SSH_KEY"] %>
+<% end %>
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:

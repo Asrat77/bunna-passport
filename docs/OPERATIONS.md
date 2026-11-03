@@ -27,31 +27,37 @@ and backup destination have been chosen explicitly.
 
 ## Chosen infrastructure
 
-The single host is an Azure virtual machine. `southafricanorth` is the closest
-Azure region to Addis Ababa, so it is the latency choice for an Addis-first
-product.
+The app shares one AWS EC2 instance with battle-arena, another of the
+operator's projects. That instance idles at well under 1% CPU, so sharing it
+costs about $1 a month (a larger disk) instead of about $22 for a second
+server. kamal-proxy on the host terminates HTTPS for both apps by host name.
 
 | Value | Setting |
 | --- | --- |
-| Resource group | `bunna-passport-rg` |
-| Virtual machine | `bunna-passport-vm`, `Standard_B2als_v2`, 2 vCPU, 4 GB |
-| Image | Ubuntu 24.04 LTS, 64 GB StandardSSD |
-| Host | `bunna-passport.southafricanorth.cloudapp.azure.com` |
+| Instance | `i-0a490324b5f52665d`, `t3.small`, 2 vCPU, 2 GB plus 2 GB swap |
+| Region | `eu-west-1` (Ireland) |
+| Image | Ubuntu 24.04 LTS |
+| Address | Elastic IP `34.252.38.138` |
+| Host | `bunna.34.252.38.138.sslip.io` |
 | Registry | `ghcr.io/asrat77/bunna-passport` |
+| Provisioning | Terraform in the battle-arena repo, `deploy/terraform` |
 
-`Standard_B2s` does not exist in `southafricanorth`; only the v2 B-series is
-offered there. Inbound 22, 80, and 443 are open on `bunna-passport-vmNSG`.
+The previous Azure VM (`southafricanorth`) stopped on 2026-10-22 when the
+Azure for Students credit ran out. Ireland is farther from Addis, but Cape
+Town (`af-south-1`) is an opt-in region with higher prices.
 
-SQLite requires a real local filesystem. The Docker volume sits on the virtual
-machine's own disk for that reason, which is also why this deployment is a
-virtual machine rather than Azure Container Apps backed by Azure Files.
+SQLite requires a real local filesystem. The Docker volume sits on the
+instance's own disk for that reason, which is also why this deployment is a
+virtual machine rather than a container service backed by network storage.
+The disk is deleted if the instance is terminated, so the off-host backup
+below is what protects the data.
 
 Deployment values live in the gitignored `.env.deploy`. The registry password is
 never stored there:
 
 ```sh
 set -a; source .env.deploy; set +a
-export KAMAL_REGISTRY_PASSWORD=<github token with write:packages>
+export KAMAL_REGISTRY_PASSWORD=$(gh auth token)   # needs write:packages
 bin/kamal deploy
 ```
 
@@ -123,9 +129,10 @@ Copy that directory off the application host and test restores regularly.
 that matters. `script/backup_offsite` takes that backup, encrypts it, and sends
 it out of the cloud account running the application.
 
-The destination is deliberately not Azure. This subscription is Azure for
-Students: if the credit runs out, a backup living in the same subscription
-disappears on the same day as the machine it was protecting.
+The destination is deliberately outside AWS. The account runs on a fixed
+credit: if it runs out, a backup living in the same account disappears on the
+same day as the machine it was protecting. The same thing happened to the
+earlier Azure deployment.
 
 Installed on the application host as `/usr/local/bin/bunna-backup-offsite`,
 scheduled nightly at 00:15 UTC, and configured from `/etc/bunna-backup.env`.
@@ -135,7 +142,7 @@ two dozen copies.
 Two values have to be supplied before the schedule does anything:
 
 1. **A destination.** Create a bucket with any S3-compatible provider outside
-   Azure — Cloudflare R2 and Backblaze B2 both have free tiers far larger than
+   AWS — Cloudflare R2 and Backblaze B2 both have free tiers far larger than
    this data — then configure it on the host with `rclone config` and set
    `BUNNA_BACKUP_REMOTE` to `remote:bucket`.
 
@@ -272,9 +279,14 @@ signature with the bot's token, so the API container needs
 supplied the same way as the other Kamal secrets). Without it every Telegram
 sign-in answers `401 invalid_init_data`; email sign-in keeps working.
 
+The Docker image builds `web/` and serves it at `/app` on the API host:
+`MiniAppsController` returns the page with `no-cache` so Telegram opens each
+new release, and the fingerprinted files sit under `public/app/assets`. Point
+the bot's Mini App URL in BotFather at `https://<host>/app`. The public
+`VITE_` settings come from `.env.deploy` as build arguments.
+
 The app calls `/api/v1` on its own origin unless `VITE_API_BASE_URL` is set
-at build time. Serve the built `web/dist` from the same host as the API (or
-behind the same proxy). A front end on another origin, such as the Appwrite
+at build time. A front end on another origin, such as the Appwrite
 site, needs that origin in `CORS_ORIGINS` (comma-separated, default
 `https://bunna-passport.appwrite.network`) and `VITE_API_BASE_URL` set to the
 API's full `/api/v1` URL in its build. CORS covers `/api/*` only and never

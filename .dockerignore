@@ -32,6 +32,10 @@
 
 # Ignore assets.
 /node_modules/
+/web/node_modules/
+/web/dist/
+/web/.env*
+/mini_app/
 /app/assets/builds/*
 !/app/assets/builds/.keep
 /public/assets

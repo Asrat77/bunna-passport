@@ -75,6 +75,9 @@ Rails.application.routes.draw do
   # The bot's webhook. Telegram proves itself with a secret header.
   post "telegram/webhook", to: "telegram/webhooks#create", as: :telegram_webhook
 
+  # The Telegram Mini App, built from web/ into the image (see the Dockerfile).
+  get "app", to: "mini_apps#show", as: :mini_app
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check

@@ -2,7 +2,10 @@ import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Production serves the app from /app on the API host (MiniAppsController),
+  // so built asset URLs carry that prefix. The dev server stays at the root.
+  base: command === "build" ? "/app/" : "/",
   plugins: [react()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
@@ -30,4 +33,4 @@ export default defineConfig({
   test: {
     environment: "node",
   },
-});
+}));
