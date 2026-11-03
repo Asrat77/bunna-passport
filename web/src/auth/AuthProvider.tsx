@@ -4,6 +4,7 @@ import { createContext, use, useCallback, useEffect, useMemo, useState, type Rea
 import { api, setTokenSource } from "@/api/client";
 import { ApiRequestError } from "@/api/errors";
 import type { AuthenticatedPayload, User } from "@/api/types";
+import { identifyUser, resetAnalytics, track } from "@/lib/analytics";
 import { inTelegram } from "@/telegram/sdk";
 
 type Status = "loading" | "signedIn" | "signedOut" | "failed";
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (payload: AuthenticatedPayload) => {
       keepToken(payload.token);
       setUser(payload.user);
+      identifyUser(payload.user);
       queryClient.setQueryData(["profile"], payload.user);
       setStatus("signedIn");
     },
@@ -83,7 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const initData = retrieveRawInitData();
           if (!initData) throw new Error("Telegram sent no initData");
           const { data } = await api.telegramSignIn(initData);
-          if (active) accept(data);
+          if (active) {
+            accept(data);
+            track("signed_in", { method: "telegram" });
+          }
           return;
         }
         const existing = storedToken();
@@ -95,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await api.getProfile();
         if (!active) return;
         setUser(data);
+        identifyUser(data);
         queryClient.setQueryData(["profile"], data);
         setStatus("signedIn");
       } catch (error) {
@@ -117,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       const { data } = await api.signIn(email, password);
       accept(data);
+      track("signed_in", { method: "email" });
     },
     [accept],
   );
@@ -127,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       keepToken(null);
       setUser(null);
+      resetAnalytics();
       queryClient.clear();
       setStatus("signedOut");
     }

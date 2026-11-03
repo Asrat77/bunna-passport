@@ -1,3 +1,4 @@
+import { track } from "@/lib/analytics";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import { ApiRequestError } from "@/api/errors";
@@ -31,6 +32,7 @@ export function Invite({ token }: { token: string }) {
   const accept = useMutation({
     mutationFn: async () => (await api.acceptInvite(token)).data,
     onSuccess: () => {
+      track("invite_accepted");
       hapticSuccess();
       for (const key of ["friends", "feed", "leaderboard", "invite"]) void queryClient.invalidateQueries({ queryKey: [key] });
       seeFriends();

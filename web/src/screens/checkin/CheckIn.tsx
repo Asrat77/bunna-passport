@@ -1,4 +1,5 @@
 import { phCamera, phCoffee, phCoffeeFill, phPlus } from "@/ui/icons";
+import { track } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@/api/client";
@@ -76,6 +77,15 @@ export function CheckIn({ shopId }: { shopId?: number }) {
     setSubmitting(true);
     setOutcome(null);
     const wasAwake = profile?.had_cup_today ?? false;
+    const details = {
+      repeat_visit: Boolean(selectedStamp),
+      has_photo: Boolean(photo),
+      has_drink: Boolean(drink),
+      has_rating: rating != null,
+      has_note: note.trim().length > 0,
+      candidates_in_range: inRange.length,
+    };
+    track("check_in_submitted", details);
     try {
       const { data } = await api.checkIn(
         {
@@ -93,6 +103,14 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       for (const key of [["passport"], ["profile"], ["checkIns"], ["shop", selected.shop.id], ["leaderboard"], ["stats", "me"]]) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
+      track("check_in_succeeded", {
+        ...details,
+        status: data.status,
+        stamp_earned: data.stamp_earned,
+        stamp_level: data.stamp_level,
+        distance_meters: Math.round(data.distance_meters),
+      });
+      if (data.stamp_earned) track("stamp_earned", { stamp_level: data.stamp_level });
       replace({ name: "ceremony", checkIn: data, wasAwake });
     } catch (error) {
       hapticError();
@@ -101,6 +119,8 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       // needs a fresh one. A dropped connection keeps the key: that retry may
       // be the same visit landing twice.
       if (code) setIdempotencyKey(newIdempotencyKey());
+      if (code) track("check_in_rejected", { ...details, rejection_code: code });
+      else track("check_in_failed", details);
       setOutcome(code ? { kind: "rejected", code, shop: selected.shop.name } : { kind: "failed" });
       setSubmitting(false);
     }

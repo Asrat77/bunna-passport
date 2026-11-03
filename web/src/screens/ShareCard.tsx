@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, type ShareTarget } from "@/api/client";
 import { useI18n } from "@/i18n/context";
+import { track } from "@/lib/analytics";
 import { canShareStory, saveStoryCard, shareCardToChat, shareCardToStory } from "@/lib/share";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
@@ -29,7 +30,8 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
     retry: 1,
   });
   const card = cards.data;
-  const done = (shared: boolean) => {
+  const done = (target: "chat" | "story" | "save") => (shared: boolean) => {
+    track("share_card_shared", { target, shared, doodle: !hideDoodle });
     if (shared) hapticSuccess();
   };
 
@@ -63,11 +65,11 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
 
       <div className="share-card__more">
         {canShareStory() ? (
-          <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && done(shareCardToStory(card.story_url, caption))}>
+          <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && done("story")(shareCardToStory(card.story_url, caption))}>
             {t("share.toStory")}
           </button>
         ) : null}
-        <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && void saveStoryCard(card.story_url).then(done)}>
+        <button type="button" className="action action--secondary" disabled={!card} onClick={() => card && void saveStoryCard(card.story_url).then(done("save"))}>
           <Icon path={phDownloadSimple} size={20} />
           {t("share.save")}
         </button>
@@ -84,7 +86,7 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
           void shareCardToChat(
             { postUrl: card.post_url, preparedMessageId: card.prepared_message_id, inviteUrl: card.invite_url },
             caption,
-          ).then(done);
+          ).then(done("chat"));
         }}
       />
     </main>
