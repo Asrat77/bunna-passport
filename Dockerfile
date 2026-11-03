@@ -68,6 +68,8 @@ FROM docker.io/library/node:20-slim AS web
 ARG VITE_MAP_STYLE_URL
 ARG VITE_MAP_STYLE_DARK_URL
 ARG VITE_SHARE_URL
+ARG VITE_POSTHOG_KEY
+ARG VITE_POSTHOG_HOST
 
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./

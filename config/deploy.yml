@@ -103,6 +103,8 @@ builder:
     VITE_MAP_STYLE_URL: <%= ENV.fetch("VITE_MAP_STYLE_URL", "") %>
     VITE_MAP_STYLE_DARK_URL: <%= ENV.fetch("VITE_MAP_STYLE_DARK_URL", "") %>
     VITE_SHARE_URL: <%= ENV.fetch("VITE_SHARE_URL", "") %>
+    VITE_POSTHOG_KEY: <%= ENV.fetch("VITE_POSTHOG_KEY", "") %>
+    VITE_POSTHOG_HOST: <%= ENV.fetch("VITE_POSTHOG_HOST", "") %>
 
   # # Pass secrets to the Docker build process
   # secrets:

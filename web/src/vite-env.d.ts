@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_MAP_STYLE_URL?: string;
   readonly VITE_MAP_STYLE_DARK_URL?: string;
   readonly VITE_SHARE_URL?: string;
+  readonly VITE_POSTHOG_KEY?: string;
+  readonly VITE_POSTHOG_HOST?: string;
 }
 
 interface ImportMeta {

@@ -1,4 +1,5 @@
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { track } from "@/lib/analytics";
 import { readFlag, writeFlag } from "@/telegram/storage";
 import { LocationError, locate, type Fix, type LocateError } from "./locate";
 
@@ -23,6 +24,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [fix, setFix] = useState<Fix | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const pending = useRef<Promise<Fix | null> | null>(null);
+  // One location_granted per launch, not one per refresh.
+  const reported = useRef(false);
 
   const refresh = useCallback(() => {
     if (pending.current) return pending.current;
@@ -31,11 +34,17 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       .then((next) => {
         setFix(next);
         setStatus("ready");
+        if (!reported.current) {
+          reported.current = true;
+          track("location_granted", { accuracy_meters: Math.round(next.accuracyMeters) });
+        }
         void writeFlag(GRANTED_KEY, "1");
         return next;
       })
       .catch((error: unknown) => {
-        setStatus(error instanceof LocationError ? error.reason : "unavailable");
+        const reason = error instanceof LocationError ? error.reason : "unavailable";
+        setStatus(reason);
+        track("location_failed", { reason });
         return null;
       })
       .finally(() => {

@@ -1,7 +1,8 @@
-import { createContext, use, useCallback, useMemo, useState, type ReactNode } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ShareTarget } from "@/api/client";
 import type { CheckIn, OpaqueId } from "@/api/types";
 import type { ShopFilter } from "@/data/nearby";
+import { track } from "@/lib/analytics";
 
 export type Tab = "explore" | "passport" | "stats";
 
@@ -44,6 +45,11 @@ export function NavigationProvider({ initial, children }: { initial: Route; chil
   const replace = useCallback((route: Route) => setStack((s) => [...s.slice(0, -1), route]), []);
   const back = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), []);
   const switchTab = useCallback((tab: Tab) => setStack([{ name: tab }]), []);
+
+  const screen = stack[stack.length - 1].name;
+  useEffect(() => {
+    track("screen_viewed", { screen });
+  }, [screen, stack.length]);
 
   const value = useMemo<Navigation>(() => {
     const route = stack[stack.length - 1];

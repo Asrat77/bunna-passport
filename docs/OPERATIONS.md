@@ -366,6 +366,8 @@ People reading the app in Amharic get the `-am` twin of whichever style
 applies (`style-light-am.json` beside `style-light.json`), so there is no
 separate setting for it.
 | `VITE_SHARE_URL` | Link a shared stamp points to, such as `https://t.me/<bot>/<app>` |
+| `VITE_POSTHOG_KEY` | PostHog project API key (`phc_…`, public). Unset means no analytics and posthog-js is never loaded |
+| `VITE_POSTHOG_HOST` | PostHog ingest host; defaults to `https://us.i.posthog.com` (use `https://eu.i.posthog.com` for an EU project) |
 
 Checks before a release: `npm run build` (type-checks, then bundles) and
 `npm test` in `web/`.
