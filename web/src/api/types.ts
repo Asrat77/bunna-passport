@@ -373,7 +373,13 @@ export type Friend = {
 export type Invite = { token: string; url: string; friends_count: number };
 
 /** GET /invites/{token}: who sent the link that was just opened. */
-export type InvitePreview = { inviter: Friend; own: boolean; already_friends: boolean };
+export type InvitePreview = {
+  inviter: Friend;
+  own: boolean;
+  already_friends: boolean;
+  /** The viewer hasn't checked in anywhere yet, so the screen explains the app. */
+  new_here: boolean;
+};
 
 /**
  * A friend's verified visit. It names the coffee day, never the time, so the

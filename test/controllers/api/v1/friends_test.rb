@@ -1,6 +1,18 @@
 require "test_helper"
 
 class Api::V1::FriendsTest < ActionDispatch::IntegrationTest
+  test "an invite preview says whether the viewer has checked in before" do
+    inviter = create_user
+    regular = create_user
+    shop = shops(:bole)
+    CheckIn.create!(user: regular, shop: shop, idempotency_key: "first", occurred_at: 1.hour.ago, latitude: shop.latitude,
+      longitude: shop.longitude, accuracy_meters: 10, distance_meters: 0, status: :verified)
+
+    get api_v1_invite_preview_path(inviter.invite_token!), headers: bearer_headers(regular), as: :json
+    assert_response :success
+    assert_equal false, response_json.dig("data", "new_here")
+  end
+
   test "accepting an invite link makes both people friends" do
     inviter = create_user(avatar_seed: "inviter")
     guest = create_user
@@ -13,6 +25,7 @@ class Api::V1::FriendsTest < ActionDispatch::IntegrationTest
     get api_v1_invite_preview_path(token), headers: bearer_headers(guest), as: :json
     assert_equal inviter.handle, response_json.dig("data", "inviter", "handle")
     assert_equal false, response_json.dig("data", "already_friends")
+    assert_equal true, response_json.dig("data", "new_here")
 
     post api_v1_friends_path, params: { invite_token: token }, headers: bearer_headers(guest), as: :json
     assert_response :created

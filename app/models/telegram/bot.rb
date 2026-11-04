@@ -69,6 +69,17 @@ class Telegram::Bot
     call("setMyCommands", { commands: commands })
   end
 
+  # What the bot's profile and an invite link's preview say about it
+  # (up to 120 characters), and the "What can this bot do?" text in an empty
+  # chat (up to 512). A language_code sets the text for that app language.
+  def set_my_short_description(text, language_code: nil)
+    call("setMyShortDescription", { short_description: text, language_code: language_code }.compact)
+  end
+
+  def set_my_description(text, language_code: nil)
+    call("setMyDescription", { description: text, language_code: language_code }.compact)
+  end
+
   # The button beside the message box that opens the Mini App.
   def set_chat_menu_button(text:, url:)
     call("setChatMenuButton", { menu_button: { type: "web_app", text: text, web_app: { url: url } } })
