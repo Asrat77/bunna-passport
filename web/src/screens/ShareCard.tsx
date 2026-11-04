@@ -21,9 +21,12 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
   const { back } = useNavigation();
   const [hideDoodle, setHideDoodle] = useState(false);
   const caption = t("share.caption", { shop: shopName });
+  // A chat message can carry more than a story: say what the app is and
+  // that the button is also a friend request, for someone who's never heard of it.
+  const message = `${caption}\n\n${t("share.inviteNote")}`;
   const cards = useQuery({
-    queryKey: ["shareCards", target, !hideDoodle, caption],
-    queryFn: async () => (await api.createShareCards(target, { doodle: !hideDoodle, caption })).data,
+    queryKey: ["shareCards", target, !hideDoodle, message],
+    queryFn: async () => (await api.createShareCards(target, { doodle: !hideDoodle, caption: message })).data,
     // A prepared Telegram message lasts a while; the image URLs don't change.
     staleTime: 10 * 60_000,
     retry: 1,
@@ -83,7 +86,7 @@ export function ShareCard({ target, shopName }: { target: ShareTarget; shopName:
           if (!card) return;
           void shareCardToChat(
             { postUrl: card.post_url, preparedMessageId: card.prepared_message_id, inviteUrl: card.invite_url },
-            caption,
+            message,
           ).then(done);
         }}
       />

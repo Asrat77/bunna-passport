@@ -22,9 +22,13 @@ class Telegram::BotTest < ActiveSupport::TestCase
     bot.set_webhook(url: "https://bunna.example/telegram/webhook", secret_token: "s3cret")
     bot.set_my_commands([ { command: "start", description: "Open" } ])
     bot.set_chat_menu_button(text: "Open", url: "https://bunna.example/app")
+    bot.set_my_short_description("A coffee passport")
+    bot.set_my_description("ቡና ፓስፖርት", language_code: "am")
 
     methods = http.calls.map(&:first)
-    assert_equal %w[ setWebhook setMyCommands setChatMenuButton ], methods
+    assert_equal %w[ setWebhook setMyCommands setChatMenuButton setMyShortDescription setMyDescription ], methods
+    assert_equal({ "short_description" => "A coffee passport" }, http.calls[3].last)
+    assert_equal({ "description" => "ቡና ፓስፖርት", "language_code" => "am" }, http.calls[4].last)
     assert_equal "s3cret", http.calls[0].last["secret_token"]
     assert_equal "start", http.calls[1].last.dig("commands", 0, "command")
     assert_equal "https://bunna.example/app", http.calls[2].last.dig("menu_button", "web_app", "url")

@@ -9,6 +9,25 @@ module Telegram::Messages
     { command: "nudges_on", description: "Turn the daily nudge back on" }
   ].freeze
 
+  # What a new person sees before they ever press Start, such as someone
+  # opening a friend's invite link. Keyed by Telegram app language; nil is
+  # the default for every other language.
+  SHORT_DESCRIPTIONS = {
+    nil => "A coffee passport for Addis Ababa. Check in at cafés, collect stamps, and see where your friends drink coffee.",
+    "am" => "ለአዲስ አበባ የተሰራ የቡና ፓስፖርት። በካፌዎች ቼክ-ኢን ያድርጉ፣ ማህተም ይሰብስቡ፣ ጓደኞችዎ የት ቡና እንደሚጠጡ ይመልከቱ።"
+  }.freeze
+
+  DESCRIPTIONS = {
+    nil => "Bunna Passport is a coffee passport for Addis Ababa ☕\n\n" \
+      "Check in at cafés to collect a stamp at each one, find new places with hours, prices and reviews, " \
+      "and add friends to see where they drink coffee.\n\n" \
+      "Opened a friend's invite? Tap Start, then accept their friend request.",
+    "am" => "ቡና ፓስፖርት ለአዲስ አበባ የተሰራ የቡና ፓስፖርት ነው ☕\n\n" \
+      "በካፌዎች ቼክ-ኢን አድርገው በእያንዳንዱ ማህተም ይሰብስቡ፣ አዳዲስ ቦታዎችን ከሰዓት፣ ከዋጋ እና ከአስተያየቶች ጋር ያግኙ፣ " \
+      "ጓደኞችን ጨምረው የት ቡና እንደሚጠጡ ይመልከቱ።\n\n" \
+      "የጓደኛ ግብዣ ከፍተዋል? Start የሚለውን ይንኩ፣ ከዚያ የጓደኝነት ጥያቄያቸውን ይቀበሉ።"
+  }.freeze
+
   NUDGES_OFF = "nudges:off".freeze
   NUDGES_ON = "nudges:on".freeze
 
