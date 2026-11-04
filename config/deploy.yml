@@ -57,6 +57,9 @@ env:
     # Canonical external host. Mailer links and host authorization both read it.
     BUNNA_APP_HOST: <%= ENV.fetch("BUNNA_APP_HOST") %>
     BUNNA_APP_PROTOCOL: https
+    # Telegram ids for error and disk alerts, comma separated. Blank sends
+    # them to every moderator who has started the bot.
+    BUNNA_ALERT_CHAT_IDS: "<%= ENV["BUNNA_ALERT_CHAT_IDS"] %>"
 
     # Set number of processes dedicated to Solid Queue (default: 1)
     # JOB_CONCURRENCY: 3
