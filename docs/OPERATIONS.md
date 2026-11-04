@@ -292,6 +292,24 @@ The app cannot report that it is down. For that, point a free external monitor
 (UptimeRobot, Better Stack or healthchecks.io) at
 `https://<BUNNA_APP_HOST>/up` every 5 minutes, alerting by email or Telegram.
 
+## Moderation digest
+
+Every morning at 09:00 Addis, `SendModerationDigestJob` sends the same chats
+as the alerts a summary of what is waiting in the console: pending new cafés,
+café edits and photos, pending reports and flagged check-ins. Nothing is sent
+when every queue is empty. The oldest five easy cases follow as their own
+messages with buttons: flagged check-ins (Verify / Reject) and suggested edits
+to an existing café (Approve / Reject, which records "Rejected by a moderator
+in Telegram." as the reason). New cafés, photos and reports need the map, the
+image or more context, so they only appear as counts.
+
+Only a tap from a moderator account counts, so a non-moderator id listed in
+`BUNNA_ALERT_CHAT_IDS` sees the buttons but cannot use them. After a tap the
+message is redrawn with the outcome and the buttons removed; an item someone
+already settled, in Telegram or the console, is left alone. Links to the
+console appear when `PUBLIC_BASE_URL` is HTTPS. To send one now:
+`bin/kamal app exec 'bin/rails runner "SendModerationDigestJob.perform_now"'`.
+
 ## Telegram Mini App
 
 The Mini App lives in `web/` and signs people in with Telegram's signed

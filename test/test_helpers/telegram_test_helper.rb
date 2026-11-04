@@ -1,10 +1,11 @@
 # Records what the bot would send instead of calling Telegram.
 class FakeTelegramBot
-  attr_reader :sent, :answers
+  attr_reader :sent, :answers, :edits
 
   def initialize(fail_with: nil)
     @sent = []
     @answers = []
+    @edits = []
     @fail_with = fail_with
   end
 
@@ -13,6 +14,11 @@ class FakeTelegramBot
 
     @sent << message
     { "message_id" => @sent.size }
+  end
+
+  def edit_message_text(**message)
+    @edits << message
+    true
   end
 
   def answer_callback_query(**answer)

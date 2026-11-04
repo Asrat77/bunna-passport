@@ -12,6 +12,20 @@ module Telegram::Messages
   NUDGES_OFF = "nudges:off".freeze
   NUDGES_ON = "nudges:on".freeze
 
+  # Moderation buttons carry "mod:<action>:<id>"; see Telegram::ModerationCallback.
+  MODERATION_PREFIX = "mod:".freeze
+
+  FLAG_REASONS = {
+    "implausible_travel" => "too fast since their last visit",
+    "mock_location" => "the phone reported a mock location",
+    "new_account_velocity" => "many visits from a brand new account"
+  }.freeze
+
+  EDIT_LABELS = {
+    "name" => "Name", "name_am" => "Amharic name", "landmark" => "Landmark",
+    "neighborhood_id" => "Neighborhood", "price_band" => "Price", "amenities" => "Amenities"
+  }.freeze
+
   extend self
 
   def welcome(user)
@@ -60,6 +74,66 @@ module Telegram::Messages
     { text: text }
   end
 
+  # The morning moderation summary; see Moderation::Digest.
+  def moderation_digest(digest)
+    contributions = digest.contributions
+    counts = Moderation::Digest::CONTRIBUTION_KINDS.map { |type, label| [ contributions.fetch(type), label ] }
+    counts << [ digest.reports, "report" ] << [ digest.flagged_check_ins, "flagged check-in" ]
+    lines = counts.map { |count, label| "• #{count} #{label.pluralize(count)}" }
+
+    text = "☕ <b>Moderation queue: #{digest.total} waiting</b>\n\n#{lines.join("\n")}"
+    quick = digest.quick_items.size
+    text += "\n\nThe oldest #{quick == 1 ? 'easy case follows' : "#{quick} easy cases follow"}, with buttons." if quick.positive?
+    { text: text, reply_markup: keyboard([ console_button("Open the console", "/console/dashboard") ]) }
+  end
+
+  # One flagged check-in or pending café edit, with its buttons while it is
+  # still waiting and the outcome once someone has settled it.
+  def moderation_item(record, outcome: nil)
+    case record
+    when CheckIn then moderation_check_in(record, outcome: outcome)
+    when Contribution then moderation_edit(record, outcome: outcome)
+    end
+  end
+
+  def moderation_check_in(check_in, outcome: nil)
+    reason = FLAG_REASONS.fetch(check_in.flag_reason.to_s, check_in.flag_reason.to_s.humanize.downcase.presence || "flagged")
+    text = <<~TEXT
+      🚩 <b>Flagged check-in at #{h(check_in.shop.name)}</b>
+      #{person(check_in.user)}, #{time_ago(check_in.occurred_at)}
+      Why: #{h(reason)}
+      #{check_in.distance_meters} m from the pin, GPS ±#{check_in.accuracy_meters} m
+    TEXT
+
+    buttons = if check_in.flagged? && outcome.nil?
+      [ [ callback_button("✅ Verify", "#{MODERATION_PREFIX}ci_ok:#{check_in.id}"), callback_button("❌ Reject", "#{MODERATION_PREFIX}ci_no:#{check_in.id}") ] ]
+    else
+      []
+    end
+    buttons << [ console_button("Open in console", "/console/check_ins/#{check_in.id}") ]
+
+    { text: with_outcome(text, outcome), reply_markup: keyboard(*buttons) }
+  end
+
+  def moderation_edit(contribution, outcome: nil)
+    edit = contribution.contributable
+    text = <<~TEXT
+      ✏️ <b>Edit to #{h(edit.shop.name)}</b>
+      #{person(contribution.user)}, #{time_ago(contribution.created_at)}
+
+      #{edit_lines(edit).join("\n")}
+    TEXT
+
+    buttons = if contribution.pending? && outcome.nil?
+      [ [ callback_button("✅ Approve", "#{MODERATION_PREFIX}ed_ok:#{contribution.id}"), callback_button("❌ Reject", "#{MODERATION_PREFIX}ed_no:#{contribution.id}") ] ]
+    else
+      []
+    end
+    buttons << [ console_button("Open in console", "/console/contributions/#{contribution.id}") ]
+
+    { text: with_outcome(text, outcome), reply_markup: keyboard(*buttons) }
+  end
+
   # Where the Mini App lives. A web_app button needs HTTPS, so without one
   # the bot still talks but offers no button.
   def mini_app_url
@@ -91,6 +165,51 @@ module Telegram::Messages
     def app_button(text)
       url = mini_app_url
       url && url.start_with?("https://") ? { text: text, web_app: { url: url } } : nil
+    end
+
+    def console_button(text, path)
+      base = ENV["PUBLIC_BASE_URL"].to_s
+      base.start_with?("https://") ? { text: text, url: "#{base.chomp('/')}#{path}" } : nil
+    end
+
+    def person(user)
+      "#{h(user.display_name)} (@#{h(user.handle)})"
+    end
+
+    def time_ago(time)
+      "#{ActionController::Base.helpers.time_ago_in_words(time)} ago"
+    end
+
+    def with_outcome(text, outcome)
+      outcome ? "#{text.strip}\n\n#{h(outcome)}" : text.strip
+    end
+
+    # What the edit would change, one line a field, old value first.
+    def edit_lines(edit)
+      shop = edit.shop
+      changes = edit.proposed_changes.to_h.stringify_keys
+      lines = []
+
+      if changes.key?("latitude") || changes.key?("longitude")
+        meters = shop.distance_from(latitude: changes.fetch("latitude", shop.latitude), longitude: changes.fetch("longitude", shop.longitude))
+        lines << "• Pin: moved #{meters.round} m"
+      end
+      lines << "• Hours: new opening hours" if changes.key?("hours")
+
+      changes.except("latitude", "longitude", "hours").each do |field, value|
+        before, after = case field
+        when "neighborhood_id" then [ shop.neighborhood&.name, Neighborhood.find_by(id: value)&.name ]
+        when "amenities" then [ amenity_list(shop.amenities), amenity_list(value) ]
+        else [ shop[field], value ]
+        end
+        lines << "• #{EDIT_LABELS.fetch(field, field.humanize)}: #{h(before.presence || '—')} → <b>#{h(after.presence || '—')}</b>"
+      end
+
+      lines
+    end
+
+    def amenity_list(amenities)
+      amenities.to_h.select { |_name, present| ActiveModel::Type::Boolean.new.cast(present) }.keys.map(&:humanize).join(", ").presence || "none"
     end
 
     def callback_button(text, data)

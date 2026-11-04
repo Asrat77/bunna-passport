@@ -25,6 +25,11 @@ production:
     class: SendDailyNudgesJob
     schedule: "0 15 * * * Africa/Addis_Ababa"
 
+  # Morning summary of the moderation queues, with buttons for easy cases.
+  send_moderation_digest:
+    class: SendModerationDigestJob
+    schedule: "0 9 * * * Africa/Addis_Ababa"
+
   # Telegram alert before the shared disk fills.
   check_host_health:
     class: CheckHostHealthJob
