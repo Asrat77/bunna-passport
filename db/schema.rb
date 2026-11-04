@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -45,7 +45,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_130000) do
     t.datetime "earned_at", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.integer "check_in_id"
     t.index ["badge_id"], name: "index_awards_on_badge_id"
+    t.index ["check_in_id"], name: "index_awards_on_check_in_id"
     t.index ["user_id", "badge_id"], name: "index_awards_on_user_id_and_badge_id", unique: true
     t.index ["user_id"], name: "index_awards_on_user_id"
   end
@@ -354,6 +356,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_130000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "awards", "badges"
+  add_foreign_key "awards", "check_ins"
   add_foreign_key "awards", "users"
   add_foreign_key "check_ins", "shops"
   add_foreign_key "check_ins", "users"

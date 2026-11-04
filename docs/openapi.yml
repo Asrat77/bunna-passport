@@ -523,7 +523,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/CheckIn" }
+                  data: { $ref: "#/components/schemas/CheckInResult" }
         "422":
           description: Persisted rejected check-in attempt
           content:
@@ -816,11 +816,25 @@ paths:
       summary: Fetch badge definitions, progress, and awards
       responses:
         "200":
-          description: Badge catalog and progress
+          description: Badge catalog and progress, cups first, then stamps, then contributions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataResponse"
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/Badge"
+                        - type: object
+                          required: [progress]
+                          properties:
+                            progress:
+                              type: integer
+                              minimum: 0
+                              description: Count toward the threshold; may exceed it.
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -1316,7 +1330,7 @@ components:
             - type: "null"
     Passport:
       type: object
-      required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today]
+      required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today, streak]
       properties:
         stamps:
           type: array
@@ -1343,6 +1357,17 @@ components:
         total_shops: { type: integer, minimum: 0 }
         completion_percentage: { type: number, minimum: 0, maximum: 100 }
         had_cup_today: { type: boolean }
+        streak: { $ref: "#/components/schemas/CoffeeWeeks" }
+    CoffeeWeeks:
+      type: object
+      description: >
+        Monday-first Addis weeks with a verified cup. This week only breaks
+        the run once it is over without one.
+      required: [current_weeks, longest_weeks, this_week]
+      properties:
+        current_weeks: { type: integer, minimum: 0 }
+        longest_weeks: { type: integer, minimum: 0 }
+        this_week: { type: boolean, description: True once this week has a verified cup. }
     LeaderboardEntry:
       type: object
       required: [rank, value, user]
@@ -1812,3 +1837,37 @@ components:
             - type: string
             - type: "null"
         occurred_at: { type: string, format: date-time }
+    CheckInResult:
+      description: A check-in as its create request returns it, with what the ceremony celebrates.
+      allOf:
+        - $ref: "#/components/schemas/CheckIn"
+        - type: object
+          required: [level_reached, badges_earned]
+          properties:
+            level_reached:
+              oneOf:
+                - $ref: "#/components/schemas/StampLevel"
+                - type: "null"
+              description: The level this visit took the stamp to (bronze for a first visit), or null when it reached none or is not counted yet.
+            badges_earned:
+              type: array
+              description: Badges this visit earned. A flagged visit earns them once a moderator verifies it.
+              items: { $ref: "#/components/schemas/Badge" }
+    Badge:
+      type: object
+      required: [id, slug, name, description, artwork_key, tier, threshold, earned_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        artwork_key: { type: string }
+        tier:
+          oneOf:
+            - $ref: "#/components/schemas/StampLevel"
+            - type: "null"
+        threshold: { type: integer, minimum: 1 }
+        earned_at:
+          oneOf:
+            - { type: string, format: date-time }
+            - type: "null"

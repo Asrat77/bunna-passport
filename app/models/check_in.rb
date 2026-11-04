@@ -15,6 +15,8 @@ class CheckIn < ApplicationRecord
   has_one :stamp, foreign_key: :first_check_in_id, dependent: :restrict_with_exception
   has_one_attached :photo
   has_many :share_images, dependent: :destroy
+  # Badges this visit tipped over, shown in its ceremony.
+  has_many :awards, dependent: :nullify
 
   enum :status, {
     verified: "verified",
@@ -143,7 +145,8 @@ class CheckIn < ApplicationRecord
       update!(verified_at: Time.current, counted_at: Time.current)
     end
 
-    AwardBadgesJob.perform_later(user)
+    # Now rather than in a job, so the check-in's own response can carry them.
+    Badge.evaluate_for(user, check_in: self)
     EvaluateTrustJob.perform_later(user)
     notify_stamp(stamp)
   end
@@ -174,6 +177,16 @@ class CheckIn < ApplicationRecord
     return unless stamp && user.bot_chat? && Stamp.level_reached_at(stamp.check_ins_count)
 
     SendStampNotificationJob.perform_later(stamp, stamp.check_ins_count)
+  end
+
+  # The stamp level this visit took the shop to, or nil when it reached none
+  # (the first visit reaches bronze). Counted from the visits before it, so
+  # the answer doesn't drift as later visits raise the stamp.
+  def level_reached
+    return unless counted_at
+
+    visits = user.check_ins.where(shop_id: shop_id).where.not(counted_at: nil).where(counted_at: ..counted_at).count
+    Stamp.level_reached_at(visits)
   end
 
   def public_status

@@ -1,17 +1,20 @@
 import { phArrowRight, phCheck } from "@/ui/icons";
 import { useEffect, useState } from "react";
-import type { CheckIn } from "@/api/types";
+import type { Badge, CheckInResult } from "@/api/types";
+import { badgeText } from "@/data/badges";
 import { useMyDoodle } from "@/data/me";
 import { useCatalog, usePassport } from "@/data/queries";
 import dither from "@/assets/dither-mocha-240.png";
+import { BadgeMark } from "@/design/badge/BadgeMark";
 import { Doodle } from "@/design/doodle/Doodle";
-import { nextLevel, visitsToNextLevel } from "@/design/seal/levels";
+import { LEVEL_THRESHOLDS, nextLevel, visitsToNextLevel } from "@/design/seal/levels";
+import { Seal } from "@/design/seal/Seal";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { stampDate, stampRotation } from "@/design/stamp/geometry";
 import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { PrimaryAction, SecondaryAction } from "@/telegram/buttons";
-import { hapticSuccess } from "@/telegram/haptics";
+import { hapticBadge, hapticSuccess } from "@/telegram/haptics";
 import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
@@ -19,6 +22,9 @@ import "./ceremony.css";
 
 /** Skippable from 0.8 s; everything has landed by about 1.6 s (DESIGN.md §6.2). */
 const SKIPPABLE_AFTER_MS = 800;
+
+/** Badges slide in after the stamp has landed, never alongside it (DESIGN.md §6.3). */
+const BADGE_AFTER_MS = { stamp: 1100, cup: 700 };
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -31,7 +37,7 @@ const celebrated = new Set<number>();
  * day, since that's the only time it wakes. Both are Mocha in either phone
  * theme, under the same dither header as Explore (docs/DESIGN.md §2.2.1).
  */
-export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: boolean }) {
+export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwake: boolean }) {
   const { t, language, ordinal } = useI18n();
   const { switchTab, push } = useNavigation();
   const { data: passport } = usePassport();
@@ -42,15 +48,23 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
   const [canSkip, setCanSkip] = useState(false);
   useMochaChrome();
 
+  const badges = checkIn.badges_earned ?? [];
+
   useEffect(() => {
     celebrated.add(checkIn.id);
     if (!replay) hapticSuccess();
-    if (phase === "settled") return;
+    // The badge's double tick lands with its card, a beat after the thunk.
+    const tick =
+      !replay && badges.length > 0
+        ? window.setTimeout(hapticBadge, reducedMotion() ? 300 : BADGE_AFTER_MS[checkIn.stamp_earned ? "stamp" : "cup"])
+        : undefined;
+    if (phase === "settled") return () => window.clearTimeout(tick);
     const skip = window.setTimeout(() => setCanSkip(true), SKIPPABLE_AFTER_MS);
     const settle = window.setTimeout(() => setPhase("settled"), 1600);
     return () => {
       window.clearTimeout(skip);
       window.clearTimeout(settle);
+      window.clearTimeout(tick);
     };
     // The ceremony plays once, when the screen opens.
   }, []);
@@ -62,7 +76,11 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
   const areaShops = shop ? (catalog.data ?? []).filter((s) => s.neighborhood.id === shop.neighborhood.id) : [];
   const areaStamped = areaShops.filter((s) => stamped.has(s.id)).length;
   const stampHere = passport?.stamps.find((s) => s.shop.id === checkIn.shop.id);
-  const visits = stampHere?.check_ins_count ?? 1;
+  // A level-up names its own count; otherwise the passport may still be refetching.
+  const levelUp = !checkIn.stamp_earned ? checkIn.level_reached : null;
+  const visits = levelUp
+    ? (LEVEL_THRESHOLDS.find(([level]) => level === levelUp)?.[1] ?? 1)
+    : (stampHere?.check_ins_count ?? 1);
   const toNext = visitsToNextLevel(visits);
   const upcoming = nextLevel(visits);
   const firstCupToday = !wasAwake;
@@ -92,16 +110,29 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
     </div>
   ) : null;
 
+  const badgeCards = badges.length > 0 ? <BadgeCards badges={badges} /> : null;
+
   if (!checkIn.stamp_earned) {
+    const levelName = levelUp ? t(`level.${levelUp}`) : "";
     return (
       <main className="screen ceremony ceremony--cup mocha" data-phase={phase}>
         <img className="ceremony__dither" src={dither} alt="" aria-hidden="true" />
-        <div className="ceremony__tick" aria-hidden="true">
-          <Icon path={phCheck} size={44} />
-        </div>
+        {levelUp ? (
+          <div className="ceremony__tick ceremony__tick--level">
+            <Seal name={checkIn.shop.name} level={levelUp} size={60} label={`${checkIn.shop.name}, ${levelName}`} />
+          </div>
+        ) : (
+          <div className="ceremony__tick" aria-hidden="true">
+            <Icon path={phCheck} size={44} />
+          </div>
+        )}
         <Headline
-          first={t("ceremony.cupTitle")}
-          second={t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })}
+          first={levelUp ? t("ceremony.levelTitle", { level: levelName }) : t("ceremony.cupTitle")}
+          second={
+            levelUp
+              ? t("ceremony.levelBody", { count: visits, shop: checkIn.shop.name, level: levelName.toLowerCase() })
+              : t("ceremony.cupBody", { count: visits, shop: checkIn.shop.name })
+          }
           size={31}
           align="center"
         />
@@ -111,8 +142,11 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
               ? t("ceremony.toNextOne", { level: t(`level.${upcoming}`).toLowerCase() })
               : t("ceremony.toNextMany", { count: toNext, level: t(`level.${upcoming}`).toLowerCase() })}
           </p>
+        ) : levelUp ? (
+          <p className="ceremony__line">{t("ceremony.levelTop")}</p>
         ) : null}
         {doodleCard}
+        {badgeCards}
         <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
       </main>
     );
@@ -191,10 +225,33 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckIn; wasAwake: bo
       ) : null}
 
       {doodleCard}
+      {badgeCards}
 
       {phase === "pressing" && canSkip ? <span className="visually-hidden">{t("ceremony.tapToSkip")}</span> : null}
       <SecondaryAction text={t("ceremony.share")} onClick={share} />
       <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
     </main>
+  );
+}
+
+/** "Badge earned — Ten Cups", one card a badge, sliding in after the stamp. */
+function BadgeCards({ badges }: { badges: Badge[] }) {
+  const { t } = useI18n();
+  return (
+    <>
+      {badges.map((badge) => {
+        const text = badgeText(badge, t);
+        return (
+          <div key={badge.id} className="ceremony__badge" role="status">
+            <BadgeMark artworkKey={badge.artwork_key} tier={badge.tier} earned size={52} />
+            <div className="ceremony__badge-text">
+              <span className="ceremony__badge-kicker mono">{t("badge.earned")}</span>
+              <span className="ceremony__badge-title">{text.name}</span>
+              <span className="muted">{text.description}</span>
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 }

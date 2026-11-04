@@ -17,7 +17,8 @@ class Api::V1::PassportsController < Api::V1::BaseController
         stamped_count: stamps.size,
         total_shops: total,
         completion_percentage: total.zero? ? 0 : (stamps.size.fdiv(total) * 100).round(1),
-        had_cup_today: Current.user.had_cup_today?
+        had_cup_today: Current.user.had_cup_today?,
+        streak: Stats::Streak.new(Current.user.check_ins.verified.pluck(:occurred_at))
       }
     )
   end

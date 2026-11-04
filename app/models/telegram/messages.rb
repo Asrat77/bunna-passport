@@ -63,6 +63,17 @@ module Telegram::Messages
     { text: "#{headline}\n\n#{detail} #{next_level_line(cups)}", reply_markup: keyboard([ app_button("Open passport") ]) }
   end
 
+  def badge(award)
+    badge = award.badge
+    earned = award.user.awards.count
+    text = <<~TEXT
+      🏅 Badge earned: <b>#{h(badge.name)}</b>
+
+      #{h(badge.description)} That's #{earned} of #{Badge.count} badges.
+    TEXT
+    { text: text.strip, reply_markup: keyboard([ app_button("See your badges") ]) }
+  end
+
   def nudges_changed(user)
     user.daily_nudges? ? "Daily nudges are on. Send /nudges_off to stop them." : "No more daily nudges. Send /nudges_on to bring them back."
   end

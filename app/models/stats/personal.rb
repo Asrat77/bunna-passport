@@ -65,32 +65,14 @@ class Stats::Personal
     end
 
     def streaks
-      weeks = times.map { |time| Stats::Clock.week(time) }.uniq
+      streak = Stats::Streak.new(times, now: now)
       days = times.map { |time| Stats::Clock.coffee_day(time) }.tally
       {
-        current_weeks: current_run(weeks),
-        longest_weeks: longest_run(weeks),
+        current_weeks: streak.current_weeks,
+        longest_weeks: streak.longest_weeks,
         coffee_days: days.size,
         best_day_cups: days.values.max || 0
       }
-    end
-
-    # Forgiving, like the passport's streak: this week only breaks it once
-    # it is over without a cup.
-    def current_run(weeks)
-      known = weeks.to_set
-      cursor = Stats::Clock.week(now)
-      cursor -= 7 unless known.include?(cursor)
-      count = 0
-      while known.include?(cursor)
-        count += 1
-        cursor -= 7
-      end
-      count
-    end
-
-    def longest_run(weeks)
-      weeks.sort.chunk_while { |earlier, later| later == earlier + 7 }.map(&:size).max || 0
     end
 
     def favorite_cafe

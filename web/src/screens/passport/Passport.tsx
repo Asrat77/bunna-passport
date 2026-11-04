@@ -16,6 +16,7 @@ import { FilterChip } from "@/ui/Chip";
 import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
+import { BadgeShelf } from "./BadgeShelf";
 import { paginate } from "./layout";
 import { PassportPage, type PageEntry } from "./PassportPage";
 import "./passport.css";
@@ -77,7 +78,9 @@ export function Passport() {
     .slice(0, Math.max(0, areas.indexOf(area!)))
     .reduce((sum, a) => sum + Math.max(1, Math.ceil(a.shops.length / 5)), 0);
   const me = profile;
-  const weeks = coffeeWeeks(checkIns ?? []);
+  // The server counts every verified cup; the recent page is a stand-in until it answers.
+  const streak = passport?.streak;
+  const weeks = streak?.current_weeks ?? coffeeWeeks(checkIns ?? []);
   const areaName = area ? (language === "am" ? area.neighborhood.name_am : area.neighborhood.name) : "";
 
   return (
@@ -134,6 +137,8 @@ export function Passport() {
           </span>
         </div>
       </div>
+
+      {streak && streak.current_weeks > 0 ? <StreakLine {...streak} /> : null}
 
       {areas.length > 0 && area ? (
         <>
@@ -193,8 +198,25 @@ export function Passport() {
         </>
       ) : null}
 
+      <BadgeShelf />
+
       <Dock />
     </main>
+  );
+}
+
+/** One line on what this week does for the run. A lost run resets quietly (DESIGN.md §6.4). */
+function StreakLine({ current_weeks, longest_weeks, this_week }: { current_weeks: number; longest_weeks: number; this_week: boolean }) {
+  const { t } = useI18n();
+  const record = longest_weeks < 2 ? "" : current_weeks >= longest_weeks ? t("streak.bestNow") : t("streak.best", { count: longest_weeks });
+  const text = this_week ? `${t("streak.inThisWeek")} ${record}`.trim() : t("streak.keepGoing", { count: current_weeks + 1 });
+  return (
+    <p className="streak-line">
+      <span aria-hidden="true">
+        <Icon path={phFire} size={14} />
+      </span>
+      <span>{text}</span>
+    </p>
   );
 }
 

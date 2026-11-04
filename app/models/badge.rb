@@ -2,6 +2,7 @@ class Badge < ApplicationRecord
   DEFAULTS = [
     {
       slug: "first-check-in",
+      tier: "bronze",
       name: "First Cup",
       description: "Record your first verified coffee.",
       artwork_key: "first-cup",
@@ -10,6 +11,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "five-shops",
+      tier: "silver",
       name: "Five Shops",
       description: "Collect stamps from five coffee shops.",
       artwork_key: "five-shops",
@@ -18,6 +20,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "ten-shops",
+      tier: "gold",
       name: "Ten Shops",
       description: "Collect stamps from ten coffee shops.",
       artwork_key: "ten-shops",
@@ -26,6 +29,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "ten-cups",
+      tier: "silver",
       name: "Ten Cups",
       description: "Record ten verified coffees.",
       artwork_key: "ten-cups",
@@ -34,6 +38,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "fifty-cups",
+      tier: "gold",
       name: "Fifty Cups",
       description: "Record fifty verified coffees.",
       artwork_key: "fifty-cups",
@@ -42,6 +47,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "first-contribution",
+      tier: "bronze",
       name: "First Contribution",
       description: "Have a community contribution accepted.",
       artwork_key: "first-contribution",
@@ -50,6 +56,7 @@ class Badge < ApplicationRecord
     },
     {
       slug: "five-contributions",
+      tier: "silver",
       name: "Five Contributions",
       description: "Have five community contributions accepted.",
       artwork_key: "five-contributions",
@@ -64,8 +71,15 @@ class Badge < ApplicationRecord
   validates :slug, :name, :description, :artwork_key, :criterion, presence: true
   validates :slug, uniqueness: true
   validates :threshold, numericality: { only_integer: true, greater_than: 0 }
+  # Tiers are struck in the same metals as stamp levels (DESIGN.md §6.3).
+  validates :tier, inclusion: { in: Stamp::LEVELS.keys }, allow_nil: true
 
-  scope :alphabetically, -> { order(:name) }
+  # Cups, then stamps, then contributions, each climbing, as the shelf shows them.
+  CRITERIA_ORDER = %w[ verified_check_ins unique_shops approved_contributions ].freeze
+
+  def self.in_display_order
+    all.sort_by { |badge| [ CRITERIA_ORDER.index(badge.criterion) || CRITERIA_ORDER.size, badge.threshold, badge.slug ] }
+  end
 
   def self.install_defaults!
     transaction do
@@ -88,13 +102,23 @@ class Badge < ApplicationRecord
     end
   end
 
-  def award_to!(user)
+  # The award, or nil when the badge isn't earned. `check_in` is the visit
+  # that tipped it over, when a visit did.
+  def award_to!(user, check_in: nil)
     return unless earned_by?(user)
 
-    user.awards.create_or_find_by!(badge: self) { |award| award.earned_at = Time.current }
+    user.awards.create_or_find_by!(badge: self) do |award|
+      award.earned_at = Time.current
+      award.check_in = check_in
+    end
   end
 
-  def self.evaluate_for(user)
-    find_each { |badge| badge.award_to!(user) }
+  # Awards every badge the user now qualifies for and returns only the ones
+  # this call created, so a caller can celebrate exactly those.
+  def self.evaluate_for(user, check_in: nil)
+    find_each.filter_map do |badge|
+      award = badge.award_to!(user, check_in: check_in)
+      award if award&.previously_new_record?
+    end
   end
 end

@@ -78,6 +78,33 @@ class TelegramJobsTest < ActiveJob::TestCase
     assert_match "New stamp", bot.sent.sole[:text]
   end
 
+  test "an earned badge sends one message after the stamp's, to bot chats only" do
+    user = telegram_user(telegram_chat_started_at: 2.days.ago, created_at: 2.days.ago)
+    quiet = telegram_user(created_at: 2.days.ago)
+
+    assert_enqueued_with(job: SendBadgeNotificationJob) { visit(user) }
+    assert_no_enqueued_jobs(only: SendBadgeNotificationJob) { visit(quiet) }
+
+    bot = with_fake_bot { perform_enqueued_jobs(only: SendBadgeNotificationJob) }
+
+    message = bot.sent.sole
+    assert_equal user.telegram_user_id, message[:chat_id]
+    assert_match "Badge earned: <b>First Cup</b>", message[:text]
+    assert_match "That's 1 of 2 badges.", message[:text]
+    assert_equal "See your badges", message[:reply_markup][:inline_keyboard].dig(0, 0, :text)
+  end
+
+  test "a blocked bot stops badge messages too" do
+    user = telegram_user(telegram_chat_started_at: 2.days.ago, created_at: 2.days.ago)
+    visit(user)
+
+    with_fake_bot(FakeTelegramBot.new(fail_with: Telegram::Bot::Forbidden.new("Forbidden"))) do
+      perform_enqueued_jobs(only: SendBadgeNotificationJob)
+    end
+
+    assert_not user.reload.bot_chat?
+  end
+
   private
     # Visits Buna House, backdated so the shop cooldown doesn't reject repeats.
     def visit(user, occurred_at: nil, mock_location: false)
