@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "i18n:export": "node scripts/i18n-export.mjs"
+    "i18n:export": "node scripts/i18n-export.mjs",
+    "i18n:import": "node scripts/i18n-import.mjs"
   },
   "dependencies": {
     "@fontsource/geist": "^5.3.0",
