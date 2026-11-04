@@ -202,7 +202,7 @@ class ShareCard::Doodle
       {
         "skin" => "paper",
         **SEED_HAIR[hair_style],
-        "hair_color" => "graphite",
+        "hair_color" => "black",
         "eyes" => SEED_EYES[eye_style],
         "eye_color" => "graphite",
         "nose" => SEED_NOSE[nose_style],

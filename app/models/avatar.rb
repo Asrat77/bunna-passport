@@ -1,12 +1,13 @@
 # What a person can choose about their profile picture, the server's copy of
 # web/src/design/doodle/catalog.json (a test checks the two match). The seed
 # still draws the face's proportions; these traits pick the parts and colours.
-# "paper" skin and "graphite" hair and eyes are the original pencil doodle.
+# "paper" skin and "graphite" eyes are the original pencil doodle; hair and
+# hats always have a colour, black by default.
 module Avatar
   OPTIONS = {
     "skin" => %w[paper porcelain sand honey caramel mocha espresso],
     "hair" => %w[bald buzz side curls afro cornrows bun long locs],
-    "hair_color" => %w[graphite black espresso chestnut auburn honey silver],
+    "hair_color" => %w[black espresso chestnut auburn honey silver],
     "eyes" => %w[dot round almond],
     "eye_color" => %w[graphite brown hazel green blue grey],
     "nose" => %w[point round curve],
@@ -24,14 +25,14 @@ module Avatar
       "caramel" => "#B97D52", "mocha" => "#94603F", "espresso" => "#76492F"
     },
     "hair_color" => {
-      "graphite" => "none", "black" => "#2B2522", "espresso" => "#4B2F22", "chestnut" => "#7B4A2B",
+      "black" => "#2B2522", "espresso" => "#4B2F22", "chestnut" => "#7B4A2B",
       "auburn" => "#A5482C", "honey" => "#CD9C50", "silver" => "#BDB7B0"
     },
     "eye_color" => {
       "graphite" => "#3A3733", "brown" => "#6A4026", "hazel" => "#8E6C2E", "green" => "#4E7B4B",
       "blue" => "#4A6E9C", "grey" => "#7C858C"
     },
-    "hat" => { "none" => "none", "cap" => "none", "beanie" => "none", "wrap" => "#C98A2B" },
+    "hat" => { "none" => "none", "cap" => "#44607C", "beanie" => "#8A3F33", "wrap" => "#C98A2B" },
     "ink" => {
       "paper" => "#3A3733", "porcelain" => "#3A3733", "sand" => "#3A3733", "honey" => "#342C27",
       "caramel" => "#2A201C", "mocha" => "#1D1512", "espresso" => "#150F0C"
@@ -41,20 +42,31 @@ module Avatar
     "eye_white" => "#FFFDF8"
   }.freeze
 
+  # Values that were once options, and what they draw as now. "graphite" hair
+  # was uncoloured pencil hatching; it reads as black hair.
+  RENAMED = { "hair_color" => { "graphite" => "black" } }.freeze
+
   module_function
+
+  # The traits with retired values swapped for their replacements.
+  def upgrade(traits)
+    return traits unless traits.is_a?(Hash)
+
+    traits.to_h.stringify_keys.to_h { |key, value| [ key, RENAMED.dig(key, value) || value ] }
+  end
 
   # Only known traits with known values, so a stale value falls back to the seed.
   def clean(traits)
     return {} unless traits.is_a?(Hash)
 
-    traits.to_h.stringify_keys.select { |key, value| OPTIONS[key]&.include?(value) }
+    upgrade(traits).select { |key, value| OPTIONS[key]&.include?(value) }
   end
 
   # Why a set of traits can't be saved, or nil when every one is known.
   def problems(traits)
     return "must be an object" unless traits.is_a?(Hash)
 
-    unknown = traits.stringify_keys.reject { |key, value| OPTIONS[key]&.include?(value) }
+    unknown = upgrade(traits).reject { |key, value| OPTIONS[key]&.include?(value) }
     "has unknown values for #{unknown.keys.sort.join(', ')}" if unknown.any?
   end
 end

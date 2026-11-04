@@ -71,7 +71,7 @@ describe("editor faces", () => {
     const { traits } = generateDoodle("meklit", "awake");
     for (const key of TRAIT_KEYS) expect(TRAIT_OPTIONS[key]).toContain(traits[key]);
     expect(traits.skin).toBe("paper");
-    expect(traits.hair_color).toBe("graphite");
+    expect(traits.hair_color).toBe("black");
   });
 });
 
@@ -79,6 +79,10 @@ describe("cleanTraits", () => {
   it("keeps known traits and drops anything else", () => {
     expect(cleanTraits({ hair: "afro", skin: "plaid", wings: "yes", glasses: 3 })).toEqual({ hair: "afro" });
     expect(cleanTraits(null)).toEqual({});
+  });
+
+  it("reads retired pencil-only hair as black", () => {
+    expect(cleanTraits({ hair_color: "graphite", eye_color: "graphite" })).toEqual({ hair_color: "black", eye_color: "graphite" });
   });
 });
 

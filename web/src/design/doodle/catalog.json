@@ -2,7 +2,7 @@
   "options": {
     "skin": ["paper", "porcelain", "sand", "honey", "caramel", "mocha", "espresso"],
     "hair": ["bald", "buzz", "side", "curls", "afro", "cornrows", "bun", "long", "locs"],
-    "hair_color": ["graphite", "black", "espresso", "chestnut", "auburn", "honey", "silver"],
+    "hair_color": ["black", "espresso", "chestnut", "auburn", "honey", "silver"],
     "eyes": ["dot", "round", "almond"],
     "eye_color": ["graphite", "brown", "hazel", "green", "blue", "grey"],
     "nose": ["point", "round", "curve"],
@@ -24,7 +24,6 @@
       "espresso": "#76492F"
     },
     "hair_color": {
-      "graphite": "none",
       "black": "#2B2522",
       "espresso": "#4B2F22",
       "chestnut": "#7B4A2B",
@@ -42,8 +41,8 @@
     },
     "hat": {
       "none": "none",
-      "cap": "none",
-      "beanie": "none",
+      "cap": "#44607C",
+      "beanie": "#8A3F33",
       "wrap": "#C98A2B"
     },
     "ink": {

@@ -40,6 +40,7 @@ class User < ApplicationRecord
   validates :telegram_user_id, uniqueness: true, allow_nil: true
   validates :avatar_seed, length: { maximum: 64 }
   validate :avatar_traits_are_known, if: -> { avatar_traits.present? }
+  before_validation :upgrade_avatar_traits, if: -> { avatar_traits.present? }
   validates :handle,
     presence: true,
     uniqueness: { case_sensitive: false },
@@ -185,6 +186,12 @@ class User < ApplicationRecord
   end
 
   private
+    # A face saved with a retired option (pencil-only hair) keeps saving.
+    def upgrade_avatar_traits
+      upgraded = Avatar.upgrade(avatar_traits)
+      self.avatar_traits = upgraded unless upgraded == avatar_traits
+    end
+
     def avatar_traits_are_known
       problem = Avatar.problems(avatar_traits)
       errors.add(:avatar_traits, problem) if problem

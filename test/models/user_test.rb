@@ -75,6 +75,15 @@ class UserTest < ActiveSupport::TestCase
     assert user.update(avatar_traits: nil)
   end
 
+  test "a face saved with pencil-only hair saves again as black hair" do
+    user = create_user
+    user.update_column(:avatar_traits, { "hair" => "afro", "hair_color" => "graphite" })
+
+    assert user.reload.update(shares_visits: false)
+    assert_equal({ "hair" => "afro", "hair_color" => "black" }, user.reload.avatar_traits)
+    assert_equal "black", Avatar.clean({ "hair_color" => "graphite" })["hair_color"]
+  end
+
   test "the share card face changes whenever the profile picture does" do
     user = create_user(telegram_user_id: 412345678)
     seeded = user.avatar_digest
