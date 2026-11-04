@@ -15,7 +15,10 @@ export type Route =
   | { name: "profile" }
   | { name: "invite"; token: string }
   | { name: "map" }
-  | { name: "cafes"; query?: string; filter?: ShopFilter };
+  | { name: "cafes"; query?: string; filter?: ShopFilter }
+  | { name: "suggestEdit"; shopId: OpaqueId }
+  | { name: "report"; shopId: OpaqueId }
+  | { name: "addCafe"; cafeName?: string };
 
 type Navigation = {
   route: Route;

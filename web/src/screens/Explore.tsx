@@ -15,6 +15,7 @@ import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import { ShopRow } from "@/ui/ShopRow";
+import { AddMissing } from "./contribute/AddMissing";
 import "./explore.css";
 
 const PREVIEW_COUNT = 5;
@@ -145,10 +146,17 @@ export function Explore() {
           </button>
         </div>
       ) : visible.length === 0 ? (
-        <p className="notice">
+        <div className="notice">
           {filter === "notYet" && !searching ? t("explore.allStamped") : t("explore.noResults")}
-          {searching ? <><br />{t("explore.noResultsHint")}</> : null}
-        </p>
+          {searching ? (
+            <>
+              <br />
+              {t("explore.noResultsHint")}
+              <br />
+              <AddMissing query={query} />
+            </>
+          ) : null}
+        </div>
       ) : (
         <ul className="shop-list shop-list--flat">
           {visible.map(({ shop, distance }) => (

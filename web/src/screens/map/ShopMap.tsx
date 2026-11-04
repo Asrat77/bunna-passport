@@ -9,7 +9,8 @@ import { distanceMeters } from "@/lib/distance";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { Icon } from "@/ui/Icon";
-import { phCrosshair } from "@/ui/icons";
+import { phCrosshair, phPlus } from "@/ui/icons";
+import "../contribute/contribute.css";
 import { CafeCard } from "./CafeCard";
 import { addPinImages, LOCATE_ZOOM, pinColours, pixelRatio, prepareMapLibre, RANGE, rangeFeatures, showRange } from "./layers";
 import { CLUSTER_PREFIX, drawCluster, PIN_OPEN, PIN_STAMPED } from "./pins";
@@ -178,15 +179,21 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
           onClose={() => setSelected(null)}
         />
       ) : (
-        <button
-        type="button"
-        className="map-locate"
-        aria-label={t("map.locate")}
-        aria-busy={status === "locating" || undefined}
-        onClick={() => void locateMe()}
-      >
-        <Icon path={phCrosshair} size={22} />
-      </button>
+        <>
+          <button type="button" className="map-add" onClick={() => push({ name: "addCafe" })}>
+            <Icon path={phPlus} size={16} />
+            {t("addCafe.entry")}
+          </button>
+          <button
+            type="button"
+            className="map-locate"
+            aria-label={t("map.locate")}
+            aria-busy={status === "locating" || undefined}
+            onClick={() => void locateMe()}
+          >
+            <Icon path={phCrosshair} size={22} />
+          </button>
+        </>
       )}
     </div>
   );

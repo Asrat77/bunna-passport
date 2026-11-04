@@ -13,6 +13,7 @@ import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import { ShopRow } from "@/ui/ShopRow";
 import { StatStrip } from "@/ui/StatStrip";
+import { AddMissing } from "./contribute/AddMissing";
 import "./cafes.css";
 
 const PAGE_SIZE = 20;
@@ -236,10 +237,17 @@ export function AllCafes({ route }: { route: CafesRoute }) {
           </button>
         </div>
       ) : visible.length === 0 ? (
-        <p className="notice">
+        <div className="notice">
           {filters.query.trim() ? t("explore.noResults") : t("cafes.none")}
-          {filters.query.trim() ? <><br />{t("explore.noResultsHint")}</> : null}
-        </p>
+          {filters.query.trim() ? (
+            <>
+              <br />
+              {t("explore.noResultsHint")}
+              <br />
+              <AddMissing query={filters.query} />
+            </>
+          ) : null}
+        </div>
       ) : (
         <ul className="shop-list shop-list--flat">
           {visible.map(({ shop, distance }) => (

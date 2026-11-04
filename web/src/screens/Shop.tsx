@@ -1,4 +1,4 @@
-import { phCheck, phMapPin, phShareNetwork } from "@/ui/icons";
+import { phCheck, phMapPin, phPencilSimple, phShareNetwork } from "@/ui/icons";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
 import { useCatalog, useReviews, useShop } from "@/data/queries";
@@ -13,10 +13,11 @@ import { PRICE_GLYPHS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
-import { FilterChip, TagChip } from "@/ui/Chip";
+import { AddChip, FilterChip, TagChip } from "@/ui/Chip";
 import { Icon } from "@/ui/Icon";
 import { StatStrip } from "@/ui/StatStrip";
 import "./shop.css";
+import "./contribute/contribute.css";
 
 type Section = "overview" | "photos" | "reviews";
 
@@ -154,13 +155,19 @@ function ShopBody({
             </button>
           </section>
           <PhotoStrip shop={shop} onAll={() => onSection("photos")} />
-          {tags.length > 0 ? (
-            <div className="chip-wrap">
-              {tags.map((tag) => (
-                <TagChip key={tag}>{t(`shop.tag.${tag}`)}</TagChip>
-              ))}
-            </div>
-          ) : null}
+          <div className="chip-wrap">
+            {tags.map((tag) => (
+              <TagChip key={tag}>{t(`shop.tag.${tag}`)}</TagChip>
+            ))}
+            <AddChip icon={<Icon path={phPencilSimple} size={16} />} onClick={() => push({ name: "suggestEdit", shopId: shop.id })}>
+              {t("suggest.entry")}
+            </AddChip>
+          </div>
+          <div className="shop-fix">
+            <button type="button" className="link-button" onClick={() => push({ name: "report", shopId: shop.id })}>
+              {t("reportCafe.entry")}
+            </button>
+          </div>
         </>
       ) : section === "photos" ? (
         <PhotoGrid shop={shop} />
