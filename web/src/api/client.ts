@@ -411,6 +411,15 @@ export const api = {
       body: { report: input },
     });
   },
+
+  /** A crash on this phone, for the operators' Telegram alerts. */
+  reportClientError(client_error: { message: string; stack?: string; screen?: string }) {
+    return request<void>("/client_errors", {
+      method: "POST",
+      body: { client_error },
+      timeoutMs: 5_000,
+    });
+  },
 };
 
 export type { Shop, ShopDetail };

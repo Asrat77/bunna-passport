@@ -466,6 +466,39 @@ paths:
         "422":
           $ref: "#/components/responses/Unprocessable"
 
+  /client_errors:
+    post:
+      tags: [Community]
+      operationId: createClientError
+      summary: Report a crash in the Mini App to the operators
+      description: >
+        Open before sign-in, since sign-in can be what broke. A bearer token,
+        when sent, names the person in the alert. Repeats of the same error are
+        announced once an hour.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client_error]
+              properties:
+                client_error:
+                  type: object
+                  required: [message]
+                  properties:
+                    message: { type: string, maxLength: 200 }
+                    stack: { type: string }
+                    screen: { type: string }
+      responses:
+        "204":
+          description: Error received
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   /check_ins:
     post:
       tags: [Activity]

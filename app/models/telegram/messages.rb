@@ -53,6 +53,13 @@ module Telegram::Messages
     user.daily_nudges? ? "Daily nudges are on. Send /nudges_off to stop them." : "No more daily nudges. Send /nudges_on to bring them back."
   end
 
+  # For the people running Bunna, not its users: see Ops::Alert.
+  def ops_alert(title, details)
+    text = "🚨 <b>#{h(title)}</b>"
+    text += "\n\n<pre>#{h(details)}</pre>" if details.present?
+    { text: text }
+  end
+
   # Where the Mini App lives. A web_app button needs HTTPS, so without one
   # the bot still talks but offers no button.
   def mini_app_url
