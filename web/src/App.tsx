@@ -20,6 +20,9 @@ import { SignIn } from "./screens/SignIn";
 import { Stats } from "./screens/Stats";
 import { Studio } from "./screens/Studio";
 import { Welcome } from "./screens/Welcome";
+import { AddCafe } from "./screens/contribute/AddCafe";
+import { ReportCafe } from "./screens/contribute/ReportCafe";
+import { SuggestEdit } from "./screens/contribute/SuggestEdit";
 import { takeLaunchInvite } from "./lib/invite";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
@@ -124,6 +127,12 @@ function Screens() {
       return <MapScreen />;
     case "cafes":
       return <AllCafes route={route} />;
+    case "suggestEdit":
+      return <SuggestEdit shopId={route.shopId} />;
+    case "report":
+      return <ReportCafe shopId={route.shopId} />;
+    case "addCafe":
+      return <AddCafe cafeName={route.cafeName} />;
   }
 }
 

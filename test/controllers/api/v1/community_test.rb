@@ -14,6 +14,24 @@ class Api::V1::CommunityTest < ActionDispatch::IntegrationTest
     assert_equal "Across from the stadium", shops(:bole).reload.landmark
   end
 
+  test "suggested hours and a moved pin reach the edit" do
+    regular = create_user(trust_level: :regular)
+
+    post api_v1_shop_edits_path(shops(:bole)),
+      params: { shop_edit: { proposed_changes: {
+        hours: { monday: [ { opens: "07:30", closes: "21:00" } ] },
+        latitude: 9.0101,
+        longitude: 38.7901
+      } } },
+      headers: bearer_headers(regular),
+      as: :json
+
+    assert_response :created
+    shop = shops(:bole).reload
+    assert_equal [ { "opens" => "07:30", "closes" => "21:00" } ], shop.hours.schedule["monday"]
+    assert_in_delta 9.0101, shop.latitude.to_f, 0.000001
+  end
+
   test "curator photo submissions publish approved variants" do
     curator = create_user(trust_level: :curator)
     image = Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
