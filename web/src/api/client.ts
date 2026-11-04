@@ -1,3 +1,4 @@
+import type { AvatarTraits } from "@/design/doodle/traits";
 import { ApiRequestError, NetworkError } from "./errors";
 import type {
   ApiError,
@@ -274,6 +275,7 @@ export const api = {
 
   updateProfile(profile: {
     avatar_seed?: string | null;
+    avatar_traits?: AvatarTraits | null;
     shares_cup_status?: boolean;
     shares_visits?: boolean;
     daily_nudges?: boolean;

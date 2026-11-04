@@ -89,6 +89,7 @@ export function Passport() {
         <button type="button" className="passport__profile" onClick={() => push({ name: "profile" })} aria-label={t("profile.open")}>
           <Doodle
             seed={doodle.seed}
+            traits={doodle.traits}
             mood={doodle.awake ? "awake" : "sleepy"}
             size={64}
             label={t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}

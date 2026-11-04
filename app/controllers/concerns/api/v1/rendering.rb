@@ -24,6 +24,7 @@ module Api::V1::Rendering
         stamps_count: user.stamps_count,
         home_neighborhood_id: user.home_neighborhood_id,
         avatar_seed: user.avatar_seed,
+        avatar_traits: user.avatar_traits,
         had_cup_today: user.had_cup_today?,
         shares_cup_status: user.shares_cup_status,
         shares_visits: user.shares_visits,
@@ -32,7 +33,7 @@ module Api::V1::Rendering
       }
     end
 
-    # Someone else as a friend sees them: the doodle and handle, never an
+    # Someone else as a friend sees them: the profile picture and handle, never an
     # email or a Telegram id.
     def friend_json(user, cup_today_ids)
       {
@@ -40,6 +41,7 @@ module Api::V1::Rendering
         handle: user.handle,
         display_name: user.display_name,
         avatar_seed: user.avatar_seed,
+        avatar_traits: user.avatar_traits,
         had_cup_today: user.public_cup_status(cup_today_ids),
         stamps_count: user.stamps_count,
         verified_check_ins_count: user.verified_check_ins_count

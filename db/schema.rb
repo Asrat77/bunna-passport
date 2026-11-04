@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_200000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -205,6 +205,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
   end
 
   create_table "share_images", force: :cascade do |t|
+    t.string "avatar_digest"
     t.integer "check_in_id", null: false
     t.datetime "created_at", null: false
     t.boolean "doodle", default: true, null: false
@@ -326,6 +327,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
 
   create_table "users", force: :cascade do |t|
     t.string "avatar_seed"
+    t.json "avatar_traits"
     t.datetime "created_at", null: false
     t.boolean "daily_nudges", default: true, null: false
     t.string "display_name", null: false

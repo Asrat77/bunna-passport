@@ -71,7 +71,7 @@ export function Explore() {
           aria-label={`${t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}. ${t("explore.openStudio")}`}
           onClick={() => push({ name: "studio" })}
         >
-          <Doodle seed={doodle.seed} mood={doodle.awake ? "awake" : "sleepy"} size={46} decorative />
+          <Doodle seed={doodle.seed} traits={doodle.traits} mood={doodle.awake ? "awake" : "sleepy"} size={46} decorative />
         </button>
         <div className="greeting__text">
           <span className="greeting__hello">{t("explore.greeting", { name })}</span>

@@ -39,6 +39,7 @@ class User < ApplicationRecord
   validates :password, confirmation: true, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_nil: true
   validates :telegram_user_id, uniqueness: true, allow_nil: true
   validates :avatar_seed, length: { maximum: 64 }
+  validate :avatar_traits_are_known, if: -> { avatar_traits.present? }
   validates :handle,
     presence: true,
     uniqueness: { case_sensitive: false },
@@ -95,6 +96,17 @@ class User < ApplicationRecord
         name = [ telegram_user["first_name"], telegram_user["last_name"] ].compact.join(" ").strip
         (name.presence || "Telegram #{telegram_id}")[0, 80]
       end
+  end
+
+  # The seed the Mini App draws your own profile picture from (web/src/data/me.ts).
+  def avatar_seed_or_default
+    avatar_seed.presence || telegram_user_id&.to_s || id.to_s
+  end
+
+  # Changes whenever the face on this person's share cards would, so a stored
+  # card is drawn again after they edit their profile picture.
+  def avatar_digest
+    Digest::SHA256.hexdigest([ avatar_seed_or_default, Avatar.clean(avatar_traits).sort.to_h ].to_json)[0, 16]
   end
 
   # Whether the bot may write to this person: they started it and haven't
@@ -171,4 +183,10 @@ class User < ApplicationRecord
 
     update!(trust_level: next_level) unless trust_level == next_level.to_s
   end
+
+  private
+    def avatar_traits_are_known
+      problem = Avatar.problems(avatar_traits)
+      errors.add(:avatar_traits, problem) if problem
+    end
 end

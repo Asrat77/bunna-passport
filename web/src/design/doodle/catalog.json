@@ -1,0 +1,62 @@
+{
+  "options": {
+    "skin": ["paper", "porcelain", "sand", "honey", "caramel", "mocha", "espresso"],
+    "hair": ["bald", "buzz", "side", "curls", "afro", "cornrows", "bun", "long", "locs"],
+    "hair_color": ["graphite", "black", "espresso", "chestnut", "auburn", "honey", "silver"],
+    "eyes": ["dot", "round", "almond"],
+    "eye_color": ["graphite", "brown", "hazel", "green", "blue", "grey"],
+    "nose": ["point", "round", "curve"],
+    "facial_hair": ["none", "stubble", "mustache", "beard"],
+    "freckles": ["none", "freckles"],
+    "glasses": ["none", "round", "square", "shades"],
+    "hat": ["none", "cap", "beanie", "wrap"],
+    "headphones": ["none", "headphones"],
+    "earrings": ["none", "studs", "hoops"]
+  },
+  "colors": {
+    "skin": {
+      "paper": "#F8F4EC",
+      "porcelain": "#F6DFCB",
+      "sand": "#EBC6A2",
+      "honey": "#D8A372",
+      "caramel": "#B97D52",
+      "mocha": "#94603F",
+      "espresso": "#76492F"
+    },
+    "hair_color": {
+      "graphite": "none",
+      "black": "#2B2522",
+      "espresso": "#4B2F22",
+      "chestnut": "#7B4A2B",
+      "auburn": "#A5482C",
+      "honey": "#CD9C50",
+      "silver": "#BDB7B0"
+    },
+    "eye_color": {
+      "graphite": "#3A3733",
+      "brown": "#6A4026",
+      "hazel": "#8E6C2E",
+      "green": "#4E7B4B",
+      "blue": "#4A6E9C",
+      "grey": "#7C858C"
+    },
+    "hat": {
+      "none": "none",
+      "cap": "none",
+      "beanie": "none",
+      "wrap": "#C98A2B"
+    },
+    "ink": {
+      "paper": "#3A3733",
+      "porcelain": "#3A3733",
+      "sand": "#3A3733",
+      "honey": "#342C27",
+      "caramel": "#2A201C",
+      "mocha": "#1D1512",
+      "espresso": "#150F0C"
+    },
+    "headphones": "#A9503A",
+    "earrings": "#C9971F",
+    "eye_white": "#FFFDF8"
+  }
+}

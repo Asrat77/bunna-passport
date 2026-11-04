@@ -784,7 +784,7 @@ paths:
     patch:
       tags: [Activity]
       operationId: updateProfile
-      summary: Choose a doodle or stop sharing cup status
+      summary: Edit the profile picture or stop sharing cup status
       requestBody:
         required: true
         content:
@@ -1244,9 +1244,14 @@ components:
             - $ref: "#/components/schemas/OpaqueId"
             - type: "null"
         avatar_seed:
-          description: Seed for the generative doodle avatar; clients fall back to the Telegram user id
+          description: Seed for the generative profile picture; clients fall back to the Telegram user id
           oneOf:
             - { type: string, maxLength: 64 }
+            - type: "null"
+        avatar_traits:
+          description: Profile picture parts from the editor; null until the user edits theirs
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
             - type: "null"
         had_cup_today:
           type: boolean
@@ -1265,6 +1270,27 @@ components:
             Whether the Telegram bot sends an afternoon "had a cup?" nudge on
             days without a check-in. Only reaches people who started the bot.
         joined_at: { type: string, format: date-time }
+    AvatarTraits:
+      type: object
+      additionalProperties: false
+      description: |
+        Profile picture parts chosen in the editor. The seed still draws the
+        face's proportions; any trait left out comes from the seed. "paper"
+        skin and "graphite" hair and eyes are the original pencil doodle.
+        Values match web/src/design/doodle/catalog.json and app/models/avatar.rb.
+      properties:
+        skin: { type: string, enum: [paper, porcelain, sand, honey, caramel, mocha, espresso] }
+        hair: { type: string, enum: [bald, buzz, side, curls, afro, cornrows, bun, long, locs] }
+        hair_color: { type: string, enum: [graphite, black, espresso, chestnut, auburn, honey, silver] }
+        eyes: { type: string, enum: [dot, round, almond] }
+        eye_color: { type: string, enum: [graphite, brown, hazel, green, blue, grey] }
+        nose: { type: string, enum: [point, round, curve] }
+        facial_hair: { type: string, enum: [none, stubble, mustache, beard] }
+        freckles: { type: string, enum: [none, freckles] }
+        glasses: { type: string, enum: [none, round, square, shades] }
+        hat: { type: string, enum: [none, cap, beanie, wrap] }
+        headphones: { type: string, enum: [none, headphones] }
+        earrings: { type: string, enum: [none, studs, hoops] }
     ProfileInput:
       type: object
       properties:
@@ -1272,12 +1298,17 @@ components:
           oneOf:
             - { type: string, maxLength: 64 }
             - type: "null"
+        avatar_traits:
+          description: Unknown traits or values are rejected with 422
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
+            - type: "null"
         shares_cup_status: { type: boolean }
         shares_visits: { type: boolean }
         daily_nudges: { type: boolean }
     Friend:
       type: object
-      required: [id, handle, display_name, avatar_seed, had_cup_today, stamps_count, verified_check_ins_count]
+      required: [id, handle, display_name, avatar_seed, avatar_traits, had_cup_today, stamps_count, verified_check_ins_count]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         handle: { type: string }
@@ -1285,6 +1316,11 @@ components:
         avatar_seed:
           oneOf:
             - type: string
+            - type: "null"
+        avatar_traits:
+          description: Profile picture parts from the editor; null until the user edits theirs
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
             - type: "null"
         had_cup_today:
           description: Null when that person has turned off sharing it.
@@ -1376,7 +1412,7 @@ components:
         value: { type: integer, minimum: 0 }
         user:
           type: object
-          required: [id, handle, display_name, avatar_seed, had_cup_today]
+          required: [id, handle, display_name, avatar_seed, avatar_traits, had_cup_today]
           properties:
             id: { $ref: "#/components/schemas/OpaqueId" }
             handle: { type: string }
@@ -1384,6 +1420,10 @@ components:
             avatar_seed:
               oneOf:
                 - type: string
+                - type: "null"
+            avatar_traits:
+              oneOf:
+                - $ref: "#/components/schemas/AvatarTraits"
                 - type: "null"
             had_cup_today:
               description: |

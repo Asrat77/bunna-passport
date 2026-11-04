@@ -1,7 +1,7 @@
 require "open3"
 
 # The image a user shares after a check-in: their passport stamp for the shop
-# on cream passport paper, their doodle "after coffee", and the wordmark. It
+# on cream passport paper, their profile picture "after coffee", and the wordmark. It
 # carries no name, handle, time of day or coordinates (see the share card plan).
 #
 # Two sizes from one layout: a 4:5 post for chats and feeds, and a 9:16 story
@@ -104,12 +104,12 @@ class ShareCard
       SVG
     end
 
-    # The user's doodle, awake, on a small tilted card: "You, after coffee".
+    # The user's profile picture, awake, on a small tilted card: "You, after coffee".
     def doodle
       return "" unless @doodle
 
       x, y = layout[:doodle]
-      face = ShareCard::Doodle.new(doodle_seed, "awake")
+      face = ShareCard::Doodle.new(user.avatar_seed_or_default, "awake", user.avatar_traits)
       <<~SVG
         <g transform="translate(#{x} #{y}) rotate(-6 140 170)">
           <rect x="0" y="0" width="280" height="340" rx="28" fill="#{RAISED}" stroke="#{BORDER}" stroke-width="2"/>
@@ -119,11 +119,6 @@ class ShareCard
           <text x="140" y="306" text-anchor="middle" font-family="Geist, sans-serif" font-weight="700" font-size="26" fill="#{INK}">You, after coffee</text>
         </g>
       SVG
-    end
-
-    # The seed the Mini App draws your own doodle from (web/src/data/me.ts).
-    def doodle_seed
-      user.avatar_seed.presence || user.telegram_user_id&.to_s || user.id.to_s
     end
 
     def footer

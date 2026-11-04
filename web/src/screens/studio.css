@@ -1,3 +1,22 @@
+/*
+ * The profile picture editor wears Mocha in both phone themes, like Explore
+ * and the ceremony: a dark stage under a warm spotlight, the pencil face on
+ * cream paper in the middle of it.
+ *
+ * Motion (after Emil Kowalski's rules): presses scale to 0.96 in 140ms; the
+ * tab pill slides with a strong ease-in-out because it moves across the
+ * screen; everything that responds to a tap uses the strong ease-out; nothing
+ * runs over 300ms. Reduced motion keeps the fades and drops the movement.
+ */
+.studio {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  background: radial-gradient(120% 46% at 50% 16%, rgba(169, 80, 58, 0.3), rgba(169, 80, 58, 0) 70%), var(--surface);
+  background-repeat: no-repeat;
+  color: var(--ink);
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
 .studio__intro {
   display: flex;
   flex-direction: column;
@@ -9,34 +28,161 @@
   font-size: 15px;
 }
 
+/* Stage */
+
+.studio__stage {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 2px;
+}
+
+.studio__face {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  /* Paper roles inside, so the mood disc stays cream on the dark stage. */
+  --accent-soft: #f7e8bf;
+  --sunken: #ede2d3;
+  --accent: #d99a24;
+  --border-strong: #bca995;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+}
+
+.studio__face-layer {
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease,
+    transform 220ms var(--ease-out);
+}
+
+.studio__face[data-mood="awake"] .studio__face-layer--sleepy,
+.studio__face[data-mood="sleepy"] .studio__face-layer--awake {
+  opacity: 0;
+  filter: blur(3px);
+  transform: scale(0.98);
+}
+
 .studio__moods {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  align-self: center;
+  width: auto;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--raised);
 }
 
 .studio__mood {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 10px 14px;
-  border-radius: 24px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--muted);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 140ms var(--ease-out);
 }
 
-.studio__mood--awake {
-  background: var(--accent-soft);
-}
-
-.studio__mood-title {
-  font-size: 15px;
+.studio__mood[aria-checked="true"] {
+  background: var(--sunken);
+  color: var(--ink);
   font-weight: 600;
 }
 
-.studio__mood-meta {
-  font-size: 11.5px;
-  color: var(--muted);
+/* Tabs: the active row is a copy clipped to one fifth, sliding between tabs. */
+
+.studio__tabs {
+  position: relative;
+  border-radius: 999px;
+  background: var(--raised);
+  padding: 4px;
 }
+
+.studio__tab-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.studio__tab-row--active {
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  background: var(--ink);
+  border-radius: 999px;
+  transition: clip-path 260ms var(--ease-in-out);
+}
+
+.studio__tab {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.studio__tab-row--active .studio__tab {
+  color: var(--surface);
+  font-weight: 600;
+}
+
+/* Panels: a short slide from the side you moved towards. */
+
+.studio__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: studio-panel-in 200ms var(--ease-out);
+}
+
+.studio__panel[data-direction="back"] {
+  animation-name: studio-panel-in-back;
+}
+
+@keyframes studio-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+@keyframes studio-panel-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+.studio__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.studio__section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.studio__shuffle {
+  min-height: 40px;
+  background: var(--raised);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+/* Drawn options */
 
 .studio__grid {
   display: grid;
@@ -44,18 +190,99 @@
   gap: 10px;
 }
 
-.studio__option {
+.studio__grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.studio__tile {
+  position: relative;
   aspect-ratio: 1;
-  border-radius: 22px;
-  background: var(--raised);
-  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: #f8f4ec;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition:
+    outline-color 150ms ease,
+    transform 140ms var(--ease-out);
 }
 
-.studio__option[aria-checked="true"] {
-  border-color: var(--primary);
+.studio__tile > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.studio__tile[aria-checked="true"] {
+  outline-color: var(--primary);
+}
+
+/* Swatches */
+
+/* One row of seven at most, spread to the edges. */
+.studio__swatches {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 44px));
+  justify-content: space-between;
+  padding: 4px 4px 0;
+}
+
+.studio__swatch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 140ms var(--ease-out);
+}
+
+/* The selection ring grows in from just inside, never from nothing. */
+.studio__swatch::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  opacity: 0;
+  transform: scale(0.86);
+  transition:
+    opacity 160ms ease,
+    transform 200ms var(--ease-out);
+}
+
+.studio__swatch[aria-checked="true"]::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.studio__swatch-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.studio__swatch-fill--pencil {
+  background:
+    repeating-linear-gradient(128deg, rgba(58, 55, 51, 0.75) 0 1.2px, transparent 1.2px 4px),
+    #f8f4ec;
+}
+
+.studio__tile:active,
+.studio__swatch:active,
+.studio__mood:active,
+.studio__shuffle:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .studio__tile:hover:not([aria-checked="true"]) {
+    outline-color: var(--border-strong);
+  }
 }
 
 .studio__footnote {
@@ -63,4 +290,22 @@
   font-size: 12.5px;
   color: var(--muted);
   text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio__panel,
+  .studio__panel[data-direction="back"] {
+    animation-name: studio-panel-fade;
+  }
+
+  .studio__face[data-mood] .studio__face-layer {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes studio-panel-fade {
+  from {
+    opacity: 0;
+  }
 }

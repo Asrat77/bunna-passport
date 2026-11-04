@@ -1,6 +1,7 @@
 # A rendered ShareCard kept in storage (R2 in production) so sharing the same
 # card again costs nothing. Rendered on the first share, never ahead of it,
-# and re-rendered when ShareCard::VERSION changes.
+# and re-rendered when ShareCard::VERSION changes or, for a card with the
+# profile picture on it, when the person has changed their picture since.
 class ShareImage < ApplicationRecord
   belongs_to :check_in
   has_one_attached :png
@@ -18,12 +19,13 @@ class ShareImage < ApplicationRecord
   end
 
   def stale?
-    new_record? || version != ShareCard::VERSION || !png.attached?
+    new_record? || version != ShareCard::VERSION || !png.attached? || (doodle? && avatar_digest != check_in.user.avatar_digest)
   end
 
   def render!
     card = ShareCard.new(check_in, format: format, doodle: doodle)
     self.version = ShareCard::VERSION
+    self.avatar_digest = check_in.user.avatar_digest if doodle?
     png.attach(io: StringIO.new(card.to_png), filename: "bunna-passport-#{format}.png", content_type: "image/png")
     save!
   end
