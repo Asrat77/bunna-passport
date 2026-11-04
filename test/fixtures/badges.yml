@@ -3,6 +3,7 @@ first_cup:
   name: First Cup
   description: Record your first verified coffee.
   artwork_key: first-cup
+  tier: bronze
   criterion: verified_check_ins
   threshold: 1
 
@@ -11,5 +12,6 @@ five_shops:
   name: Five Shops
   description: Collect five shop stamps.
   artwork_key: five-shops
+  tier: silver
   criterion: unique_shops
   threshold: 5

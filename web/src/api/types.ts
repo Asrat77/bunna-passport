@@ -170,6 +170,29 @@ export type CheckIn = {
   stamp_level: StampLevel | null;
 };
 
+/** A badge definition, with when the viewer earned it (DESIGN.md §6.3). */
+export type Badge = {
+  id: OpaqueId;
+  slug: string;
+  name: string;
+  description: string;
+  artwork_key: string;
+  /** The metal it is struck in; the same ladder as stamp levels. */
+  tier: StampLevel | null;
+  threshold: number;
+  earned_at: Timestamp | null;
+};
+
+/** GET /badges: every badge, with how far the viewer has got. */
+export type BadgeProgress = Badge & { progress: number };
+
+/** The create response: a check-in plus what its ceremony celebrates. */
+export type CheckInResult = CheckIn & {
+  /** The level this visit took the stamp to (bronze on a first visit), or null. */
+  level_reached: StampLevel | null;
+  badges_earned: Badge[];
+};
+
 /** The rendered share cards for one stamp (POST …/share_cards). */
 export type ShareCards = {
   check_in_id: OpaqueId;
@@ -214,7 +237,11 @@ export type Passport = {
   total_shops: number;
   completion_percentage: number;
   had_cup_today: boolean;
+  streak: CoffeeWeeks;
 };
+
+/** Monday-first Addis weeks with a verified cup (DESIGN.md §6.4). */
+export type CoffeeWeeks = { current_weeks: number; longest_weeks: number; this_week: boolean };
 
 export type ContributionType =
   | "Shop::Submission"

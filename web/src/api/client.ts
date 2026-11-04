@@ -3,7 +3,9 @@ import type {
   ApiError,
   AuthenticatedPayload,
   CatalogPage,
+  BadgeProgress,
   CheckIn,
+  CheckInResult,
   CheckInInput,
   CityStats,
   Contribution,
@@ -248,14 +250,14 @@ export const api = {
   /** A photo, when there is one, makes this a multipart request. */
   checkIn(input: CheckInInput, photo?: File | null, signal?: AbortSignal) {
     if (!photo) {
-      return request<CheckIn>("/check_ins", { method: "POST", body: { check_in: input }, signal });
+      return request<CheckInResult>("/check_ins", { method: "POST", body: { check_in: input }, signal });
     }
     const form = new FormData();
     for (const [key, value] of Object.entries(input)) {
       if (value !== undefined) form.append(`check_in[${key}]`, String(value));
     }
     form.append("check_in[photo]", photo);
-    return request<CheckIn>("/check_ins", { method: "POST", body: form, signal, timeoutMs: 60_000 });
+    return request<CheckInResult>("/check_ins", { method: "POST", body: form, signal, timeoutMs: 60_000 });
   },
 
   listCheckIns(cursor?: OpaqueId) {
@@ -280,7 +282,7 @@ export const api = {
   },
 
   listBadges() {
-    return request<unknown>("/badges");
+    return request<BadgeProgress[]>("/badges");
   },
 
   listContributions(cursor?: OpaqueId) {

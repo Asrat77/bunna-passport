@@ -27,6 +27,52 @@ class Api::V1::CheckInsTest < ActionDispatch::IntegrationTest
     assert_equal 1, user.reload.verified_check_ins_count
   end
 
+  test "the create response carries the level reached and the badges earned, on replay too" do
+    user = create_user(created_at: 2.days.ago)
+    params = { check_in: check_in_params(idempotency_key: "first-cup") }
+
+    post api_v1_check_ins_path, params: params, headers: bearer_headers(user), as: :json
+    assert_response :created
+    assert_equal "bronze", response_json.dig("data", "level_reached")
+    assert_equal [ "first-check-in" ], response_json.dig("data", "badges_earned").pluck("slug")
+
+    post api_v1_check_ins_path, params: params, headers: bearer_headers(user), as: :json
+    assert_equal [ "first-check-in" ], response_json.dig("data", "badges_earned").pluck("slug"), "replay must repeat the original answer"
+  end
+
+  test "a return visit that reaches a level says so and earns no badge twice" do
+    user = create_user(created_at: 10.days.ago)
+    4.times do |index|
+      travel_to((5 - index).days.ago) do
+        CheckIn.record!(
+          user: user, shop: shops(:bole), idempotency_key: "visit-#{index}",
+          latitude: shops(:bole).latitude, longitude: shops(:bole).longitude, accuracy_meters: 10
+        )
+      end
+    end
+
+    post api_v1_check_ins_path, params: { check_in: check_in_params }, headers: bearer_headers(user), as: :json
+
+    assert_response :created
+    assert_equal "silver", response_json.dig("data", "level_reached")
+    assert_equal "silver", response_json.dig("data", "stamp_level")
+    assert_empty response_json.dig("data", "badges_earned")
+  end
+
+  test "a flagged visit reaches no level and earns no badge until it is verified" do
+    user = create_user
+
+    post api_v1_check_ins_path, params: { check_in: check_in_params(mock_location: true) }, headers: bearer_headers(user), as: :json
+
+    assert_nil response_json.dig("data", "level_reached")
+    assert_empty response_json.dig("data", "badges_earned")
+
+    check_in = CheckIn.last
+    check_in.verify!
+    assert_equal [ check_in.id ], user.awards.pluck(:check_in_id)
+    assert_equal "bronze", check_in.reload.level_reached
+  end
+
   test "a return visit adds a cup without claiming a second stamp" do
     user = create_user(created_at: 2.days.ago)
     CheckIn.record!(

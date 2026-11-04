@@ -138,8 +138,10 @@ module Api::V1::Rendering
       }
     end
 
-    def check_in_json(check_in)
-      {
+    # The ceremony's extras ride only on the create response: the level this
+    # visit reached and the badges it earned. A replay reports the same.
+    def check_in_json(check_in, ceremony: false)
+      data = {
         id: check_in.id,
         shop: {
           id: check_in.shop_id,
@@ -156,5 +158,25 @@ module Api::V1::Rendering
         note: check_in.note,
         occurred_at: check_in.occurred_at.iso8601
       }
+      return data unless ceremony
+
+      data.merge(
+        level_reached: check_in.level_reached,
+        badges_earned: check_in.awards.includes(:badge).order(:id).map { |award| badge_json(award.badge, earned_at: award.earned_at) }
+      )
+    end
+
+    def badge_json(badge, earned_at:, progress: nil)
+      data = {
+        id: badge.id,
+        slug: badge.slug,
+        name: badge.name,
+        description: badge.description,
+        artwork_key: badge.artwork_key,
+        tier: badge.tier,
+        threshold: badge.threshold,
+        earned_at: earned_at&.iso8601
+      }
+      progress.nil? ? data : data.merge(progress: progress)
     end
 end

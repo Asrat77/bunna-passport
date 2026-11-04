@@ -90,7 +90,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
         },
         photo,
       );
-      for (const key of [["passport"], ["profile"], ["checkIns"], ["shop", selected.shop.id], ["leaderboard"], ["stats", "me"]]) {
+      for (const key of [["passport"], ["profile"], ["checkIns"], ["shop", selected.shop.id], ["leaderboard"], ["stats", "me"], ["badges"]]) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
       replace({ name: "ceremony", checkIn: data, wasAwake });

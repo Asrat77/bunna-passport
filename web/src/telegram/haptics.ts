@@ -12,3 +12,9 @@ export function hapticError(): void {
 export function hapticSelection(): void {
   hapticFeedback.selectionChanged.ifAvailable();
 }
+
+/** The badge's double tick (DESIGN.md §7), after the stamp's thunk. */
+export function hapticBadge(): void {
+  hapticFeedback.impactOccurred.ifAvailable("light");
+  window.setTimeout(() => hapticFeedback.impactOccurred.ifAvailable("light"), 90);
+}

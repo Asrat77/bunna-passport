@@ -20,11 +20,14 @@ class Api::V1::ActivityReadsTest < ActionDispatch::IntegrationTest
     get api_v1_passport_path, headers: headers, as: :json
     assert_equal [ check_in.shop_id ], response_json.dig("data", "stamps").pluck("shop").pluck("id")
     assert_equal 1, response_json.dig("data", "stamped_count")
+    assert_equal({ "current_weeks" => 1, "longest_weeks" => 1, "this_week" => true }, response_json.dig("data", "streak"))
 
     get api_v1_badges_path, headers: headers, as: :json
     first_cup = response_json["data"].find { |badge| badge["slug"] == "first-check-in" }
     assert_equal 1, first_cup["progress"]
     assert first_cup["earned_at"].present?
+    assert_equal "bronze", first_cup["tier"]
+    assert_equal "verified_check_ins", Badge.find_by(slug: response_json["data"].first["slug"]).criterion, "cups lead the shelf"
   end
 
   test "leaderboards are public and validate scope" do

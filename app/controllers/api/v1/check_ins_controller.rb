@@ -25,7 +25,7 @@ class Api::V1::CheckInsController < Api::V1::BaseController
     if check_in.rejected?
       render_error(:unprocessable_entity, check_in.flag_reason, rejection_message(check_in.flag_reason))
     else
-      render_data(check_in_json(check_in), status: :created)
+      render_data(check_in_json(check_in, ceremony: true), status: :created)
     end
   end
 

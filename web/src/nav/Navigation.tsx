@@ -1,6 +1,6 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from "react";
 import type { ShareTarget } from "@/api/client";
-import type { CheckIn, OpaqueId } from "@/api/types";
+import type { CheckInResult, OpaqueId } from "@/api/types";
 import type { ShopFilter } from "@/data/nearby";
 
 export type Tab = "explore" | "passport" | "stats";
@@ -9,7 +9,7 @@ export type Route =
   | { name: Tab }
   | { name: "shop"; id: OpaqueId }
   | { name: "checkin"; shopId?: OpaqueId }
-  | { name: "ceremony"; checkIn: CheckIn; wasAwake: boolean }
+  | { name: "ceremony"; checkIn: CheckInResult; wasAwake: boolean }
   | { name: "share"; target: ShareTarget; shopName: string }
   | { name: "studio" }
   | { name: "profile" }
