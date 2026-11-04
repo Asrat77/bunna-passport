@@ -41,6 +41,12 @@ class Telegram::Bot
     call("sendMessage", params)
   end
 
+  def edit_message_text(chat_id:, message_id:, text:, reply_markup: nil)
+    params = { chat_id: chat_id, message_id: message_id, text: text, parse_mode: "HTML", link_preview_options: { is_disabled: true } }
+    params[:reply_markup] = reply_markup if reply_markup
+    call("editMessageText", params)
+  end
+
   def answer_callback_query(callback_query_id:, text: nil)
     call("answerCallbackQuery", { callback_query_id: callback_query_id, text: text }.compact)
   end
