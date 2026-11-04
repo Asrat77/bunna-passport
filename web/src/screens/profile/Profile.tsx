@@ -33,6 +33,7 @@ export function Profile() {
       <header className="profile__header">
         <Doodle
           seed={doodle.seed}
+          traits={doodle.traits}
           mood={doodle.awake ? "awake" : "sleepy"}
           size={96}
           label={t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}

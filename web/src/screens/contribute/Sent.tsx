@@ -21,7 +21,7 @@ export function Sent({ body }: { body: Key }) {
     <main className="screen screen--glow contribute-sent">
       <BackControl onBack={back} label={t("common.back")} />
       <div className="contribute-sent__doodle">
-        <Doodle seed={doodle.seed} mood="awake" size={96} decorative />
+        <Doodle seed={doodle.seed} traits={doodle.traits} mood="awake" size={96} decorative />
       </div>
       <Headline first={t("sent.titleA")} second={t("sent.titleB")} size={30} align="center" />
       <p className="contribute-sent__body">{t(body)}</p>

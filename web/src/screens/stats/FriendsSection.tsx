@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import type { FeedItem, Friend } from "@/api/types";
-import { doodleSeedFor } from "@/data/me";
+import { doodleSeedFor, doodleTraitsFor } from "@/data/me";
 import { useFeed, useFriends, useInvite, usePassport } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
@@ -276,5 +276,5 @@ export function FriendDoodle({ friend, size }: { friend: Friend; size: number })
   const awake = friend.had_cup_today === true;
   const label =
     friend.had_cup_today === null ? t("doodle.other", { handle }) : t(awake ? "doodle.otherAwake" : "doodle.otherSleepy", { handle });
-  return <Doodle seed={doodleSeedFor(friend)} mood={awake ? "awake" : "sleepy"} size={size} label={label} />;
+  return <Doodle seed={doodleSeedFor(friend)} traits={doodleTraitsFor(friend)} mood={awake ? "awake" : "sleepy"} size={size} label={label} />;
 }
