@@ -4,7 +4,8 @@ class Api::V1::ProfilesController < Api::V1::BaseController
   end
 
   def update
-    Current.user.update!(params.expect(profile: %i[ avatar_seed shares_cup_status shares_visits daily_nudges ]))
+    changes = params.expect(profile: [ :avatar_seed, :shares_cup_status, :shares_visits, :daily_nudges, avatar_traits: {} ]).to_h
+    Current.user.update!(changes)
     render_data(user_json(Current.user))
   end
 end

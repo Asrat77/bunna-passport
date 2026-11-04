@@ -76,8 +76,26 @@ class Api::V1::ActivityReadsTest < ActionDispatch::IntegrationTest
     assert_equal false, response_json.dig("data", "daily_nudges")
   end
 
+  test "the profile picture editor saves the face's parts" do
+    user = create_user(created_at: 2.days.ago)
+    headers = bearer_headers(user)
+    traits = { skin: "mocha", hair: "locs", hair_color: "black", glasses: "shades", headphones: "headphones" }
+
+    get api_v1_profile_path, headers: headers, as: :json
+    assert_nil response_json.dig("data", "avatar_traits")
+
+    patch api_v1_profile_path, params: { profile: { avatar_seed: "42-3", avatar_traits: traits } }, headers: headers, as: :json
+    assert_response :success
+    assert_equal traits.stringify_keys, response_json.dig("data", "avatar_traits")
+    assert_equal traits.stringify_keys, user.reload.avatar_traits
+
+    patch api_v1_profile_path, params: { profile: { avatar_traits: { hair: "mohawk" } } }, headers: headers, as: :json
+    assert_response :unprocessable_entity
+    assert_equal traits.stringify_keys, user.reload.avatar_traits
+  end
+
   test "boards show the doodle and hide cup status for anyone who opted out" do
-    sharing = create_user(avatar_seed: "sharing")
+    sharing = create_user(avatar_seed: "sharing", avatar_traits: { "hair" => "afro" })
     private_drinker = create_user(shares_cup_status: false)
     [ sharing, private_drinker ].each_with_index do |user, index|
       CheckIn.record!(user: user, shop: shops(:bole), idempotency_key: "board-#{index}",
@@ -90,6 +108,7 @@ class Api::V1::ActivityReadsTest < ActionDispatch::IntegrationTest
 
     rows = response_json["data"].pluck("user")
     assert_equal [ "sharing", nil ], rows.pluck("avatar_seed")
+    assert_equal [ { "hair" => "afro" }, nil ], rows.pluck("avatar_traits")
     assert_equal [ true, nil ], rows.pluck("had_cup_today")
   end
 end

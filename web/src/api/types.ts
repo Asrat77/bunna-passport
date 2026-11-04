@@ -7,6 +7,7 @@
  * wins and this file is wrong.
  */
 
+import type { AvatarTraits } from "@/design/doodle/traits";
 import type { StampLevel } from "@/design/seal/levels";
 
 export type OpaqueId = number;
@@ -27,6 +28,8 @@ export type User = {
   stamps_count: number;
   home_neighborhood_id: OpaqueId | null;
   avatar_seed: string | null;
+  /** Profile picture parts chosen in the editor; null until someone edits theirs. */
+  avatar_traits: Partial<AvatarTraits> | null;
   /** Server-computed against the 04:00 Addis coffee day. */
   had_cup_today: boolean;
   shares_cup_status: boolean;
@@ -280,6 +283,7 @@ export type LeaderboardEntry = {
     handle: string;
     display_name: string;
     avatar_seed: string | null;
+    avatar_traits: Partial<AvatarTraits> | null;
     /** null when that person has turned off sharing their coffee status. */
     had_cup_today: boolean | null;
   };
@@ -358,6 +362,7 @@ export type Friend = {
   handle: string;
   display_name: string;
   avatar_seed: string | null;
+  avatar_traits: Partial<AvatarTraits> | null;
   /** null when they've turned off sharing it. */
   had_cup_today: boolean | null;
   stamps_count: number;
