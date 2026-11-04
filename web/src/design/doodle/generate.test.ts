@@ -10,8 +10,10 @@ describe("generateDoodle", () => {
   for (const [key, expected] of Object.entries(canvas)) {
     const [seed, mood] = key.split("|") as [string, Mood];
     it(`draws ${seed} ${mood} exactly as the canvas does`, () => {
-      const { hash: _hash, ...paths } = generateDoodle(seed, mood);
-      expect(paths).toEqual(expected);
+      // The canvas predates editable parts, so only its own layers are compared.
+      const paths = generateDoodle(seed, mood) as unknown as Record<string, unknown>;
+      const drawn = Object.fromEntries(Object.keys(expected).map((part) => [part, paths[part]]));
+      expect(drawn).toEqual(expected);
     });
   }
 
