@@ -264,11 +264,33 @@ The confirmation flag is intentionally required.
 ## Operational checks
 
 - Inspect JSON logs by `request_id`.
-- Alert on `/up` failures and growing Solid Queue failures.
+- `/up`, unhandled errors and disk space alert as described under Alerts.
 - Watch flagged-to-verified check-in ratio, moderation queue age, stale shop
   hours, and backup age.
 - Run `RefreshLeaderboardsJob.perform_now("week")` as a post-deploy job smoke
   check; it is safe and idempotent.
+
+## Alerts
+
+Production reports its own problems to Telegram through the bot
+(`Ops::Alert`). Three things raise an alert:
+
+- an unhandled exception in a request, or in a job once its retries are
+  used up (`Ops::ErrorSubscriber`, subscribed in production only);
+- a crash in the Mini App, which posts to `POST /api/v1/client_errors`
+  (a render crash also shows a "Reopen" screen instead of a blank app);
+- the storage volume passing 85% full, checked hourly by
+  `CheckHostHealthJob`.
+
+Alerts go to the Telegram ids in `BUNNA_ALERT_CHAT_IDS` (comma separated) when
+it is set at deploy time, and otherwise to every moderator account that has
+started the bot. Each distinct error is announced at most once an hour; the
+disk warning once every 12 hours. Nothing is sent when `TELEGRAM_BOT_TOKEN` is
+unset.
+
+The app cannot report that it is down. For that, point a free external monitor
+(UptimeRobot, Better Stack or healthchecks.io) at
+`https://<BUNNA_APP_HOST>/up` every 5 minutes, alerting by email or Telegram.
 
 ## Telegram Mini App
 

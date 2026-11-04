@@ -23,10 +23,12 @@ import { Welcome } from "./screens/Welcome";
 import { AddCafe } from "./screens/contribute/AddCafe";
 import { ReportCafe } from "./screens/contribute/ReportCafe";
 import { SuggestEdit } from "./screens/contribute/SuggestEdit";
+import { setErrorScreen } from "./lib/errorReporting";
 import { takeLaunchInvite } from "./lib/invite";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
 import { SchemeContext, useColorScheme } from "./telegram/theme";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { Headline } from "./ui/Headline";
 import "./app.css";
 
@@ -48,11 +50,13 @@ export function App() {
     <SchemeContext value={scheme}>
       <QueryClientProvider client={queryClient}>
         <I18nProvider>
-          <AuthProvider>
-            <LocationProvider>
-              <Gate />
-            </LocationProvider>
-          </AuthProvider>
+          <ErrorBoundary fallback={<Crashed />}>
+            <AuthProvider>
+              <LocationProvider>
+                <Gate />
+              </LocationProvider>
+            </AuthProvider>
+          </ErrorBoundary>
         </I18nProvider>
       </QueryClientProvider>
     </SchemeContext>
@@ -100,6 +104,7 @@ function Screens() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setErrorScreen(route.name);
   }, [route]);
 
   switch (route.name) {
@@ -159,6 +164,21 @@ function LaunchFailed() {
       <Headline first={t("launch.failed")} second={t("launch.failedB")} size={30} align="center" />
       <p className="launch__text">{t("launch.failedBody")}</p>
       <PrimaryAction text={t("launch.retry")} onClick={retry} />
+    </main>
+  );
+}
+
+/** What a render crash leaves on screen; reopening starts the app fresh. */
+function Crashed() {
+  const { t } = useI18n();
+  return (
+    <main className="screen screen--glow launch">
+      <div className="launch__doodle">
+        <Doodle seed="bunna" mood="sleepy" size={96} decorative />
+      </div>
+      <Headline first={t("crash.title")} second={t("crash.titleB")} size={30} align="center" />
+      <p className="launch__text">{t("crash.body")}</p>
+      <PrimaryAction text={t("crash.reload")} onClick={() => window.location.reload()} />
     </main>
   );
 }
