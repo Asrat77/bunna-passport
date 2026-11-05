@@ -1014,6 +1014,46 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /invite/message:
+    post:
+      tags: [Friends]
+      operationId: prepareInviteMessage
+      summary: The invite as a prepared Telegram message with an open button
+      description: >
+        Saves a prepared inline message (Bot API savePreparedInlineMessage)
+        holding the text and a button that opens the caller's invite link,
+        for the Mini App's shareMessage. prepared_message_id is null off
+        Telegram, without a bot, or when the Bot API fails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 500 }
+                button: { type: string, maxLength: 64 }
+      responses:
+        "200":
+          description: The invite link and the prepared message, if any
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [token, url, friends_count, prepared_message_id]
+                    properties:
+                      token: { type: string }
+                      url: { type: string, format: uri }
+                      friends_count: { type: integer, minimum: 0 }
+                      prepared_message_id: { type: string, nullable: true }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /invites/{token}:
     get:
       tags: [Friends]
@@ -1035,11 +1075,12 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [inviter, own, already_friends]
+                    required: [inviter, own, already_friends, new_here]
                     properties:
                       inviter: { $ref: "#/components/schemas/Friend" }
                       own: { type: boolean, description: The caller's own link }
                       already_friends: { type: boolean }
+                      new_here: { type: boolean, description: The caller has never checked in, so the app explains itself }
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
