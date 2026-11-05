@@ -1,4 +1,4 @@
-import { retrieveLaunchParams, shareURL } from "@telegram-apps/sdk-react";
+import { retrieveLaunchParams, shareMessage, shareURL } from "@telegram-apps/sdk-react";
 
 const START_PREFIX = "invite_";
 const TOKEN = /^[A-Za-z0-9]{8,64}$/;
@@ -38,10 +38,27 @@ export function takeLaunchInvite(): string | null {
 }
 
 /**
- * Sends the invite link on its own, for someone with no stamp to put on a
- * card yet: Telegram's share sheet, the phone's, or the clipboard.
+ * Sends the invite on its own, for someone with no stamp to put on a card
+ * yet. Inside Telegram that's the prepared message, whose button opens the
+ * app; otherwise Telegram's link sheet, the phone's, or the clipboard.
  */
-export async function shareInviteLink(url: string, text: string): Promise<"shared" | "copied" | null> {
+export async function shareInviteLink(
+  url: string,
+  text: string,
+  preparedMessageId?: string | null,
+): Promise<"shared" | "copied" | null> {
+  if (preparedMessageId) {
+    const [called, sending] = shareMessage.ifAvailable(preparedMessageId);
+    if (called) {
+      try {
+        await sending;
+        return "shared";
+      } catch {
+        // Closed the chat picker, or the message expired.
+        return null;
+      }
+    }
+  }
   const [shared] = shareURL.ifAvailable(url, text);
   if (shared) return "shared";
   if (navigator.share) {
