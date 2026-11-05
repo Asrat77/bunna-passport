@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n/context";
 import { distanceMeters, formatMeters } from "@/lib/distance";
 import { openStatus } from "@/lib/hours";
 import { openInMaps } from "@/lib/maps";
-import { PRICE_GLYPHS } from "@/lib/price";
+import { PRICE_LABEL_KEYS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
@@ -125,7 +125,7 @@ function ShopBody({
 
       <StatStrip
         stats={[
-          { value: shop.price_band ? PRICE_GLYPHS[shop.price_band] : t("shop.priceUnknown"), label: t("shop.price") },
+          { value: shop.price_band ? t(PRICE_LABEL_KEYS[shop.price_band]) : t("shop.priceUnknown"), label: t("shop.price") },
           { value: stamp?.check_ins_count ?? 0, label: t("shop.yourCups") },
           { value: `${areaStamped}/${areaShops.length}`, label: t("shop.areaPage", { area }) },
         ]}
