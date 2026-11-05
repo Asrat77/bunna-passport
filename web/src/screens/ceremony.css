@@ -79,6 +79,11 @@
   animation: fade-up 360ms ease-out 640ms both;
 }
 
+/* "How was it?" arrives last, once the stamp and any badges have landed. */
+.ceremony__review {
+  animation: fade-up 360ms ease-out 1300ms both;
+}
+
 /* The badge rides after the stamp (DESIGN.md §6.3): a card slide-in once it has landed. */
 .ceremony__badge {
   animation: badge-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 1100ms both;

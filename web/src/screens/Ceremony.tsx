@@ -18,6 +18,7 @@ import { hapticBadge, hapticSuccess } from "@/telegram/haptics";
 import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
+import { ReviewComposer } from "./review/ReviewComposer";
 import "./ceremony.css";
 
 /** Skippable from 0.8 s; everything has landed by about 1.6 s (DESIGN.md §6.2). */
@@ -112,6 +113,13 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
 
   const badgeCards = badges.length > 0 ? <BadgeCards badges={badges} /> : null;
 
+  // Asked while the visit is fresh: one tap on a cup is a whole review.
+  const reviewCard = checkIn.rating ? null : (
+    <div className="ceremony__review">
+      <ReviewComposer visit={checkIn} />
+    </div>
+  );
+
   if (!checkIn.stamp_earned) {
     const levelName = levelUp ? t(`level.${levelUp}`) : "";
     return (
@@ -147,6 +155,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
         ) : null}
         {doodleCard}
         {badgeCards}
+        {reviewCard}
         <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
       </main>
     );
@@ -226,6 +235,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
 
       {doodleCard}
       {badgeCards}
+      {reviewCard}
 
       {phase === "pressing" && canSkip ? <span className="visually-hidden">{t("ceremony.tapToSkip")}</span> : null}
       <SecondaryAction text={t("ceremony.share")} onClick={share} />
