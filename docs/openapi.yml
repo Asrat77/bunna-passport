@@ -1021,7 +1021,8 @@ paths:
       summary: The invite as a prepared Telegram message with an open button
       description: >
         Saves a prepared inline message (Bot API savePreparedInlineMessage)
-        holding the text and a button that opens the caller's invite link,
+        holding the caller's invite card (GET /invite_cards/{token}.png), the
+        text as its caption, and a button that opens the caller's invite link,
         for the Mini App's shareMessage. prepared_message_id is null off
         Telegram, without a bot, or when the Bot API fails.
       requestBody:

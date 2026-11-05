@@ -73,6 +73,8 @@ Rails.application.routes.draw do
   # Rendered share cards, fetched by Telegram and by phones saving the image.
   # Public on purpose: the unguessable token is the only key.
   get "cards/:token", to: "share_images#show", as: :share_image, constraints: { format: "png" }
+  # The picture on a friend invite sent to a chat, keyed by the invite token.
+  get "invite_cards/:token", to: "invite_cards#show", as: :invite_card, constraints: { format: "png" }
 
   # The bot's webhook. Telegram proves itself with a secret header.
   post "telegram/webhook", to: "telegram/webhooks#create", as: :telegram_webhook
