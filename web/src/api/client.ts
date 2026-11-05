@@ -13,6 +13,7 @@ import type {
   FeedItem,
   Friend,
   Invite,
+  InviteMessage,
   InvitePreview,
   LeaderboardEntry,
   LeaderboardMetric,
@@ -327,6 +328,11 @@ export const api = {
   },
 
   /** Retires the current link for a new one; friends stay friends. */
+  /** The invite as a prepared Telegram message with an open button, when the sender is on Telegram. */
+  prepareInviteMessage(text: string, button: string) {
+    return request<InviteMessage>("/invite/message", { method: "POST", body: { text, button } });
+  },
+
   rotateInvite() {
     return request<Invite>("/invite", { method: "DELETE" });
   },

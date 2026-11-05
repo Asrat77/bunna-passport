@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       get "feed", to: "feeds#show", as: :feed
       get "invite", to: "invites#show", as: :invite
       delete "invite", to: "invites#destroy"
+      post "invite/message", to: "invites#message", as: :invite_message
       get "invites/:token", to: "invite_previews#show", as: :invite_preview
       resources :leaderboards, only: :index
       get "stats/me", to: "personal_stats#show", as: :personal_stats

@@ -372,6 +372,9 @@ export type Friend = {
 /** GET /invite. */
 export type Invite = { token: string; url: string; friends_count: number };
 
+/** POST /invite/message: the invite as a prepared Telegram message, if one could be made. */
+export type InviteMessage = Invite & { prepared_message_id: string | null };
+
 /** GET /invites/{token}: who sent the link that was just opened. */
 export type InvitePreview = {
   inviter: Friend;

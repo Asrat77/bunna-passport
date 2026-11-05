@@ -1,5 +1,5 @@
 import { phArrowClockwise, phUserPlus } from "@/ui/icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import type { FeedItem, Friend } from "@/api/types";
@@ -82,6 +82,18 @@ function InviteCard() {
   const queryClient = useQueryClient();
   const { data: passport } = usePassport();
   const invite = useInvite();
+  const inviteText = t("friends.inviteText");
+  const inviteButton = t("friends.inviteButton");
+  // Made ahead of the tap, like share cards, so the share sheet opens at once.
+  // A prepared message carries a native "Open" button; without one the link
+  // goes in the text instead.
+  const prepared = useQuery({
+    queryKey: ["inviteMessage", invite.data?.token, inviteText, inviteButton],
+    queryFn: async () => (await api.prepareInviteMessage(inviteText, inviteButton)).data.prepared_message_id,
+    enabled: Boolean(invite.data),
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
   const [note, setNote] = useState<string | null>(null);
   const latest = passport?.stamps[0];
 
@@ -95,7 +107,7 @@ function InviteCard() {
 
   async function sendLink() {
     if (!invite.data) return;
-    const result = await shareInviteLink(invite.data.url, t("friends.inviteText"));
+    const result = await shareInviteLink(invite.data.url, inviteText, prepared.data ?? null);
     if (result) hapticSuccess();
     setNote(result === "copied" ? t("friends.copied") : null);
   }
