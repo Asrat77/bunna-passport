@@ -5,11 +5,14 @@ class Telegram::BotTest < ActiveSupport::TestCase
   class FakeHTTP
     attr_reader :calls
 
-    def initialize = @calls = []
+    def initialize(result: true)
+      @calls = []
+      @result = result
+    end
 
     def post(path, body, _headers)
       @calls << [ path.split("/").last, JSON.parse(body) ]
-      Struct.new(:body).new({ ok: true, result: true }.to_json)
+      Struct.new(:body).new({ ok: true, result: @result }.to_json)
     end
   end
 
@@ -32,6 +35,23 @@ class Telegram::BotTest < ActiveSupport::TestCase
     assert_equal "s3cret", http.calls[0].last["secret_token"]
     assert_equal "start", http.calls[1].last.dig("commands", 0, "command")
     assert_equal "https://bunna.example/app", http.calls[2].last.dig("menu_button", "web_app", "url")
+  ensure
+    Net::HTTP.singleton_class.alias_method :start, :original_start
+    Net::HTTP.singleton_class.remove_method :original_start
+  end
+
+  test "prepares an inline message and returns its id" do
+    http = FakeHTTP.new(result: { id: "prepared-42" })
+    Net::HTTP.singleton_class.alias_method :original_start, :start
+    Net::HTTP.define_singleton_method(:start) { |*, **, &block| block.call(http) }
+
+    id = Telegram::Bot.new(token: "123:test").save_prepared_inline_message(user_id: 7, result: { type: "photo", id: "x" })
+
+    assert_equal "prepared-42", id
+    method, body = http.calls.first
+    assert_equal "savePreparedInlineMessage", method
+    assert_equal 7, body["user_id"]
+    assert_equal "photo", body.dig("result", "type")
   ensure
     Net::HTTP.singleton_class.alias_method :start, :original_start
     Net::HTTP.singleton_class.remove_method :original_start

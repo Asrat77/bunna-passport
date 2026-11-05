@@ -25,14 +25,16 @@ class Telegram::Bot
   # Stores a message the user can then send to any chat with the Mini App's
   # shareMessage. Returns the prepared message id. Bot API 8.0.
   def save_prepared_inline_message(user_id:, result:)
-    call("savePreparedInlineMessage",
+    # The params are a hash in braces: as bare keywords Ruby would read them
+    # as call's own keyword arguments and raise ArgumentError.
+    call("savePreparedInlineMessage", {
       user_id: user_id,
       result: result,
       allow_user_chats: true,
       allow_bot_chats: true,
       allow_group_chats: true,
       allow_channel_chats: true
-    ).fetch("id")
+    }).fetch("id")
   end
 
   def send_message(chat_id:, text:, reply_markup: nil)
