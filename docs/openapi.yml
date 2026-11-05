@@ -311,15 +311,27 @@ paths:
       operationId: listShopReviews
       summary: What visitors said about a shop
       description: >
-        Reviews are not a separate record. Each one is the rating or note left
-        on a check-in the server verified, so only people who were physically
-        at the shop can appear here. Rejected and flagged visits never surface.
+        Reviews are not a separate record. Each one is the rating, note or tags
+        left on a check-in the server verified, so only people who were
+        physically at the shop can appear here. Rejected and flagged visits
+        never surface, and neither do reviews a moderator hid after a report.
+        Newest first, twenty a page. The score counts each person once, by
+        their latest rating; the summary covers the whole shop whatever the
+        filter.
       security: []
       parameters:
         - $ref: "#/components/parameters/ShopId"
+        - name: cursor
+          in: query
+          description: The next_cursor from the previous page.
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+        - name: filter
+          in: query
+          description: notes keeps reviews with words; photos keeps reviews with a photo.
+          schema: { type: string, enum: [notes, photos] }
       responses:
         "200":
-          description: Verified visits that carried a rating or a note
+          description: Verified visits that carried a rating, a note or tags
           content:
             application/json:
               schema:
@@ -332,14 +344,40 @@ paths:
                       $ref: "#/components/schemas/Review"
                   meta:
                     type: object
-                    required: [rating_average, rating_count, total]
+                    required: [rating_average, rating_count, distribution, top_tags, typical_prices, total, next_cursor]
                     properties:
                       rating_average:
                         type: number
                         format: float
                         nullable: true
-                      rating_count: { type: integer }
-                      total: { type: integer }
+                      rating_count: { type: integer, description: People who rated, each counted once. }
+                      distribution:
+                        type: object
+                        description: How many people gave each score, keyed "1" to "5".
+                        additionalProperties: { type: integer }
+                      top_tags:
+                        type: array
+                        items:
+                          type: object
+                          required: [tag, count]
+                          properties:
+                            tag: { $ref: "#/components/schemas/ReviewTag" }
+                            count: { type: integer }
+                      typical_prices:
+                        type: array
+                        description: Median price paid per drink over the last 180 days.
+                        items:
+                          type: object
+                          required: [drink, median_birr, count]
+                          properties:
+                            drink: { $ref: "#/components/schemas/Drink" }
+                            median_birr: { type: integer }
+                            count: { type: integer }
+                      total: { type: integer, description: Reviews matching the filter. }
+                      next_cursor:
+                        oneOf:
+                          - $ref: "#/components/schemas/OpaqueId"
+                          - type: "null"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -559,11 +597,10 @@ paths:
       operationId: updateCheckIn
       summary: Say something about a visit already recorded
       description: >
-        Fills in the rating, note and drink for a check-in the caller made.
-        This finishes a check-in rather than editing a review: it is allowed
-        for 24 hours after the visit, refused on a rejected one, and cannot
-        revise where or when the visit happened. Someone else's check-in is
-        not found.
+        Fills in or changes the rating, note, drink, tags and price for a
+        check-in the caller made. Allowed for seven days after the visit,
+        refused on a rejected one, and never revises where or when the visit
+        happened. Someone else's check-in is not found.
       parameters:
         - $ref: "#/components/parameters/Id"
       requestBody:
@@ -579,7 +616,12 @@ paths:
                   properties:
                     rating: { type: integer, minimum: 1, maximum: 5 }
                     note: { type: string, maxLength: 280 }
-                    drink: { type: string }
+                    drink: { $ref: "#/components/schemas/Drink" }
+                    price_birr: { type: integer, minimum: 1, maximum: 5000 }
+                    tags:
+                      type: array
+                      maxItems: 4
+                      items: { $ref: "#/components/schemas/ReviewTag" }
       responses:
         "200":
           description: The visit, with what was said about it
@@ -1811,25 +1853,47 @@ components:
       unevaluatedProperties: false
     Review:
       type: object
-      required: [id, user, rating, note, drink, occurred_at]
+      required: [id, user, rating, note, drink, tags, price_birr, photo, occurred_at]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         user:
           type: object
-          required: [id, handle, display_name]
+          required: [id, handle, display_name, avatar_seed, avatar_traits]
           properties:
             id: { $ref: "#/components/schemas/OpaqueId" }
             handle: { type: string }
             display_name: { type: string }
+            avatar_seed: { type: string, nullable: true }
+            avatar_traits: { type: object, nullable: true }
         rating:
           type: integer
           minimum: 1
           maximum: 5
           nullable: true
         note: { type: string, nullable: true }
-        drink: { type: string, nullable: true }
+        drink:
+          type: string
+          nullable: true
+          description: A Drink code, or free text on visits from before codes.
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/ReviewTag" }
+        price_birr: { type: integer, nullable: true }
+        photo:
+          type: object
+          nullable: true
+          required: [thumb, full]
+          properties:
+            thumb: { type: string, format: uri }
+            full: { type: string, format: uri }
         occurred_at: { type: string, format: date-time }
       unevaluatedProperties: false
+    ReviewTag:
+      type: string
+      enum: [great_coffee, cozy, friendly_staff, quick_service, good_for_work, good_value, quiet, lively]
+    Drink:
+      type: string
+      description: One of macchiato, buna, spris, espresso, latte. Older clients may send free text.
     Contribution:
       type: object
       required: [id, type, status, confirmation_count, created_at]
@@ -1868,9 +1932,14 @@ components:
         longitude: { type: number, minimum: -180, maximum: 180 }
         accuracy_meters: { type: integer, minimum: 0 }
         mock_location: { type: boolean, default: false }
-        drink: { type: string }
+        drink: { $ref: "#/components/schemas/Drink" }
         rating: { type: integer, minimum: 1, maximum: 5 }
         note: { type: string, maxLength: 280 }
+        price_birr: { type: integer, minimum: 1, maximum: 5000, description: What the visitor paid for the drink. }
+        tags:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ReviewTag" }
         photo:
           type: string
           format: binary
@@ -1917,6 +1986,13 @@ components:
         note:
           oneOf:
             - type: string
+            - type: "null"
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/ReviewTag" }
+        price_birr:
+          oneOf:
+            - { type: integer, minimum: 1, maximum: 5000 }
             - type: "null"
         occurred_at: { type: string, format: date-time }
     CheckInResult:

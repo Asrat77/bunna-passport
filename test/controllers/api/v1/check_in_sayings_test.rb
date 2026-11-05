@@ -32,11 +32,50 @@ class Api::V1::CheckInSayingsTest < ActionDispatch::IntegrationTest
     assert_nil check_in.reload.rating
   end
 
-  test "the window closes after a day" do
+  test "tags and a price can be added with the rating" do
+    user = create_user(created_at: 2.days.ago)
+    check_in = visit(user)
+
+    patch api_v1_check_in_path(check_in),
+      params: { check_in: { rating: 5, drink: "macchiato", price_birr: 45, tags: %w[ cozy great_coffee ] } },
+      headers: bearer_headers(user), as: :json
+
+    assert_response :success
+    assert_equal %w[ cozy great_coffee ], response_json.dig("data", "tags")
+    assert_equal 45, response_json.dig("data", "price_birr")
+  end
+
+  test "unknown tags and impossible prices are refused" do
+    user = create_user(created_at: 2.days.ago)
+    check_in = visit(user)
+
+    patch api_v1_check_in_path(check_in), params: { check_in: { tags: %w[ amazing ] } }, headers: bearer_headers(user), as: :json
+    assert_response :unprocessable_entity
+
+    patch api_v1_check_in_path(check_in), params: { check_in: { price_birr: 0 } }, headers: bearer_headers(user), as: :json
+    assert_response :unprocessable_entity
+    assert_empty check_in.reload.tags
+  end
+
+  test "a review can still be added days later" do
     user = create_user(created_at: 3.days.ago)
     check_in = visit(user)
 
-    travel_to check_in.occurred_at + 25.hours do
+    travel_to check_in.occurred_at + 3.days do
+      patch api_v1_check_in_path(check_in),
+        params: { check_in: { rating: 4 } },
+        headers: bearer_headers(user), as: :json
+    end
+
+    assert_response :success
+    assert_equal 4, check_in.reload.rating
+  end
+
+  test "the window closes after a week" do
+    user = create_user(created_at: 3.days.ago)
+    check_in = visit(user)
+
+    travel_to check_in.occurred_at + 8.days do
       patch api_v1_check_in_path(check_in),
         params: { check_in: { rating: 5 } },
         headers: bearer_headers(user), as: :json

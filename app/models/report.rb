@@ -30,6 +30,8 @@ class Report < ApplicationRecord
     transaction do
       update!(status: :upheld, reviewed_by: by, reviewed_at: Time.current)
       reported_user&.update!(trust_level: :newcomer)
+      # A reported review comes down; the visit and its stamp still count.
+      reportable.update!(review_hidden_at: Time.current) if reportable.is_a?(CheckIn)
     end
   end
 
@@ -44,7 +46,11 @@ class Report < ApplicationRecord
     raise NotAuthorized unless by&.moderator?
     raise AlreadyPending if pending?
 
-    update!(status: :pending, reviewed_by: nil, reviewed_at: nil)
+    transaction do
+      was_upheld = upheld?
+      update!(status: :pending, reviewed_by: nil, reviewed_at: nil)
+      restore_review if was_upheld
+    end
   end
 
   def reported_user
@@ -60,4 +66,13 @@ class Report < ApplicationRecord
   class NotAuthorized < StandardError; end
   class AlreadyReviewed < StandardError; end
   class AlreadyPending < StandardError; end
+
+  private
+    # Back up only if no other upheld report still holds it down.
+    def restore_review
+      return unless reportable.is_a?(CheckIn)
+      return if Report.upheld.where(reportable: reportable).where.not(id: id).exists?
+
+      reportable.update!(review_hidden_at: nil)
+    end
 end

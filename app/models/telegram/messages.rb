@@ -31,6 +31,9 @@ module Telegram::Messages
   NUDGES_OFF = "nudges:off".freeze
   NUDGES_ON = "nudges:on".freeze
 
+  # Rating buttons carry "rate:<check-in id>:<cups>"; see Telegram::RatingCallback.
+  RATING_PREFIX = "rate:".freeze
+
   # Moderation buttons carry "mod:<action>:<id>"; see Telegram::ModerationCallback.
   MODERATION_PREFIX = "mod:".freeze
 
@@ -91,6 +94,27 @@ module Telegram::Messages
       #{h(badge.description)} That's #{earned} of #{Badge.count} badges.
     TEXT
     { text: text.strip, reply_markup: keyboard([ app_button("See your badges") ]) }
+  end
+
+  # A while after a visit nobody rated: one tap on a cup saves the rating.
+  def review_prompt(check_in)
+    text = <<~TEXT
+      How was <b>#{h(check_in.shop.name)}</b>? ☕
+
+      Tap a cup to rate your visit. It helps the next person pick where to go.
+    TEXT
+    cups = (1..5).map { |n| callback_button("#{n} ☕", "#{RATING_PREFIX}#{check_in.id}:#{n}") }
+    { text: text.strip, reply_markup: keyboard(cups, [ app_button("Add a note or a photo") ]) }
+  end
+
+  # The prompt, redrawn once it is answered, so the buttons can't be tapped again.
+  def review_thanks(check_in)
+    text = <<~TEXT
+      You gave <b>#{h(check_in.shop.name)}</b> #{"☕" * check_in.rating.to_i} (#{check_in.rating}/5). Thanks!
+
+      Want to say more? Open the app to add a note, tags or what you paid.
+    TEXT
+    { text: text.strip, reply_markup: keyboard([ app_button("Open Bunna Passport") ]) }
   end
 
   def nudges_changed(user)
