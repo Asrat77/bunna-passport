@@ -35,6 +35,7 @@ class Telegram::Update
 
     def handle_callback(callback)
       return Telegram::ModerationCallback.new(callback, bot: @bot).handle if callback["data"].to_s.start_with?(Telegram::Messages::MODERATION_PREFIX)
+      return Telegram::RatingCallback.new(callback, bot: @bot).handle if callback["data"].to_s.start_with?(Telegram::Messages::RATING_PREFIX)
 
       user = User.find_by(telegram_user_id: callback.dig("from", "id"))
       case callback["data"]

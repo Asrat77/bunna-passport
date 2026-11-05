@@ -23,6 +23,8 @@ import type {
   Passport,
   PersonalStats,
   Review,
+  ReviewFilter,
+  Saying,
   ShareCards,
   Shop,
   ShopDetail,
@@ -256,7 +258,8 @@ export const api = {
     }
     const form = new FormData();
     for (const [key, value] of Object.entries(input)) {
-      if (value !== undefined) form.append(`check_in[${key}]`, String(value));
+      if (Array.isArray(value)) for (const item of value) form.append(`check_in[${key}][]`, String(item));
+      else if (value !== undefined) form.append(`check_in[${key}]`, String(value));
     }
     form.append("check_in[photo]", photo);
     return request<CheckInResult>("/check_ins", { method: "POST", body: form, signal, timeoutMs: 60_000 });
@@ -374,10 +377,10 @@ export const api = {
   },
 
   /**
-   * Fills in what someone chose to say about a visit already recorded. Allowed
-   * for a day afterwards; cannot revise where or when the visit happened.
+   * Fills in or changes what someone said about a visit already recorded.
+   * Allowed for a week afterwards; cannot revise where or when it happened.
    */
-  updateCheckIn(id: OpaqueId, saying: { rating?: number; note?: string; drink?: string }) {
+  updateCheckIn(id: OpaqueId, saying: Saying) {
     return request<CheckIn>(`/check_ins/${id}`, {
       method: "PATCH",
       body: { check_in: saying },
@@ -398,9 +401,9 @@ export const api = {
     });
   },
 
-  /** What people said on visits the server verified. */
-  listReviews(shopId: OpaqueId) {
-    return request<Review[]>(`/shops/${shopId}/reviews`);
+  /** What people said on visits the server verified, newest first, a page at a time. */
+  listReviews(shopId: OpaqueId, options: { cursor?: OpaqueId; filter?: ReviewFilter } = {}) {
+    return request<Review[]>(`/shops/${shopId}/reviews`, { query: { cursor: options.cursor, filter: options.filter } });
   },
 
   suggestEdit(shopId: OpaqueId, proposed_changes: Record<string, unknown>) {

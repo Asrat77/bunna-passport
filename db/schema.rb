@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_090000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -85,6 +85,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_200000) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.datetime "verified_at"
+    t.integer "price_birr"
+    t.json "tags", default: [], null: false
+    t.datetime "review_prompted_at"
+    t.datetime "review_hidden_at"
     t.index ["shop_id", "occurred_at"], name: "index_check_ins_on_shop_id_and_occurred_at"
     t.index ["shop_id"], name: "index_check_ins_on_shop_id"
     t.index ["status", "occurred_at"], name: "index_check_ins_on_status_and_occurred_at"
@@ -95,6 +99,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_200000) do
     t.check_constraint "distance_meters >= 0", name: "check_ins_distance"
     t.check_constraint "latitude BETWEEN -90 AND 90", name: "check_ins_latitude"
     t.check_constraint "longitude BETWEEN -180 AND 180", name: "check_ins_longitude"
+    t.check_constraint "price_birr IS NULL OR price_birr BETWEEN 1 AND 5000", name: "check_ins_price_birr"
     t.check_constraint "rating IS NULL OR rating BETWEEN 1 AND 5", name: "check_ins_rating"
     t.check_constraint "status IN ('verified', 'flagged', 'rejected')", name: "check_ins_status"
   end

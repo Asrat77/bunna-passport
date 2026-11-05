@@ -158,6 +158,8 @@ module Api::V1::Rendering
         drink: check_in.drink,
         rating: check_in.rating,
         note: check_in.note,
+        tags: check_in.tags,
+        price_birr: check_in.price_birr,
         occurred_at: check_in.occurred_at.iso8601
       }
       return data unless ceremony

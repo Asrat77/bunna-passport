@@ -144,9 +144,27 @@ export type CheckInInput = {
   longitude: number;
   accuracy_meters: number;
   mock_location?: boolean;
+} & Saying;
+
+/** Quick things to say about a café, as codes each reader sees in their language. */
+export type ReviewTag =
+  | "great_coffee"
+  | "cozy"
+  | "friendly_staff"
+  | "quick_service"
+  | "good_for_work"
+  | "good_value"
+  | "quiet"
+  | "lively";
+
+/** What someone says about a visit; every part optional. */
+export type Saying = {
+  /** A drink code (macchiato, buna, …). Older visits may hold free text. */
   drink?: string;
   rating?: number;
   note?: string;
+  tags?: ReviewTag[];
+  price_birr?: number;
 };
 
 /**
@@ -167,6 +185,8 @@ export type CheckIn = {
   drink: string | null;
   rating: number | null;
   note: string | null;
+  tags: ReviewTag[];
+  price_birr: number | null;
   occurred_at: Timestamp;
   /** True when this visit created the user's first stamp at this shop. */
   stamp_earned: boolean;
@@ -212,17 +232,36 @@ export type ShareCards = {
 
 export type Review = {
   id: OpaqueId;
-  user: { id: OpaqueId; handle: string; display_name: string };
+  user: {
+    id: OpaqueId;
+    handle: string;
+    display_name: string;
+    avatar_seed: string | null;
+    avatar_traits: Partial<AvatarTraits> | null;
+  };
   rating: number | null;
   note: string | null;
   drink: string | null;
+  tags: ReviewTag[];
+  price_birr: number | null;
+  photo: { thumb: string; full: string } | null;
   occurred_at: Timestamp;
 };
 
+export type ReviewFilter = "notes" | "photos";
+
 export type ReviewSummary = {
+  /** Each person counted once, by their latest rating. */
   rating_average: number | null;
   rating_count: number;
+  /** People who gave each score, keyed "1" to "5". */
+  distribution: Record<string, number>;
+  top_tags: { tag: ReviewTag; count: number }[];
+  /** Median paid per drink over the last six months. */
+  typical_prices: { drink: string; median_birr: number; count: number }[];
+  /** Reviews matching the filter. */
   total: number;
+  next_cursor: OpaqueId | null;
 };
 
 export type PassportStamp = {

@@ -1,8 +1,4 @@
 class Api::V1::CheckInsController < Api::V1::BaseController
-  # How long after a visit its own rating and note can still be filled in. This
-  # finishes a check-in; it is not an editable review.
-  SAYING_WINDOW = 24.hours
-
   # Both limits need a name. Rails keys the counter on scope, name and client,
   # so two unnamed limits in one controller share a key and spend each other's
   # allowance.
@@ -29,8 +25,10 @@ class Api::V1::CheckInsController < Api::V1::BaseController
     end
   end
 
-  # Says something about a visit already recorded. The ceremony asks right
-  # after the stamp lands, which is the only moment anyone wants to answer.
+  # Says something about a visit already recorded, for a week afterwards
+  # (CheckIn::SAYING_WINDOW): the ceremony asks right after the stamp lands,
+  # and the café page and the bot ask again later. Where and when the visit
+  # happened is never editable.
   def update
     check_in = Current.user.check_ins.find(params[:id])
 
@@ -42,7 +40,7 @@ class Api::V1::CheckInsController < Api::V1::BaseController
       )
     end
 
-    if check_in.occurred_at < SAYING_WINDOW.ago
+    unless check_in.open_for_saying?
       return render_error(
         :unprocessable_entity,
         "saying_window_closed",
@@ -56,16 +54,16 @@ class Api::V1::CheckInsController < Api::V1::BaseController
 
   private
     def check_in_params
-      params.expect(check_in: %i[
-        shop_id idempotency_key latitude longitude accuracy_meters mock_location
-        drink rating note photo
+      params.expect(check_in: [
+        :shop_id, :idempotency_key, :latitude, :longitude, :accuracy_meters, :mock_location,
+        :drink, :rating, :note, :photo, :price_birr, { tags: [] }
       ])
     end
 
     # Deliberately narrower than check_in_params: where someone was and when is
     # settled by the visit, and nothing said afterwards may revise it.
     def saying_params
-      params.expect(check_in: %i[ drink rating note ])
+      params.expect(check_in: [ :drink, :rating, :note, :price_birr, tags: [] ])
     end
 
     def rejection_message(code)

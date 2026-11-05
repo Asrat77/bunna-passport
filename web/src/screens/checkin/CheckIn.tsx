@@ -6,6 +6,7 @@ import { ApiRequestError } from "@/api/errors";
 import type { RejectionCode } from "@/api/types";
 import { candidatesAround, newIdempotencyKey } from "@/data/checkin";
 import { useCatalog, useProfile } from "@/data/queries";
+import { DRINKS } from "@/data/reviews";
 import { useStampsByShop } from "@/data/stamps";
 import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
@@ -22,7 +23,6 @@ import { Icon } from "@/ui/Icon";
 import { Radar } from "./Radar";
 import "./checkin.css";
 
-const DRINKS = ["macchiato", "buna", "spris"] as const;
 
 type Outcome = { kind: "rejected"; code: RejectionCode; shop: string } | { kind: "failed" } | null;
 
@@ -84,7 +84,8 @@ export function CheckIn({ shopId }: { shopId?: number }) {
           latitude: fix.latitude,
           longitude: fix.longitude,
           accuracy_meters: fix.accuracyMeters,
-          drink: drink ? t(`checkin.drink.${drink as (typeof DRINKS)[number]}`) : undefined,
+          // A code, so each reader sees the drink in their own language.
+          drink: drink ?? undefined,
           rating: rating ?? undefined,
           note: note.trim() || undefined,
         },
@@ -207,7 +208,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
               <div className="chip-wrap" role="group" aria-label={t("checkin.drink")}>
                 {DRINKS.map((key) => (
                   <FilterChip key={key} selected={drink === key} onClick={() => setDrink((d) => (d === key ? null : key))}>
-                    {t(`checkin.drink.${key}`)}
+                    {t(`drink.${key}`)}
                   </FilterChip>
                 ))}
                 <AddChip pressed={noteOpen} onClick={() => setNoteOpen((open) => !open)} icon={<Icon path={phPlus} size={16} />}>
