@@ -31,6 +31,20 @@ class Shop < ApplicationRecord
     splurge: "splurge"
   }, validate: { allow_nil: true }
 
+  # Where each drink's price (birr) tips into the next band: up to the first
+  # number is budget, up to the second standard, up to the third premium, and
+  # anything above is a splurge. Addis prices in late 2026; tune as they move.
+  PRICE_BAND_CEILINGS = {
+    "buna" => [ 40, 80, 150 ],
+    "macchiato" => [ 50, 100, 180 ],
+    "spris" => [ 50, 100, 180 ],
+    "espresso" => [ 50, 100, 180 ],
+    "latte" => [ 80, 150, 250 ]
+  }.freeze
+  # How many different people must have reported a price before their
+  # reports replace the catalog's guess.
+  PRICE_BAND_MIN_REPORTERS = 3
+
   normalizes :name, :name_am, :landmark, with: ->(value) { value.strip }
 
   before_validation :set_search_keys
@@ -54,6 +68,40 @@ class Shop < ApplicationRecord
       Shop::Name.similarity(shop.name, name) >= 0.80 ||
         Shop::Name.similarity(shop.name_am, name_am) >= 0.80
     end
+  end
+
+  # The band people's reported prices point to, and how many people that is:
+  # each person's latest priced visit here within PRICE_WINDOW counts once,
+  # as the band its drink's price falls in, and the median band wins.
+  # Nil when fewer than PRICE_BAND_MIN_REPORTERS people have said.
+  def reported_price_band(now: Time.current)
+    latest = check_ins.verified
+      .where(review_hidden_at: nil, drink: PRICE_BAND_CEILINGS.keys)
+      .where.not(price_birr: nil)
+      .where(occurred_at: (now - CheckIn::PRICE_WINDOW)..now)
+      .order(:occurred_at, :id)
+      .pluck(:user_id, :drink, :price_birr)
+      .index_by(&:first)
+      .values
+    return [ nil, latest.size ] if latest.size < PRICE_BAND_MIN_REPORTERS
+
+    bands = latest.map { |_, drink, price| PRICE_BAND_CEILINGS.fetch(drink).count { |ceiling| price > ceiling } }.sort
+    [ self.class.price_bands.keys[bands[bands.size / 2]], latest.size ]
+  end
+
+  # Reports win over the catalog once there are enough of them. When they
+  # drop below that again, the last band stays but no longer claims reports.
+  def refresh_price_band_from_reports!(now: Time.current)
+    band, reporters = reported_price_band(now: now)
+    if band
+      update!(price_band: band, price_band_reports_count: reporters) if band != price_band || reporters != price_band_reports_count
+    elsif price_band_reports_count.positive?
+      update!(price_band_reports_count: 0)
+    end
+  end
+
+  def price_band_from_reports?
+    price_band_reports_count.positive?
   end
 
   def merge_into!(winner, by:)

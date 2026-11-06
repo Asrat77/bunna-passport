@@ -299,6 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
     t.string "status", default: "pending", null: false
     t.integer "submitted_by_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "price_band_reports_count", default: 0, null: false
     t.json "review_tags", default: {}, null: false
     t.index ["latitude", "longitude"], name: "index_shops_on_latitude_and_longitude"
     t.index ["merged_into_id"], name: "index_shops_on_merged_into_id"

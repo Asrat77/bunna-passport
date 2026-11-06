@@ -129,7 +129,10 @@ function ShopBody({
 
       <StatStrip
         stats={[
-          { value: shop.price_band ? t(PRICE_LABEL_KEYS[shop.price_band]) : t("shop.priceUnknown"), label: t("shop.price") },
+          {
+            value: shop.price_band ? t(PRICE_LABEL_KEYS[shop.price_band]) : t("shop.priceUnknown"),
+            label: shop.price_band && (shop.price_band_reports ?? 0) > 0 ? t("shop.priceFromReviews") : t("shop.price"),
+          },
           { value: stamp?.check_ins_count ?? 0, label: t("shop.yourCups") },
           { value: `${areaStamped}/${areaShops.length}`, label: t("shop.areaPage", { area }) },
         ]}

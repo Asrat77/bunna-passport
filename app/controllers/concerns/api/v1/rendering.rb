@@ -77,6 +77,9 @@ module Api::V1::Rendering
         longitude: shop.longitude.to_f,
         status: shop.status,
         price_band: shop.price_band,
+        # How many people's reported prices set price_band; 0 means the
+        # catalog or a moderator did.
+        price_band_reports: shop.price_band_reports_count,
         attributes: shop.api_attributes,
         # In the catalog too, so a list can say "Open" without a request per shop.
         hours: hours_json(shop.hours),

@@ -35,6 +35,11 @@ production:
     class: SendWeeklyReportJob
     schedule: "45 8 * * 1 Africa/Addis_Ababa"
 
+  # Price bands from what people paid, so old reports age out.
+  refresh_price_bands:
+    class: RefreshPriceBandsJob
+    schedule: "30 3 * * * Africa/Addis_Ababa"
+
   # Telegram alert before the shared disk fills.
   check_host_health:
     class: CheckHostHealthJob
