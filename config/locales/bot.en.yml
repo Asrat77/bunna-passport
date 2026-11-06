@@ -1,0 +1,103 @@
+# What the Telegram bot says to people, in English. The Amharic copy lives in
+# bot.am.yml with the same keys; see Telegram::Messages. Text is Telegram
+# HTML: values interpolated here are escaped before they arrive.
+en:
+  bot:
+    commands:
+      start: "Open your passport"
+      nudges_off: "Stop the daily “had a cup?” nudge"
+      nudges_on: "Turn the daily nudge back on"
+      friends_off: "Stop the evening friends round-up"
+      friends_on: "Turn the friends round-up back on"
+    buttons:
+      find_first_cafe: "Find my first café"
+      open_app: "Open Bunna Passport"
+      check_in: "Check in"
+      stop_nudges: "Stop daily nudges"
+      open_passport: "Open passport"
+      see_badges: "See your badges"
+      add_note: "Add a note or a photo"
+      see_feed: "See the feed"
+      stop_friend_updates: "Stop friend updates"
+    welcome:
+      body: |-
+        Selam %{name} ☕
+
+        Bunna Passport is a stamp book for coffee in Addis. Check in at a café to press its stamp, then keep going back: every cup adds up, and the stamp turns bronze, silver, gold, then diamond.
+
+        Your profile picture sleeps until your first cup of the day. %{nudge_line}
+      nudges_on: "If it's still asleep in the afternoon, I'll send you one nudge. /nudges_off stops it."
+      nudges_off: "Daily nudges are off; /nudges_on brings them back."
+    first_stamp_nudge: |-
+      Your passport is still empty ☕
+
+      Your first stamp is one check-in away. Open the app and it will point you to the café closest to you. Check in once you're there.
+    nudge: |-
+      Had a cup today? ☕
+
+      Your profile picture is still asleep. Check in at your next buna to wake it up.
+    nudges_changed:
+      "on": "Daily nudges are on. Send /nudges_off to stop them."
+      "off": "No more daily nudges. Send /nudges_on to bring them back."
+    friend_updates_changed:
+      "on": "The evening friends round-up is on. Send /friends_off to stop it."
+      "off": "No more friends round-ups. Send /friends_on to bring them back."
+    levels:
+      bronze: "Bronze"
+      silver: "Silver"
+      gold: "Gold"
+      diamond: "Diamond"
+    stamp:
+      new: "New stamp: <b>%{shop}</b> %{mark}"
+      level_up: "Your <b>%{shop}</b> stamp is now %{level} %{mark}"
+      count: "That's stamp %{count} in your passport."
+      cups_so_far: "%{count} cups there so far."
+      top_level: "That's the top level."
+      next_level:
+        one: "%{count} more cup for %{level}."
+        other: "%{count} more cups for %{level}."
+    badge:
+      earned: "🏅 Badge earned: <b>%{name}</b>"
+      tally: "%{description} That's %{count} of %{total} badges."
+    badges:
+      first-check-in:
+        name: "First Cup"
+        description: "Record your first verified coffee."
+      ten-cups:
+        name: "Ten Cups"
+        description: "Record ten verified coffees."
+      fifty-cups:
+        name: "Fifty Cups"
+        description: "Record fifty verified coffees."
+      five-shops:
+        name: "Five Shops"
+        description: "Collect stamps from five coffee shops."
+      ten-shops:
+        name: "Ten Shops"
+        description: "Collect stamps from ten coffee shops."
+      first-contribution:
+        name: "First Contribution"
+        description: "Have a community contribution accepted."
+      five-contributions:
+        name: "Five Contributions"
+        description: "Have five community contributions accepted."
+    review:
+      prompt: |-
+        How was <b>%{shop}</b>? ☕
+
+        Tap a cup to rate your visit. It helps the next person pick where to go.
+      thanks: |-
+        You gave <b>%{shop}</b> %{cups} (%{rating}/5). Thanks!
+
+        Want to say more? Open the app to add a note, tags or what you paid.
+      out_of_date: "That button is out of date."
+      closed: "That visit can't be rated any more."
+      saved: "Thanks! Saved %{rating}/5."
+      already_rated: "You already rated this visit %{rating}/5."
+    friend_digest:
+      title: "☕ <b>Your coffee friends today</b>"
+      new_stamps: "New stamps:"
+      stamped: "• %{name} stamped <b>%{shop}</b>"
+      reactions: "On your visits:"
+      reacted: "• %{name} %{emoji} your <b>%{shop}</b> visit"
+      and_more: "• and %{count} more"

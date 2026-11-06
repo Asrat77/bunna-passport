@@ -1,0 +1,102 @@
+# What the Telegram bot says to people whose language is Amharic. Keys match
+# bot.en.yml; wording follows the Mini App's reviewed Amharic (web/src/i18n).
+am:
+  bot:
+    commands:
+      start: "ፓስፖርትዎን ይክፈቱ"
+      nudges_off: "የዕለቱን “ቡና ጠጥተዋል?” ማስታወሻ ያቁሙ"
+      nudges_on: "የዕለቱን ማስታወሻ መልሰው ያብሩ"
+      friends_off: "የምሽቱን የጓደኞች ማጠቃለያ ያቁሙ"
+      friends_on: "የጓደኞች ማጠቃለያውን መልሰው ያብሩ"
+    buttons:
+      find_first_cafe: "የመጀመሪያ ካፌዬን ፈልግ"
+      open_app: "ቡና ፓስፖርትን ይክፈቱ"
+      check_in: "ቼክ-ኢን ያድርጉ"
+      stop_nudges: "የዕለት ማስታወሻዎችን ያቁሙ"
+      open_passport: "ፓስፖርቱን ይክፈቱ"
+      see_badges: "ባጆችዎን ይመልከቱ"
+      add_note: "ማስታወሻ ወይም ፎቶ ያክሉ"
+      see_feed: "የጓደኞችን ጉብኝት ይመልከቱ"
+      stop_friend_updates: "የጓደኞች ማጠቃለያን ያቁሙ"
+    welcome:
+      body: |-
+        ሰላም %{name} ☕
+
+        ቡና ፓስፖርት በአዲስ አበባ ለሚጠጡት ቡና የማህተም ደብተር ነው። በአንድ ካፌ ቼክ-ኢን አድርገው ማህተሙን ይውሰዱ፣ ከዚያም ደጋግመው ይመለሱ፦ እያንዳንዱ ስኒ ይቆጠራል፣ ማህተሙም ነሐስ፣ ብር፣ ወርቅ፣ ከዚያም አልማዝ ይሆናል።
+
+        የመገለጫ ምስልዎ የቀኑ የመጀመሪያ ቡናዎ እስኪደርስ ድረስ ተኝቶ ይቆያል። %{nudge_line}
+      nudges_on: "ከሰዓት በኋላም ተኝቶ ከሆነ አንድ ጊዜ አስታውስዎታለሁ። /nudges_off ይህን ያቆማል።"
+      nudges_off: "የዕለት ማስታወሻዎች ጠፍተዋል፤ /nudges_on መልሶ ያበራቸዋል።"
+    first_stamp_nudge: |-
+      ፓስፖርትዎ አሁንም ባዶ ነው ☕
+
+      የመጀመሪያ ማህተምዎ አንድ ቼክ-ኢን ብቻ ይቀረዋል። መተግበሪያውን ይክፈቱ፣ ለእርስዎ ቅርብ ወደሆነው ካፌ ይመራዎታል። እዚያ ሲደርሱ ቼክ-ኢን ያድርጉ።
+    nudge: |-
+      ዛሬ ቡና ጠጥተዋል? ☕
+
+      የመገለጫ ምስልዎ አሁንም ተኝቷል። ለመቀስቀስ በሚቀጥለው ቡናዎ ቼክ-ኢን ያድርጉ።
+    nudges_changed:
+      "on": "የዕለት ማስታወሻዎች በርተዋል። ለማቆም /nudges_off ይላኩ።"
+      "off": "ከእንግዲህ የዕለት ማስታወሻ አይላክልዎትም። መልሰው ለማብራት /nudges_on ይላኩ።"
+    friend_updates_changed:
+      "on": "የምሽቱ የጓደኞች ማጠቃለያ በርቷል። ለማቆም /friends_off ይላኩ።"
+      "off": "ከእንግዲህ የጓደኞች ማጠቃለያ አይላክልዎትም። መልሰው ለማብራት /friends_on ይላኩ።"
+    levels:
+      bronze: "ነሐስ"
+      silver: "ብር"
+      gold: "ወርቅ"
+      diamond: "አልማዝ"
+    stamp:
+      new: "አዲስ ማህተም፦ <b>%{shop}</b> %{mark}"
+      level_up: "የ<b>%{shop}</b> ማህተምዎ አሁን %{level} ሆኗል %{mark}"
+      count: "ይህ በፓስፖርትዎ ውስጥ %{count}ኛው ማህተም ነው።"
+      cups_so_far: "እዚያ እስካሁን %{count} ስኒ ጠጥተዋል።"
+      top_level: "ይህ ከፍተኛው ደረጃ ነው።"
+      next_level:
+        one: "ለ%{level} %{count} ተጨማሪ ስኒ ይቀራል።"
+        other: "ለ%{level} %{count} ተጨማሪ ስኒዎች ይቀራሉ።"
+    badge:
+      earned: "🏅 ባጅ አግኝተዋል፦ <b>%{name}</b>"
+      tally: "%{description} እስካሁን ከ%{total} ባጆች %{count} አግኝተዋል።"
+    badges:
+      first-check-in:
+        name: "የመጀመሪያ ስኒ"
+        description: "የመጀመሪያውን የተረጋገጠ ቡናዎን ይመዝግቡ።"
+      ten-cups:
+        name: "አስር ስኒዎች"
+        description: "አስር የተረጋገጡ ቡናዎችን ይመዝግቡ።"
+      fifty-cups:
+        name: "ሃምሳ ስኒዎች"
+        description: "ሃምሳ የተረጋገጡ ቡናዎችን ይመዝግቡ።"
+      five-shops:
+        name: "አምስት ካፌዎች"
+        description: "ከአምስት ቡና ቤቶች ማህተም ይሰብስቡ።"
+      ten-shops:
+        name: "አስር ካፌዎች"
+        description: "ከአስር ቡና ቤቶች ማህተም ይሰብስቡ።"
+      first-contribution:
+        name: "የመጀመሪያ አስተዋጽኦ"
+        description: "አንድ የማህበረሰብ አስተዋጽኦዎ ተቀባይነት ያግኝ።"
+      five-contributions:
+        name: "አምስት አስተዋጽኦዎች"
+        description: "አምስት የማህበረሰብ አስተዋጽኦዎችዎ ተቀባይነት ያግኙ።"
+    review:
+      prompt: |-
+        <b>%{shop}</b> እንዴት ነበር? ☕
+
+        ጉብኝትዎን ለመገምገም አንድ ስኒ ይንኩ። ቀጣዩ ሰው የት እንደሚሄድ እንዲመርጥ ይረዳል።
+      thanks: |-
+        ለ<b>%{shop}</b> %{cups} (%{rating}/5) ሰጥተዋል። እናመሰግናለን!
+
+        ተጨማሪ ማለት ይፈልጋሉ? ማስታወሻ፣ መለያዎች ወይም የከፈሉትን ዋጋ ለመጨመር መተግበሪያውን ይክፈቱ።
+      out_of_date: "ይህ ቁልፍ ጊዜው አልፎበታል።"
+      closed: "ይህ ጉብኝት ከእንግዲህ ሊገመገም አይችልም።"
+      saved: "እናመሰግናለን! %{rating}/5 ተቀምጧል።"
+      already_rated: "ይህን ጉብኝት ቀደም ብለው %{rating}/5 ሰጥተውታል።"
+    friend_digest:
+      title: "☕ <b>የዛሬ የቡና ጓደኞችዎ</b>"
+      new_stamps: "አዳዲስ ማህተሞች፦"
+      stamped: "• %{name} የ<b>%{shop}</b> ማህተም አገኙ"
+      reactions: "በጉብኝቶችዎ ላይ፦"
+      reacted: "• %{name} %{emoji} ለ<b>%{shop}</b> ጉብኝትዎ"
+      and_more: "• እና ሌሎች %{count}"

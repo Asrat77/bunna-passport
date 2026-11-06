@@ -23,5 +23,9 @@ module BunnaPassport
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # The bot talks to people in English or Amharic; see Telegram::Messages.
+    config.i18n.available_locales = %i[en am]
+    config.i18n.default_locale = :en
   end
 end

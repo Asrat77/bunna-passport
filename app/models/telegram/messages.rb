@@ -1,13 +1,13 @@
 # What the bot says. Text is Telegram HTML, so anything a person or the
 # catalog wrote is escaped.
+#
+# Messages for Bunna's users come from config/locales/bot.*.yml, in the
+# language of the person they go to (User#bot_locale). The moderation and
+# ops messages are for the people running Bunna and stay in English.
 module Telegram::Messages
   LEVEL_MARKS = { "bronze" => "🥉", "silver" => "🥈", "gold" => "🥇", "diamond" => "💎" }.freeze
 
-  COMMANDS = [
-    { command: "start", description: "Open your passport" },
-    { command: "nudges_off", description: "Stop the daily “had a cup?” nudge" },
-    { command: "nudges_on", description: "Turn the daily nudge back on" }
-  ].freeze
+  COMMAND_NAMES = %w[start nudges_off nudges_on friends_off friends_on].freeze
 
   # What a new person sees before they ever press Start, such as someone
   # opening a friend's invite link. Keyed by Telegram app language; nil is
@@ -30,6 +30,8 @@ module Telegram::Messages
 
   NUDGES_OFF = "nudges:off".freeze
   NUDGES_ON = "nudges:on".freeze
+  FRIENDS_OFF = "friends:off".freeze
+  FRIENDS_ON = "friends:on".freeze
 
   # Rating buttons carry "rate:<check-in id>:<cups>"; see Telegram::RatingCallback.
   RATING_PREFIX = "rate:".freeze
@@ -50,89 +52,108 @@ module Telegram::Messages
 
   extend self
 
+  # The bot's command menu in one language, for setMyCommands.
+  def commands(locale = I18n.default_locale)
+    I18n.with_locale(locale) do
+      COMMAND_NAMES.map { |name| { command: name, description: I18n.t("bot.commands.#{name}") } }
+    end
+  end
+
+  # Runs the block in the language of whoever the message is for.
+  def in_language_of(user, &block)
+    I18n.with_locale(user&.bot_locale || I18n.default_locale, &block)
+  end
+
   def welcome(user)
-    text = <<~TEXT
-      Selam #{h(user.display_name)} ☕
-
-      Bunna Passport is a stamp book for coffee in Addis. Check in at a café to press its stamp, then keep going back: every cup adds up, and the stamp turns bronze, silver, gold, then diamond.
-
-      Your doodle sleeps until your first cup of the day. #{nudge_line(user)}
-    TEXT
-    { text: text.strip, reply_markup: keyboard([ app_button("Open Bunna Passport") ]) }
+    in_language_of(user) do
+      text = t("welcome.body", name: h(user.display_name), nudge_line: t(user.daily_nudges? ? "welcome.nudges_on" : "welcome.nudges_off"))
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.open_app")) ]) }
+    end
   end
 
   def nudge(user)
-    return first_stamp_nudge if user.stamps_count.zero?
-
-    text = <<~TEXT
-      Had a cup today? ☕
-
-      Your doodle is still asleep. Check in at your next buna to wake it up.
-    TEXT
-    { text: text.strip, reply_markup: keyboard([ app_button("Check in") ], [ callback_button("Stop daily nudges", NUDGES_OFF) ]) }
-  end
-
-  # The daily nudge for someone who hasn't checked in anywhere yet, whether a
-  # friend's invite brought them or they found the bot themselves. The app's
-  # first-stamp guide picks the café; this only points them to it.
-  def first_stamp_nudge
-    text = <<~TEXT
-      Your passport is still empty ☕
-
-      Your first stamp is one check-in away. Open the app and it will point you to the café closest to you. Check in once you're there.
-    TEXT
-    { text: text.strip, reply_markup: keyboard([ app_button("Find my first café") ], [ callback_button("Stop daily nudges", NUDGES_OFF) ]) }
+    in_language_of(user) do
+      # No stamp yet, whether an invite brought them or not: point to the
+      # first one. The app's first-stamp guide picks the café.
+      if user.stamps_count.zero?
+        { text: t("first_stamp_nudge"), reply_markup: keyboard([ app_button(t("buttons.find_first_cafe")) ], [ callback_button(t("buttons.stop_nudges"), NUDGES_OFF) ]) }
+      else
+        { text: t("nudge"), reply_markup: keyboard([ app_button(t("buttons.check_in")) ], [ callback_button(t("buttons.stop_nudges"), NUDGES_OFF) ]) }
+      end
+    end
   end
 
   # Sent when a counted visit takes a stamp to a level, the first being the
   # new stamp itself. `cups` is the count that visit reached, since the
   # stamp may have moved on by the time this is sent.
   def stamp(stamp, cups)
-    level = Stamp.level_reached_at(cups)
-    headline = if cups == 1
-      "New stamp: <b>#{h(stamp.shop.name)}</b> #{LEVEL_MARKS.fetch(level)}"
-    else
-      "Your <b>#{h(stamp.shop.name)}</b> stamp is now #{level.capitalize} #{LEVEL_MARKS.fetch(level)}"
-    end
-    detail = cups == 1 ? "That's stamp #{stamp.user.stamps_count} in your passport." : "#{cups} cups there so far."
+    in_language_of(stamp.user) do
+      level = Stamp.level_reached_at(cups)
+      shop, mark = h(stamp.shop.name), LEVEL_MARKS.fetch(level)
+      headline = cups == 1 ? t("stamp.new", shop: shop, mark: mark) : t("stamp.level_up", shop: shop, level: level_name(level), mark: mark)
+      detail = cups == 1 ? t("stamp.count", count: stamp.user.stamps_count) : t("stamp.cups_so_far", count: cups)
 
-    { text: "#{headline}\n\n#{detail} #{next_level_line(cups)}", reply_markup: keyboard([ app_button("Open passport") ]) }
+      { text: "#{headline}\n\n#{detail} #{next_level_line(cups)}", reply_markup: keyboard([ app_button(t("buttons.open_passport")) ]) }
+    end
   end
 
   def badge(award)
-    badge = award.badge
-    earned = award.user.awards.count
-    text = <<~TEXT
-      🏅 Badge earned: <b>#{h(badge.name)}</b>
-
-      #{h(badge.description)} That's #{earned} of #{Badge.count} badges.
-    TEXT
-    { text: text.strip, reply_markup: keyboard([ app_button("See your badges") ]) }
+    in_language_of(award.user) do
+      badge = award.badge
+      name = t("badges.#{badge.slug}.name", default: badge.name)
+      description = t("badges.#{badge.slug}.description", default: badge.description)
+      text = "#{t('badge.earned', name: h(name))}\n\n#{t('badge.tally', description: h(description), count: award.user.awards.count, total: Badge.count)}"
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.see_badges")) ]) }
+    end
   end
 
   # A while after a visit nobody rated: one tap on a cup saves the rating.
   def review_prompt(check_in)
-    text = <<~TEXT
-      How was <b>#{h(check_in.shop.name)}</b>? ☕
-
-      Tap a cup to rate your visit. It helps the next person pick where to go.
-    TEXT
-    cups = (1..5).map { |n| callback_button("#{n} ☕", "#{RATING_PREFIX}#{check_in.id}:#{n}") }
-    { text: text.strip, reply_markup: keyboard(cups, [ app_button("Add a note or a photo") ]) }
+    in_language_of(check_in.user) do
+      cups = (1..5).map { |n| callback_button("#{n} ☕", "#{RATING_PREFIX}#{check_in.id}:#{n}") }
+      { text: t("review.prompt", shop: h(check_in.shop.name)), reply_markup: keyboard(cups, [ app_button(t("buttons.add_note")) ]) }
+    end
   end
 
   # The prompt, redrawn once it is answered, so the buttons can't be tapped again.
   def review_thanks(check_in)
-    text = <<~TEXT
-      You gave <b>#{h(check_in.shop.name)}</b> #{"☕" * check_in.rating.to_i} (#{check_in.rating}/5). Thanks!
+    in_language_of(check_in.user) do
+      text = t("review.thanks", shop: h(check_in.shop.name), cups: "☕" * check_in.rating.to_i, rating: check_in.rating)
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.open_app")) ]) }
+    end
+  end
 
-      Want to say more? Open the app to add a note, tags or what you paid.
-    TEXT
-    { text: text.strip, reply_markup: keyboard([ app_button("Open Bunna Passport") ]) }
+  # Short answers to a tap on a rating cup; see Telegram::RatingCallback.
+  def rating_answer(user, key, rating: nil)
+    in_language_of(user) { t("review.#{key}", rating: rating) }
+  end
+
+  # The evening round-up; see Friends::Digest.
+  def friend_digest(digest)
+    in_language_of(digest.user) do
+      sections = []
+      if digest.new_stamps.any?
+        lines = digest.new_stamps.map { |check_in| t("friend_digest.stamped", name: h(check_in.user.display_name), shop: h(check_in.shop.name)) }
+        sections << "#{t('friend_digest.new_stamps')}\n#{capped(lines).join("\n")}"
+      end
+      if digest.reactions.any?
+        lines = digest.reactions.map do |reaction|
+          t("friend_digest.reacted", name: h(reaction.user.display_name), emoji: reaction.emoji, shop: h(reaction.check_in.shop.name))
+        end
+        sections << "#{t('friend_digest.reactions')}\n#{capped(lines).join("\n")}"
+      end
+
+      text = "#{t('friend_digest.title')}\n\n#{sections.join("\n\n")}"
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.see_feed")) ], [ callback_button(t("buttons.stop_friend_updates"), FRIENDS_OFF) ]) }
+    end
+  end
+
+  def friend_updates_changed(user)
+    in_language_of(user) { t(user.friend_updates? ? "friend_updates_changed.on" : "friend_updates_changed.off") }
   end
 
   def nudges_changed(user)
-    user.daily_nudges? ? "Daily nudges are on. Send /nudges_off to stop them." : "No more daily nudges. Send /nudges_on to bring them back."
+    in_language_of(user) { t(user.daily_nudges? ? "nudges_changed.on" : "nudges_changed.off") }
   end
 
   # For the people running Bunna, not its users: see Ops::Alert.
@@ -233,20 +254,25 @@ module Telegram::Messages
   end
 
   private
-    def nudge_line(user)
-      if user.daily_nudges?
-        "If it's still asleep in the afternoon, I'll send you one nudge. /nudges_off stops it."
-      else
-        "Daily nudges are off; /nudges_on brings them back."
-      end
+    def t(key, **options)
+      I18n.t("bot.#{key}", **options)
+    end
+
+    def level_name(level)
+      t("levels.#{level}")
     end
 
     def next_level_line(cups)
       remaining = Stamp.visits_to_next_level(cups)
-      return "That's the top level." unless remaining
+      return t("stamp.top_level") unless remaining
 
-      next_level = Stamp.level_for(cups + remaining)
-      "#{remaining} more #{remaining == 1 ? 'cup' : 'cups'} for #{next_level.capitalize}."
+      t("stamp.next_level", count: remaining, level: level_name(Stamp.level_for(cups + remaining)))
+    end
+
+    def capped(lines)
+      return lines if lines.size <= Friends::Digest::MAX_LINES
+
+      lines.first(Friends::Digest::MAX_LINES) << t("friend_digest.and_more", count: lines.size - Friends::Digest::MAX_LINES)
     end
 
     def keyboard(*rows)

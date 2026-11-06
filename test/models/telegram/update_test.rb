@@ -80,6 +80,30 @@ class Telegram::UpdateTest < ActiveSupport::TestCase
     assert_empty @bot.sent
   end
 
+  test "someone whose Telegram is in Amharic is welcomed in Amharic, and it sticks" do
+    with_fake_bot(@bot) do
+      handle(text_message("/start", from: { id: 5150, first_name: "Hana", language_code: "am" }))
+    end
+
+    user = User.find_by!(telegram_user_id: 5150)
+    assert_equal "am", user.language
+    assert_match "ሰላም Hana", @bot.sent.sole[:text]
+    assert_equal "ቡና ፓስፖርትን ይክፈቱ", @bot.sent.sole[:reply_markup][:inline_keyboard].dig(0, 0, :text)
+
+    # Picked English in the Mini App: a later message from an Amharic phone doesn't undo it.
+    user.update!(language: "en")
+    with_fake_bot(@bot) { handle(text_message("/nudges_off", from: { id: 5150, language_code: "am" })) }
+    assert_equal "en", user.reload.language
+    assert_match "No more daily nudges", @bot.sent.last[:text]
+  end
+
+  test "other Telegram languages get English" do
+    with_fake_bot(@bot) { handle(text_message("/start", from: { id: 5151, first_name: "Jo", language_code: "fr" })) }
+
+    assert_equal "en", User.find_by!(telegram_user_id: 5151).language
+    assert_match "Selam Jo", @bot.sent.sole[:text]
+  end
+
   private
     def handle(payload)
       Telegram::Update.new(payload, bot: @bot).handle

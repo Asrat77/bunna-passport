@@ -35,6 +35,11 @@ Rails.application.routes.draw do
       resources :badges, only: :index
       resources :friends, only: %i[ index create destroy ]
       get "feed", to: "feeds#show", as: :feed
+      # A friend's visit from the feed: one reaction each, set or taken back.
+      put "feed/:check_in_id/reaction", to: "check_in_reactions#update", as: :feed_reaction
+      delete "feed/:check_in_id/reaction", to: "check_in_reactions#destroy"
+      # Reactions friends left on your own visits.
+      get "reactions", to: "check_in_reactions#index", as: :reactions
       get "invite", to: "invites#show", as: :invite
       delete "invite", to: "invites#destroy"
       post "invite/message", to: "invites#message", as: :invite_message

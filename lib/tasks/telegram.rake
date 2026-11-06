@@ -1,7 +1,8 @@
 namespace :bunna do
   namespace :telegram do
     configure_bot = lambda do |bot|
-      bot.set_my_commands(Telegram::Messages::COMMANDS)
+      bot.set_my_commands(Telegram::Messages.commands(:en))
+      bot.set_my_commands(Telegram::Messages.commands(:am), language_code: "am")
       Telegram::Messages::SHORT_DESCRIPTIONS.each { |language, text| bot.set_my_short_description(text, language_code: language) }
       Telegram::Messages::DESCRIPTIONS.each { |language, text| bot.set_my_description(text, language_code: language) }
       url = Telegram::Messages.mini_app_url
