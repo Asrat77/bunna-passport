@@ -30,6 +30,7 @@ module Api::V1::Rendering
         shares_visits: user.shares_visits,
         daily_nudges: user.daily_nudges,
         friend_updates: user.friend_updates,
+        language: user.language,
         joined_at: user.created_at.iso8601
       }
     end

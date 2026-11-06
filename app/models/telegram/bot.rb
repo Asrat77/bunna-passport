@@ -67,8 +67,10 @@ class Telegram::Bot
     call("deleteWebhook", {})
   end
 
-  def set_my_commands(commands)
-    call("setMyCommands", { commands: commands })
+  # A language_code sets the menu for people whose Telegram app is in that
+  # language; without one it is the menu for everyone else.
+  def set_my_commands(commands, language_code: nil)
+    call("setMyCommands", { commands: commands, language_code: language_code }.compact)
   end
 
   # What the bot's profile and an invite link's preview say about it

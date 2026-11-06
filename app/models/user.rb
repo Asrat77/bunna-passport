@@ -27,6 +27,10 @@ class User < ApplicationRecord
   normalizes :handle, with: ->(handle) { handle.strip.downcase.delete_prefix("@") }
   normalizes :display_name, with: ->(name) { name.strip }
 
+  # Languages the bot can write in. Anything else gets English.
+  LANGUAGES = %w[en am].freeze
+  validates :language, inclusion: { in: LANGUAGES }, allow_nil: true
+
   enum :trust_level, {
     newcomer: "newcomer",
     regular: "regular",
@@ -83,13 +87,20 @@ class User < ApplicationRecord
     # Finds or creates the account behind a verified Telegram user.
     def from_telegram!(telegram_user)
       telegram_id = Integer(telegram_user.fetch("id"))
-      find_by(telegram_user_id: telegram_id) || create!(
+      user = find_by(telegram_user_id: telegram_id) || create!(
         telegram_user_id: telegram_id,
         handle: available_handle(telegram_user["username"], telegram_id),
         display_name: telegram_display_name(telegram_user, telegram_id)
       )
+      user.adopt_telegram_language(telegram_user["language_code"])
+      user
     rescue ActiveRecord::RecordNotUnique
       find_by!(telegram_user_id: telegram_id)
+    end
+
+    # "am", "am-ET" and the like read as Amharic; any other code as English.
+    def language_from_telegram(code)
+      code.to_s.downcase.start_with?("am") ? "am" : "en"
     end
 
     private
@@ -122,6 +133,17 @@ class User < ApplicationRecord
   # blocked it since.
   def bot_chat?
     telegram_user_id.present? && telegram_chat_started_at.present?
+  end
+
+  # The locale the bot writes to this person in.
+  def bot_locale
+    language == "am" ? :am : :en
+  end
+
+  # Takes the Telegram app's language until we know better. Once set, only
+  # the Mini App's language switch changes it (it reports what's on screen).
+  def adopt_telegram_language(code)
+    update_column(:language, self.class.language_from_telegram(code)) if language.nil? && code.present?
   end
 
   def start_bot_chat!

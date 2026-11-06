@@ -40,6 +40,7 @@ class Telegram::Update
       return Telegram::RatingCallback.new(callback, bot: @bot).handle if callback["data"].to_s.start_with?(Telegram::Messages::RATING_PREFIX)
 
       user = User.find_by(telegram_user_id: callback.dig("from", "id"))
+      user&.adopt_telegram_language(callback.dig("from", "language_code"))
       text = case callback["data"]
       when Telegram::Messages::NUDGES_OFF, Telegram::Messages::NUDGES_ON
         user&.update!(daily_nudges: callback["data"] == Telegram::Messages::NUDGES_ON)

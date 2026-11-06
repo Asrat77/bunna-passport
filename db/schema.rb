@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -365,12 +365,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
     t.integer "verified_check_ins_count", default: 0, null: false
     t.boolean "friend_updates", default: true, null: false
     t.datetime "last_friend_digest_at"
+    t.string "language"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
     t.index ["invite_token"], name: "index_users_on_invite_token", unique: true
     t.index ["telegram_user_id"], name: "index_users_on_telegram_user_id", unique: true
     t.check_constraint "email_address IS NOT NULL OR telegram_user_id IS NOT NULL", name: "users_have_a_sign_in"
+    t.check_constraint "language IN ('en', 'am')", name: "users_language"
     t.check_constraint "trust_level IN ('newcomer', 'regular', 'curator', 'moderator')", name: "users_trust_level"
     t.check_constraint "verified_check_ins_count >= 0 AND stamps_count >= 0", name: "users_non_negative_counters"
   end

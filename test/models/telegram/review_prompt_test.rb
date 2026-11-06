@@ -100,6 +100,18 @@ class Telegram::ReviewPromptTest < ActiveJob::TestCase
     assert_nil check_in.reload.rating
   end
 
+  test "Amharic speakers are asked and thanked in Amharic" do
+    @user.update!(language: "am")
+    check_in = visit(@user)
+    bot = FakeTelegramBot.new
+
+    assert_match "<b>Buna House</b> እንዴት ነበር?", Telegram::Messages.review_prompt(check_in)[:text]
+    tap_button(bot, "rate:#{check_in.id}:4")
+
+    assert_equal "እናመሰግናለን! 4/5 ተቀምጧል።", bot.answers.sole[:text]
+    assert_match "ለ<b>Buna House</b> ☕☕☕☕ (4/5) ሰጥተዋል።", bot.edits.sole[:text]
+  end
+
   private
     def visit(user, occurred_at: nil, rating: nil)
       travel_to(occurred_at || Time.current) do
