@@ -583,6 +583,13 @@ Each component ships with: both scripts, both themes, RTL-safe layout
    approved only when a person put it in that column — never because it looked
    plausible.
 
+   **Telegram Mini App (web/):** a native speaker reviewed all 687 strings the
+   Mini App shows on 2026-11-04 and corrected 100 of them, mostly to polite
+   "you" (‑ዎ) forms on buttons. `npm run i18n:export` in web/ writes the same
+   CSV for both catalogues and `npm run i18n:import -- file.csv` writes the
+   reviewed column back; strings added later need the same pass before they
+   ship.
+
 ---
 
 ## 12. What this spec deliberately excludes
