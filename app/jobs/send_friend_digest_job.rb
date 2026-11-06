@@ -14,7 +14,9 @@ class SendFriendDigestJob < ApplicationJob
     return if digest.empty?
 
     Telegram::Bot.new.send_message(chat_id: user.telegram_user_id, **Telegram::Messages.friend_digest(digest))
-    user.update!(last_friend_digest_at: now)
+    # Straight to the column: the message is already out, and an unrelated
+    # validation on the user mustn't fail the job after it.
+    user.update_column(:last_friend_digest_at, now)
   rescue Telegram::Bot::Forbidden
     user.stop_bot_chat!
   end
