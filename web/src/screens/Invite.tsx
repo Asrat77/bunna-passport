@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import { ApiRequestError } from "@/api/errors";
+import type { InvitePreview } from "@/api/types";
 import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction, SecondaryAction } from "@/telegram/buttons";
+import { rememberInviter } from "@/lib/invite";
 import { hapticSuccess } from "@/telegram/haptics";
 import { Headline } from "@/ui/Headline";
 import { FriendDoodle } from "./stats/FriendsSection";
@@ -14,7 +16,9 @@ import "./invite.css";
  * Opened from someone's invite link. Shows who sent it and asks before
  * making the two of you friends, since friends see each other's visits.
  * Someone who hasn't checked in anywhere yet also gets a short note on
- * what the app is, since the link may be how they first heard of it.
+ * what the app is, since the link may be how they first heard of it, and
+ * after saying yes lands on Explore's first-stamp guide instead of the
+ * friends list, which would be empty of anything of theirs.
  */
 export function Invite({ token }: { token: string }) {
   const { t } = useI18n();
@@ -32,10 +36,16 @@ export function Invite({ token }: { token: string }) {
   const leave = () => (canGoBack ? back() : switchTab("explore"));
   const accept = useMutation({
     mutationFn: async () => (await api.acceptInvite(token)).data,
-    onSuccess: () => {
+    onSuccess: async () => {
       hapticSuccess();
       for (const key of ["friends", "feed", "leaderboard", "invite"]) void queryClient.invalidateQueries({ queryKey: [key] });
-      seeFriends();
+      const preview = queryClient.getQueryData<InvitePreview>(["invitePreview", token]);
+      if (preview?.new_here) {
+        await rememberInviter(preview.inviter.handle);
+        switchTab("explore");
+      } else {
+        seeFriends();
+      }
     },
   });
 

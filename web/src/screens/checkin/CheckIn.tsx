@@ -5,7 +5,7 @@ import { api } from "@/api/client";
 import { ApiRequestError } from "@/api/errors";
 import type { RejectionCode } from "@/api/types";
 import { candidatesAround, newIdempotencyKey } from "@/data/checkin";
-import { useCatalog, useProfile } from "@/data/queries";
+import { useCatalog, usePassport, useProfile } from "@/data/queries";
 import { DRINKS } from "@/data/reviews";
 import { useStampsByShop } from "@/data/stamps";
 import { Seal } from "@/design/seal/Seal";
@@ -39,6 +39,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
   const catalog = useCatalog();
   const stamps = useStampsByShop();
   const { data: profile } = useProfile();
+  const { data: passport } = usePassport();
   const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [drink, setDrink] = useState<string | null>(null);
@@ -76,6 +77,8 @@ export function CheckIn({ shopId }: { shopId?: number }) {
     setSubmitting(true);
     setOutcome(null);
     const wasAwake = profile?.had_cup_today ?? false;
+    // Known before the visit lands; the passport refetches straight after.
+    const passportWasEmpty = passport?.stamped_count === 0;
     try {
       const { data } = await api.checkIn(
         {
@@ -94,7 +97,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       for (const key of [["passport"], ["profile"], ["checkIns"], ["shop", selected.shop.id], ["leaderboard"], ["stats", "me"], ["badges"]]) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
-      replace({ name: "ceremony", checkIn: data, wasAwake });
+      replace({ name: "ceremony", checkIn: data, wasAwake, firstStamp: passportWasEmpty && data.stamp_earned });
     } catch (error) {
       hapticError();
       const code = error instanceof ApiRequestError ? error.rejectionCode : null;

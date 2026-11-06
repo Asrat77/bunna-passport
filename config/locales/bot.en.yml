@@ -10,6 +10,7 @@ en:
       friends_off: "Stop the evening friends round-up"
       friends_on: "Turn the friends round-up back on"
     buttons:
+      find_first_cafe: "Find my first café"
       open_app: "Open Bunna Passport"
       check_in: "Check in"
       stop_nudges: "Stop daily nudges"
@@ -27,6 +28,10 @@ en:
         Your profile picture sleeps until your first cup of the day. %{nudge_line}
       nudges_on: "If it's still asleep in the afternoon, I'll send you one nudge. /nudges_off stops it."
       nudges_off: "Daily nudges are off; /nudges_on brings them back."
+    first_stamp_nudge: |-
+      Your passport is still empty ☕
+
+      Your first stamp is one check-in away. Open the app and it will point you to the café closest to you. Check in once you're there.
     nudge: |-
       Had a cup today? ☕
 

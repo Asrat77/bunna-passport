@@ -9,7 +9,7 @@ export type Route =
   | { name: Tab }
   | { name: "shop"; id: OpaqueId }
   | { name: "checkin"; shopId?: OpaqueId }
-  | { name: "ceremony"; checkIn: CheckInResult; wasAwake: boolean }
+  | { name: "ceremony"; checkIn: CheckInResult; wasAwake: boolean; firstStamp?: boolean }
   | { name: "share"; target: ShareTarget; shopName: string }
   | { name: "studio" }
   | { name: "profile" }

@@ -231,3 +231,27 @@
 .ceremony__tick--level {
   color: inherit;
 }
+
+/* First stamp ever: the end of the first-stamp guide. */
+.ceremony__first-mark {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.ceremony__first-invite {
+  align-self: flex-start;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+}

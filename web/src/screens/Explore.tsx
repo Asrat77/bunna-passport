@@ -18,6 +18,7 @@ import { Icon } from "@/ui/Icon";
 import { ShopRow } from "@/ui/ShopRow";
 import { CafeFilterChips } from "@/ui/CafeFilters";
 import { AddMissing } from "./contribute/AddMissing";
+import { FirstStampGuide } from "./onboarding/FirstStampGuide";
 import "./explore.css";
 
 const PREVIEW_COUNT = 5;
@@ -83,6 +84,8 @@ export function Explore() {
         size={31}
         oneLine
       />
+
+      <FirstStampGuide />
 
       <label className="search">
         <span className="visually-hidden">{t("explore.searchLabel")}</span>

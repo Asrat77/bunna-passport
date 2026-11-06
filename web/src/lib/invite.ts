@@ -1,4 +1,5 @@
 import { retrieveLaunchParams, shareMessage, shareURL } from "@telegram-apps/sdk-react";
+import { readFlag, writeFlag } from "@/telegram/storage";
 
 const START_PREFIX = "invite_";
 const TOKEN = /^[A-Za-z0-9]{8,64}$/;
@@ -75,4 +76,24 @@ export async function shareInviteLink(
   } catch {
     return null;
   }
+}
+
+const INVITED_BY = "bunna.invitedBy";
+const HANDLE = /^[a-z0-9_]{3,30}$/;
+
+/**
+ * Who brought a new person in, kept until their first stamp so the
+ * first-stamp guide and ceremony can say the friend will see it.
+ */
+export function rememberInviter(handle: string): Promise<void> {
+  return writeFlag(INVITED_BY, handle);
+}
+
+export async function readInviter(): Promise<string | null> {
+  const handle = await readFlag(INVITED_BY);
+  return handle && HANDLE.test(handle) ? handle : null;
+}
+
+export function forgetInviter(): Promise<void> {
+  return writeFlag(INVITED_BY, "");
 }

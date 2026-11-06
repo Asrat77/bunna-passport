@@ -73,7 +73,13 @@ module Telegram::Messages
 
   def nudge(user)
     in_language_of(user) do
-      { text: t("nudge"), reply_markup: keyboard([ app_button(t("buttons.check_in")) ], [ callback_button(t("buttons.stop_nudges"), NUDGES_OFF) ]) }
+      # No stamp yet, whether an invite brought them or not: point to the
+      # first one. The app's first-stamp guide picks the café.
+      if user.stamps_count.zero?
+        { text: t("first_stamp_nudge"), reply_markup: keyboard([ app_button(t("buttons.find_first_cafe")) ], [ callback_button(t("buttons.stop_nudges"), NUDGES_OFF) ]) }
+      else
+        { text: t("nudge"), reply_markup: keyboard([ app_button(t("buttons.check_in")) ], [ callback_button(t("buttons.stop_nudges"), NUDGES_OFF) ]) }
+      end
     end
   end
 
