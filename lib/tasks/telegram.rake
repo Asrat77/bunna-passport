@@ -68,5 +68,13 @@ namespace :bunna do
       end
       puts "Nudged #{sent} #{sent == 1 ? 'person' : 'people'}."
     end
+
+    desc "Send last week's numbers to the ops chat now"
+    task weekly_report: :environment do
+      abort "Set TELEGRAM_BOT_TOKEN" unless Telegram::Bot.configured?
+
+      SendWeeklyReportJob.perform_now
+      puts "Sent last week's numbers to #{Ops::Alert.chat_ids.size} chat(s)."
+    end
   end
 end
