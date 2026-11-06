@@ -1747,6 +1747,12 @@ components:
             - type: "null"
         attributes: { $ref: "#/components/schemas/ShopAttributes" }
         hours: { $ref: "#/components/schemas/ShopHours" }
+        review_tags:
+          type: object
+          description: How many public reviews picked each quick tag, most common first. Tags nobody picked are left out.
+          additionalProperties: { type: integer, minimum: 1 }
+          propertyNames:
+            enum: [great_coffee, cozy, friendly_staff, quick_service, good_for_work, good_value, quiet, lively]
         updated_at: { type: string, format: date-time }
     ShopHours:
       type: object

@@ -2,6 +2,8 @@ import * as maplibregl from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeatureCollection } from "geojson";
 import type { OpaqueId, Shop } from "@/api/types";
+import { useCafeFilters } from "@/data/cafeFilters";
+import { filterOptions, findShops } from "@/data/nearby";
 import { useCatalog } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { useI18n } from "@/i18n/context";
@@ -41,6 +43,7 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   const { push } = useNavigation();
   const catalog = useCatalog();
   const stamps = useStampsByShop();
+  const filters = useCafeFilters();
   const { fix, status, refresh } = useLocation();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -123,18 +126,27 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
     map.current.setStyle(styleUrl);
   }, [styleUrl]);
 
+  // Only the cafés that pass the shared filters get a pin.
+  const shown = useMemo(
+    () =>
+      findShops(catalog.data ?? [], { origin: null, query: "", stamped: new Set(), ...filterOptions(filters) }).map(
+        ({ shop }) => shop,
+      ),
+    [catalog.data, filters],
+  );
+
   useEffect(() => {
-    cafes.current = cafeFeatures(catalog.data ?? [], stamps, language);
+    cafes.current = cafeFeatures(shown, stamps, language);
     map.current?.getSource<maplibregl.GeoJSONSource>(CAFES)?.setData(cafes.current);
-  }, [catalog.data, stamps, language]);
+  }, [shown, stamps, language]);
 
   useEffect(() => {
     map.current?.getLayer(SELECTED) && map.current.setFilter(SELECTED, selectedFilter(selected));
   }, [selected]);
 
   const selectedShop = useMemo(
-    () => (selected === null ? undefined : catalog.data?.find((shop) => shop.id === selected)),
-    [catalog.data, selected],
+    () => (selected === null ? undefined : shown.find((shop) => shop.id === selected)),
+    [shown, selected],
   );
 
   useEffect(() => {
@@ -169,6 +181,11 @@ export default function ShopMap({ styleUrl }: { styleUrl: string }) {
   return (
     <div className="map-screen__frame">
       <div ref={container} className="map-screen__map" />
+      {catalog.data && catalog.data.length > 0 && shown.length === 0 ? (
+        <p className="map-none" role="status">
+          {t("map.noneMatch")}
+        </p>
+      ) : null}
       {selectedShop ? (
         <CafeCard
           key={selectedShop.id}
