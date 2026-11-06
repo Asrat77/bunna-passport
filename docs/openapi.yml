@@ -1032,6 +1032,92 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /feed/{check_in_id}/reaction:
+    parameters:
+      - name: check_in_id
+        in: path
+        required: true
+        schema: { $ref: "#/components/schemas/OpaqueId" }
+    put:
+      tags: [Friends]
+      operationId: reactToFeedItem
+      summary: React to a friend's visit
+      description: >
+        Sets the caller's one reaction to a visit in their feed, replacing any
+        earlier one. Visits outside the caller's feed are 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { $ref: "#/components/schemas/ReactionKind" }
+      responses:
+        "200":
+          description: The visit's reactions after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Reactions" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    delete:
+      tags: [Friends]
+      operationId: unreactToFeedItem
+      summary: Take back a reaction
+      responses:
+        "200":
+          description: The visit's reactions after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Reactions" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /reactions:
+    get:
+      tags: [Friends]
+      operationId: listReceivedReactions
+      summary: Reactions friends left on the caller's visits
+      description: >
+        The newest 30 reactions on the caller's visits from the last 30 days,
+        from people who are still their friends.
+      responses:
+        "200":
+          description: Received reactions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ReceivedReaction" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /invite:
     get:
       tags: [Friends]
@@ -1353,6 +1439,11 @@ components:
           description: |
             Whether the Telegram bot sends an afternoon "had a cup?" nudge on
             days without a check-in. Only reaches people who started the bot.
+        friend_updates:
+          type: boolean
+          description: |
+            Whether the Telegram bot sends an evening round-up of friends' new
+            stamps and reactions to this user's visits, at most once a day.
         joined_at: { type: string, format: date-time }
     AvatarTraits:
       type: object
@@ -1390,6 +1481,7 @@ components:
         shares_cup_status: { type: boolean }
         shares_visits: { type: boolean }
         daily_nudges: { type: boolean }
+        friend_updates: { type: boolean }
     Friend:
       type: object
       required: [id, handle, display_name, avatar_seed, avatar_traits, had_cup_today, stamps_count, verified_check_ins_count]
@@ -1415,7 +1507,7 @@ components:
         verified_check_ins_count: { type: integer, minimum: 0 }
     FeedItem:
       type: object
-      required: [id, user, shop, coffee_day, stamp_earned]
+      required: [id, user, shop, coffee_day, stamp_earned, reactions]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         user: { $ref: "#/components/schemas/Friend" }
@@ -1448,6 +1540,48 @@ components:
           oneOf:
             - type: string
             - type: "null"
+        reactions: { $ref: "#/components/schemas/Reactions" }
+    ReactionKind:
+      type: string
+      enum: [coffee, heart, fire, clap]
+    Reactions:
+      type: object
+      required: [counts, mine]
+      description: Counts only; who reacted is shown to the visit's owner alone.
+      properties:
+        counts:
+          type: array
+          items:
+            type: object
+            required: [kind, count]
+            properties:
+              kind: { $ref: "#/components/schemas/ReactionKind" }
+              count: { type: integer, minimum: 1 }
+        mine:
+          oneOf:
+            - $ref: "#/components/schemas/ReactionKind"
+            - type: "null"
+    ReceivedReaction:
+      type: object
+      required: [id, kind, user, check_in, reacted_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        kind: { $ref: "#/components/schemas/ReactionKind" }
+        user: { $ref: "#/components/schemas/Friend" }
+        check_in:
+          type: object
+          required: [id, shop, coffee_day]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            shop:
+              type: object
+              required: [id, name, name_am]
+              properties:
+                id: { $ref: "#/components/schemas/OpaqueId" }
+                name: { type: string }
+                name_am: { type: string }
+            coffee_day: { type: string, format: date }
+        reacted_at: { type: string, format: date-time }
     Passport:
       type: object
       required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today, streak]

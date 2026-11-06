@@ -10,6 +10,8 @@ class Api::V1::FeedsController < Api::V1::BaseController
     levels = Stamp.where(user_id: check_ins.map(&:user_id).uniq, shop_id: check_ins.map(&:shop_id).uniq)
       .to_h { |stamp| [ [ stamp.user_id, stamp.shop_id ], stamp.level ] }
     cup_today_ids = User.ids_with_cup_today(check_ins.map(&:user_id).uniq)
+    reaction_counts = CheckInReaction.counts_by_check_in(check_ins.map(&:id))
+    my_reactions = Current.user.check_in_reactions.where(check_in_id: check_ins.map(&:id)).pluck(:check_in_id, :kind).to_h
 
     render_data(
       check_ins.map do |check_in|
@@ -27,7 +29,8 @@ class Api::V1::FeedsController < Api::V1::BaseController
           stamp_level: levels[[ check_in.user_id, check_in.shop_id ]],
           drink: check_in.drink,
           rating: check_in.rating,
-          note: check_in.note
+          note: check_in.note,
+          reactions: reactions_json(reaction_counts[check_in.id], my_reactions[check_in.id])
         }
       end,
       meta: { next_cursor: check_ins.size == limit ? check_ins.last.id : nil }

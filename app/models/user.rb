@@ -19,6 +19,7 @@ class User < ApplicationRecord
   has_many :friendships, dependent: :delete_all
   has_many :friends, through: :friendships
   has_many :inverse_friendships, class_name: "Friendship", foreign_key: :friend_id, dependent: :delete_all
+  has_many :check_in_reactions, dependent: :delete_all
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 
@@ -70,6 +71,13 @@ class User < ApplicationRecord
     def nudgeable(now = Time.current)
       where.not(telegram_user_id: nil).where.not(telegram_chat_started_at: nil).where(daily_nudges: true)
         .where("last_nudged_at IS NULL OR last_nudged_at < ?", coffee_day_start(now))
+    end
+
+    # People the bot may send the evening friends round-up to: they started
+    # it, kept friend updates on, and haven't had one this coffee day.
+    def friend_digestable(now = Time.current)
+      where.not(telegram_user_id: nil).where.not(telegram_chat_started_at: nil).where(friend_updates: true)
+        .where("last_friend_digest_at IS NULL OR last_friend_digest_at < ?", coffee_day_start(now))
     end
 
     # Finds or creates the account behind a verified Telegram user.

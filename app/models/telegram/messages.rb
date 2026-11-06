@@ -6,7 +6,9 @@ module Telegram::Messages
   COMMANDS = [
     { command: "start", description: "Open your passport" },
     { command: "nudges_off", description: "Stop the daily “had a cup?” nudge" },
-    { command: "nudges_on", description: "Turn the daily nudge back on" }
+    { command: "nudges_on", description: "Turn the daily nudge back on" },
+    { command: "friends_off", description: "Stop the evening friends round-up" },
+    { command: "friends_on", description: "Turn the friends round-up back on" }
   ].freeze
 
   # What a new person sees before they ever press Start, such as someone
@@ -30,6 +32,8 @@ module Telegram::Messages
 
   NUDGES_OFF = "nudges:off".freeze
   NUDGES_ON = "nudges:on".freeze
+  FRIENDS_OFF = "friends:off".freeze
+  FRIENDS_ON = "friends:on".freeze
 
   # Rating buttons carry "rate:<check-in id>:<cups>"; see Telegram::RatingCallback.
   RATING_PREFIX = "rate:".freeze
@@ -115,6 +119,32 @@ module Telegram::Messages
       Want to say more? Open the app to add a note, tags or what you paid.
     TEXT
     { text: text.strip, reply_markup: keyboard([ app_button("Open Bunna Passport") ]) }
+  end
+
+  # The evening round-up; see Friends::Digest.
+  def friend_digest(digest)
+    sections = []
+    if digest.new_stamps.any?
+      lines = digest.new_stamps.map { |check_in| "• #{h(check_in.user.display_name)} stamped <b>#{h(check_in.shop.name)}</b>" }
+      sections << "New stamps:\n#{capped(lines).join("\n")}"
+    end
+    if digest.reactions.any?
+      lines = digest.reactions.map do |reaction|
+        "• #{h(reaction.user.display_name)} #{reaction.emoji} your <b>#{h(reaction.check_in.shop.name)}</b> visit"
+      end
+      sections << "On your visits:\n#{capped(lines).join("\n")}"
+    end
+
+    text = "☕ <b>Your coffee friends today</b>\n\n#{sections.join("\n\n")}"
+    { text: text, reply_markup: keyboard([ app_button("See the feed") ], [ callback_button("Stop friend updates", FRIENDS_OFF) ]) }
+  end
+
+  def friend_updates_changed(user)
+    if user.friend_updates?
+      "The evening friends round-up is on. Send /friends_off to stop it."
+    else
+      "No more friends round-ups. Send /friends_on to bring them back."
+    end
   end
 
   def nudges_changed(user)
@@ -233,6 +263,12 @@ module Telegram::Messages
 
       next_level = Stamp.level_for(cups + remaining)
       "#{remaining} more #{remaining == 1 ? 'cup' : 'cups'} for #{next_level.capitalize}."
+    end
+
+    def capped(lines)
+      return lines if lines.size <= Friends::Digest::MAX_LINES
+
+      lines.first(Friends::Digest::MAX_LINES) << "• and #{lines.size - Friends::Digest::MAX_LINES} more"
     end
 
     def keyboard(*rows)

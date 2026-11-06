@@ -11,6 +11,9 @@ import type {
   CityStats,
   Contribution,
   FeedItem,
+  ReactionKind,
+  Reactions,
+  ReceivedReaction,
   Friend,
   Invite,
   InviteMessage,
@@ -60,7 +63,7 @@ export function setTokenSource(source: TokenSource): void {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | undefined>;
   headers?: Record<string, string>;
@@ -283,6 +286,7 @@ export const api = {
     shares_cup_status?: boolean;
     shares_visits?: boolean;
     daily_nudges?: boolean;
+    friend_updates?: boolean;
   }) {
     return request<User>("/profile", { method: "PATCH", body: { profile } });
   },
@@ -346,6 +350,16 @@ export const api = {
 
   getFeed(cursor?: OpaqueId) {
     return request<FeedItem[]>("/feed", { query: { cursor } });
+  },
+
+  /** Sets or (with null) takes back your reaction to a friend's visit. */
+  reactToFeedItem(checkInId: OpaqueId, kind: ReactionKind | null) {
+    const path = `/feed/${checkInId}/reaction`;
+    return kind ? request<Reactions>(path, { method: "PUT", body: { kind } }) : request<Reactions>(path, { method: "DELETE" });
+  },
+
+  listReceivedReactions() {
+    return request<ReceivedReaction[]>("/reactions");
   },
 
   getPersonalStats() {

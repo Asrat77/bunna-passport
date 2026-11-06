@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -64,6 +64,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_badges_on_slug", unique: true
     t.check_constraint "threshold > 0", name: "badges_threshold"
+  end
+
+  create_table "check_in_reactions", force: :cascade do |t|
+    t.integer "check_in_id", null: false
+    t.integer "user_id", null: false
+    t.string "kind", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["check_in_id", "user_id"], name: "index_check_in_reactions_on_check_in_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_check_in_reactions_on_user_id"
+    t.check_constraint "kind IN ('coffee', 'heart', 'fire', 'clap')", name: "check_in_reactions_kind"
   end
 
   create_table "check_ins", force: :cascade do |t|
@@ -352,6 +363,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
     t.string "trust_level", default: "newcomer", null: false
     t.datetime "updated_at", null: false
     t.integer "verified_check_ins_count", default: 0, null: false
+    t.boolean "friend_updates", default: true, null: false
+    t.datetime "last_friend_digest_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
@@ -367,6 +380,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
   add_foreign_key "awards", "badges"
   add_foreign_key "awards", "check_ins"
   add_foreign_key "awards", "users"
+  add_foreign_key "check_in_reactions", "check_ins"
+  add_foreign_key "check_in_reactions", "users"
   add_foreign_key "check_ins", "shops"
   add_foreign_key "check_ins", "users"
   add_foreign_key "contribution_confirmations", "contributions"

@@ -1,21 +1,25 @@
 import { phArrowClockwise, phUserPlus } from "@/ui/icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
-import type { FeedItem, Friend } from "@/api/types";
+import { REACTION_KINDS, type FeedItem, type Friend, type ReactionKind, type Reactions, type ReceivedReaction } from "@/api/types";
 import { doodleSeedFor, doodleTraitsFor } from "@/data/me";
-import { useFeed, useFriends, useInvite, usePassport } from "@/data/queries";
+import { guessReactions } from "@/data/reactions";
+import { useFeed, useFriends, useInvite, usePassport, useReceivedReactions } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
 import { addisCoffeeDay, shiftDay } from "@/lib/coffeeDay";
 import { shareInviteLink } from "@/lib/invite";
 import { useNavigation } from "@/nav/Navigation";
-import { hapticSuccess } from "@/telegram/haptics";
+import { hapticSelection, hapticSuccess } from "@/telegram/haptics";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import "./friends.css";
 
 type T = ReturnType<typeof useI18n>["t"];
+
+export const REACTION_EMOJI: Record<ReactionKind, string> = { coffee: "☕", heart: "❤️", fire: "🔥", clap: "👏" };
+type FeedPages = InfiniteData<{ items: FeedItem[]; nextCursor?: number }>;
 
 /**
  * Coffee friends: an invite that rides on your latest share card, the last
@@ -46,6 +50,7 @@ export function FriendsSection() {
         <p className="notice">{t("friends.noFriends")}</p>
       ) : (
         <>
+          <ReceivedReactions />
           <section className="friends-feed" aria-labelledby="friends-feed-title">
             <h2 id="friends-feed-title" className="section-title">
               {t("friends.feed")}
@@ -201,7 +206,7 @@ function FeedRow({ item }: { item: FeedItem }) {
   const extras = [item.drink, item.rating ? "★".repeat(item.rating) : null].filter(Boolean).join(" · ");
 
   return (
-    <li>
+    <li className="feed-item">
       <button type="button" className="feed-row" onClick={() => push({ name: "shop", id: item.shop.id })}>
         <FriendDoodle friend={item.user} size={40} />
         <span className="feed-row__text">
@@ -216,7 +221,109 @@ function FeedRow({ item }: { item: FeedItem }) {
         </span>
         {item.stamp_earned ? <span className="feed-row__badge mono">{t(`level.${item.stamp_level ?? "bronze"}`)}</span> : null}
       </button>
+      <ReactionBar item={item} />
     </li>
+  );
+}
+
+/**
+ * One reaction per visit: tap a kind to set it, tap yours again to take it
+ * back. The feed updates at once and settles on what the server says.
+ */
+function ReactionBar({ item }: { item: FeedItem }) {
+  const { t } = useI18n();
+  const queryClient = useQueryClient();
+  const react = useMutation({
+    mutationFn: async (kind: ReactionKind | null) => (await api.reactToFeedItem(item.id, kind)).data,
+    onMutate: (kind) => {
+      const previous = item.reactions;
+      setReactions(queryClient, item.id, guessReactions(previous, kind));
+      return { previous };
+    },
+    onError: (_error, _kind, context) => {
+      if (context) setReactions(queryClient, item.id, context.previous);
+    },
+    onSuccess: (reactions) => setReactions(queryClient, item.id, reactions),
+  });
+  const counts = new Map(item.reactions.counts.map((row) => [row.kind, row.count]));
+
+  return (
+    <div className="reaction-bar" role="group" aria-label={t("friends.reactLabel", { handle: item.user.handle })}>
+      {REACTION_KINDS.map((kind) => {
+        const mine = item.reactions.mine === kind;
+        const count = counts.get(kind) ?? 0;
+        return (
+          <button
+            key={kind}
+            type="button"
+            className="reaction-chip"
+            aria-pressed={mine}
+            aria-label={t(`reaction.${kind}`)}
+            disabled={react.isPending}
+            onClick={() => {
+              hapticSelection();
+              react.mutate(mine ? null : kind);
+            }}
+          >
+            <span aria-hidden="true">{REACTION_EMOJI[kind]}</span>
+            {count > 0 ? <span className="reaction-chip__count mono">{count}</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function setReactions(queryClient: ReturnType<typeof useQueryClient>, id: FeedItem["id"], reactions: Reactions) {
+  queryClient.setQueryData<FeedPages>(["feed"], (data) =>
+    data
+      ? {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            items: page.items.map((entry) => (entry.id === id ? { ...entry, reactions } : entry)),
+          })),
+        }
+      : data,
+  );
+}
+
+/** Friends' reactions to your own visits, newest first. */
+function ReceivedReactions() {
+  const { t, language } = useI18n();
+  const received = useReceivedReactions();
+  const [expanded, setExpanded] = useState(false);
+  const list = received.data ?? [];
+  if (list.length === 0) return null;
+  const shown = expanded ? list : list.slice(0, 3);
+
+  return (
+    <section className="friends-reactions" aria-labelledby="friends-reactions-title">
+      <h2 id="friends-reactions-title" className="section-title">
+        {t("friends.reactionsTitle")}
+      </h2>
+      <ul className="card feed-rows">
+        {shown.map((reaction: ReceivedReaction) => (
+          <li key={reaction.id} className="feed-row feed-row--static">
+            <FriendDoodle friend={reaction.user} size={32} />
+            <span className="feed-row__text">
+              <span className="feed-row__line">
+                <strong>@{reaction.user.handle}</strong>{" "}
+                {t("friends.reactedTo", {
+                  emoji: REACTION_EMOJI[reaction.kind],
+                  shop: language === "am" ? reaction.check_in.shop.name_am : reaction.check_in.shop.name,
+                })}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {list.length > shown.length ? (
+        <button type="button" className="pill-button friends-feed__more" onClick={() => setExpanded(true)}>
+          {t("friends.more")}
+        </button>
+      ) : null}
+    </section>
   );
 }
 

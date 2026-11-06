@@ -29,6 +29,7 @@ module Api::V1::Rendering
         shares_cup_status: user.shares_cup_status,
         shares_visits: user.shares_visits,
         daily_nudges: user.daily_nudges,
+        friend_updates: user.friend_updates,
         joined_at: user.created_at.iso8601
       }
     end
@@ -45,6 +46,15 @@ module Api::V1::Rendering
         had_cup_today: user.public_cup_status(cup_today_ids),
         stamps_count: user.stamps_count,
         verified_check_ins_count: user.verified_check_ins_count
+      }
+    end
+
+    # How friends reacted to a visit: a count per kind, and the viewer's own.
+    # Counts only, so a friend can't see who else knows the person.
+    def reactions_json(counts, mine)
+      {
+        counts: CheckInReaction::KINDS.filter_map { |kind| { kind: kind, count: counts[kind] } if counts[kind].to_i.positive? },
+        mine: mine
       }
     end
 
