@@ -1,7 +1,7 @@
 import type { StatsShop } from "@/api/types";
 import { useCityStats } from "@/data/queries";
 import { useI18n } from "@/i18n/context";
-import { PRICE_GLYPHS } from "@/lib/price";
+import { PRICE_LABEL_KEYS } from "@/lib/price";
 import { useNavigation } from "@/nav/Navigation";
 import { Headline } from "@/ui/Headline";
 import { StatStrip } from "@/ui/StatStrip";
@@ -146,7 +146,7 @@ export function CitySection() {
           {BANDS.map((band) => (
             <li key={band} className="levels__cell">
               <span className="levels__count mono">{data.price_bands[band]}</span>
-              <span className="levels__name">{PRICE_GLYPHS[band]}</span>
+              <span className="levels__name">{t(PRICE_LABEL_KEYS[band])}</span>
             </li>
           ))}
         </ul>

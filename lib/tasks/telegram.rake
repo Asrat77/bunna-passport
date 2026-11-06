@@ -1,7 +1,10 @@
 namespace :bunna do
   namespace :telegram do
     configure_bot = lambda do |bot|
-      bot.set_my_commands(Telegram::Messages::COMMANDS)
+      bot.set_my_commands(Telegram::Messages.commands(:en))
+      bot.set_my_commands(Telegram::Messages.commands(:am), language_code: "am")
+      Telegram::Messages::SHORT_DESCRIPTIONS.each { |language, text| bot.set_my_short_description(text, language_code: language) }
+      Telegram::Messages::DESCRIPTIONS.each { |language, text| bot.set_my_description(text, language_code: language) }
       url = Telegram::Messages.mini_app_url
       if url&.start_with?("https://")
         bot.set_chat_menu_button(text: "Open", url: url)
@@ -65,6 +68,14 @@ namespace :bunna do
         sent += 1
       end
       puts "Nudged #{sent} #{sent == 1 ? 'person' : 'people'}."
+    end
+
+    desc "Send last week's numbers to the ops chat now"
+    task weekly_report: :environment do
+      abort "Set TELEGRAM_BOT_TOKEN" unless Telegram::Bot.configured?
+
+      SendWeeklyReportJob.perform_now
+      puts "Sent last week's numbers to #{Ops::Alert.chat_ids.size} chat(s)."
     end
   end
 end

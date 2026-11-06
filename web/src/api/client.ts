@@ -1,3 +1,5 @@
+import type { AvatarTraits } from "@/design/doodle/traits";
+import type { Language } from "@/i18n/strings";
 import { ApiRequestError, NetworkError } from "./errors";
 import type {
   ApiError,
@@ -10,8 +12,12 @@ import type {
   CityStats,
   Contribution,
   FeedItem,
+  ReactionKind,
+  Reactions,
+  ReceivedReaction,
   Friend,
   Invite,
+  InviteMessage,
   InvitePreview,
   LeaderboardEntry,
   LeaderboardMetric,
@@ -21,6 +27,8 @@ import type {
   Passport,
   PersonalStats,
   Review,
+  ReviewFilter,
+  Saying,
   ShareCards,
   Shop,
   ShopDetail,
@@ -56,7 +64,7 @@ export function setTokenSource(source: TokenSource): void {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | undefined>;
   headers?: Record<string, string>;
@@ -254,7 +262,8 @@ export const api = {
     }
     const form = new FormData();
     for (const [key, value] of Object.entries(input)) {
-      if (value !== undefined) form.append(`check_in[${key}]`, String(value));
+      if (Array.isArray(value)) for (const item of value) form.append(`check_in[${key}][]`, String(item));
+      else if (value !== undefined) form.append(`check_in[${key}]`, String(value));
     }
     form.append("check_in[photo]", photo);
     return request<CheckInResult>("/check_ins", { method: "POST", body: form, signal, timeoutMs: 60_000 });
@@ -274,9 +283,12 @@ export const api = {
 
   updateProfile(profile: {
     avatar_seed?: string | null;
+    avatar_traits?: AvatarTraits | null;
     shares_cup_status?: boolean;
     shares_visits?: boolean;
     daily_nudges?: boolean;
+    friend_updates?: boolean;
+    language?: Language;
   }) {
     return request<User>("/profile", { method: "PATCH", body: { profile } });
   },
@@ -325,6 +337,11 @@ export const api = {
   },
 
   /** Retires the current link for a new one; friends stay friends. */
+  /** The invite as a prepared Telegram message with an open button, when the sender is on Telegram. */
+  prepareInviteMessage(text: string, button: string) {
+    return request<InviteMessage>("/invite/message", { method: "POST", body: { text, button } });
+  },
+
   rotateInvite() {
     return request<Invite>("/invite", { method: "DELETE" });
   },
@@ -335,6 +352,16 @@ export const api = {
 
   getFeed(cursor?: OpaqueId) {
     return request<FeedItem[]>("/feed", { query: { cursor } });
+  },
+
+  /** Sets or (with null) takes back your reaction to a friend's visit. */
+  reactToFeedItem(checkInId: OpaqueId, kind: ReactionKind | null) {
+    const path = `/feed/${checkInId}/reaction`;
+    return kind ? request<Reactions>(path, { method: "PUT", body: { kind } }) : request<Reactions>(path, { method: "DELETE" });
+  },
+
+  listReceivedReactions() {
+    return request<ReceivedReaction[]>("/reactions");
   },
 
   getPersonalStats() {
@@ -366,10 +393,10 @@ export const api = {
   },
 
   /**
-   * Fills in what someone chose to say about a visit already recorded. Allowed
-   * for a day afterwards; cannot revise where or when the visit happened.
+   * Fills in or changes what someone said about a visit already recorded.
+   * Allowed for a week afterwards; cannot revise where or when it happened.
    */
-  updateCheckIn(id: OpaqueId, saying: { rating?: number; note?: string; drink?: string }) {
+  updateCheckIn(id: OpaqueId, saying: Saying) {
     return request<CheckIn>(`/check_ins/${id}`, {
       method: "PATCH",
       body: { check_in: saying },
@@ -390,9 +417,9 @@ export const api = {
     });
   },
 
-  /** What people said on visits the server verified. */
-  listReviews(shopId: OpaqueId) {
-    return request<Review[]>(`/shops/${shopId}/reviews`);
+  /** What people said on visits the server verified, newest first, a page at a time. */
+  listReviews(shopId: OpaqueId, options: { cursor?: OpaqueId; filter?: ReviewFilter } = {}) {
+    return request<Review[]>(`/shops/${shopId}/reviews`, { query: { cursor: options.cursor, filter: options.filter } });
   },
 
   suggestEdit(shopId: OpaqueId, proposed_changes: Record<string, unknown>) {

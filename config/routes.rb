@@ -35,8 +35,14 @@ Rails.application.routes.draw do
       resources :badges, only: :index
       resources :friends, only: %i[ index create destroy ]
       get "feed", to: "feeds#show", as: :feed
+      # A friend's visit from the feed: one reaction each, set or taken back.
+      put "feed/:check_in_id/reaction", to: "check_in_reactions#update", as: :feed_reaction
+      delete "feed/:check_in_id/reaction", to: "check_in_reactions#destroy"
+      # Reactions friends left on your own visits.
+      get "reactions", to: "check_in_reactions#index", as: :reactions
       get "invite", to: "invites#show", as: :invite
       delete "invite", to: "invites#destroy"
+      post "invite/message", to: "invites#message", as: :invite_message
       get "invites/:token", to: "invite_previews#show", as: :invite_preview
       resources :leaderboards, only: :index
       get "stats/me", to: "personal_stats#show", as: :personal_stats
@@ -72,6 +78,8 @@ Rails.application.routes.draw do
   # Rendered share cards, fetched by Telegram and by phones saving the image.
   # Public on purpose: the unguessable token is the only key.
   get "cards/:token", to: "share_images#show", as: :share_image, constraints: { format: "png" }
+  # The picture on a friend invite sent to a chat, keyed by the invite token.
+  get "invite_cards/:token", to: "invite_cards#show", as: :invite_card, constraints: { format: "png" }
 
   # The bot's webhook. Telegram proves itself with a secret header.
   post "telegram/webhook", to: "telegram/webhooks#create", as: :telegram_webhook

@@ -1,7 +1,7 @@
 import { phCheck, phMapPin, phPencilSimple, phShareNetwork } from "@/ui/icons";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
-import { useCatalog, useReviews, useShop } from "@/data/queries";
+import { useCatalog, useShop } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { stampDate, stampRotation } from "@/design/stamp/geometry";
@@ -9,13 +9,15 @@ import { useI18n } from "@/i18n/context";
 import { distanceMeters, formatMeters } from "@/lib/distance";
 import { openStatus } from "@/lib/hours";
 import { openInMaps } from "@/lib/maps";
-import { PRICE_GLYPHS } from "@/lib/price";
+import { PRICE_LABEL_KEYS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { AddChip, FilterChip, TagChip } from "@/ui/Chip";
 import { Icon } from "@/ui/Icon";
 import { StatStrip } from "@/ui/StatStrip";
+import { ReviewComposer } from "./review/ReviewComposer";
+import { ReviewHighlights, ScoreLine, ShopReviews, useVisitToReview } from "./review/ShopReviews";
 import "./shop.css";
 import "./contribute/contribute.css";
 
@@ -74,6 +76,7 @@ function ShopBody({
   // The shop is fetched without signing in (it's cached for everyone), so the
   // viewer's own stamp comes from their passport.
   const stamp = shop.stamp ?? stamps.get(shop.id) ?? null;
+  const visitToReview = useVisitToReview(shop.id);
 
   const statusText =
     status === "open" ? t("shop.openNow") : status === "closingSoon" ? t("shop.closingSoon") : status === "closed" ? t("shop.closedNow") : null;
@@ -115,6 +118,7 @@ function ShopBody({
             </>
           ) : null}
         </span>
+        <ScoreLine shopId={shop.id} onOpen={() => onSection("reviews")} />
         {stamp ? (
           <button type="button" className="shop__share" onClick={() => push({ name: "share", target: { shopId: shop.id }, shopName: shop.name })}>
             <Icon path={phShareNetwork} size={18} />
@@ -125,7 +129,10 @@ function ShopBody({
 
       <StatStrip
         stats={[
-          { value: shop.price_band ? PRICE_GLYPHS[shop.price_band] : t("shop.priceUnknown"), label: t("shop.price") },
+          {
+            value: shop.price_band ? t(PRICE_LABEL_KEYS[shop.price_band]) : t("shop.priceUnknown"),
+            label: shop.price_band && (shop.price_band_reports ?? 0) > 0 ? t("shop.priceFromReviews") : t("shop.price"),
+          },
           { value: stamp?.check_ins_count ?? 0, label: t("shop.yourCups") },
           { value: `${areaStamped}/${areaShops.length}`, label: t("shop.areaPage", { area }) },
         ]}
@@ -141,6 +148,7 @@ function ShopBody({
 
       {section === "overview" ? (
         <>
+          {visitToReview ? <ReviewComposer key={visitToReview.id} visit={visitToReview} /> : null}
           <section className="card getting-there" aria-labelledby="getting-there">
             <h2 id="getting-there" className="eyebrow">
               {t("shop.gettingThere")}
@@ -155,6 +163,7 @@ function ShopBody({
             </button>
           </section>
           <PhotoStrip shop={shop} onAll={() => onSection("photos")} />
+          <ReviewHighlights shopId={shop.id} />
           <div className="chip-wrap">
             {tags.map((tag) => (
               <TagChip key={tag}>{t(`shop.tag.${tag}`)}</TagChip>
@@ -172,7 +181,7 @@ function ShopBody({
       ) : section === "photos" ? (
         <PhotoGrid shop={shop} />
       ) : (
-        <Reviews shopId={shop.id} />
+        <ShopReviews shopId={shop.id} visit={visitToReview} onCheckIn={() => push({ name: "checkin", shopId: shop.id })} />
       )}
     </>
   );
@@ -214,31 +223,5 @@ function PhotoGrid({ shop }: { shop: ShopDetail }) {
         </a>
       ))}
     </div>
-  );
-}
-
-function Reviews({ shopId }: { shopId: number }) {
-  const { t } = useI18n();
-  const { data, isPending } = useReviews(shopId, true);
-  if (isPending) return <div className="skeleton" style={{ height: 120 }} />;
-  if (!data || data.length === 0) return <p className="notice">{t("reviews.empty")}</p>;
-  return (
-    <ul className="reviews">
-      {data.map((review) => (
-        <li key={review.id} className="card review">
-          <div className="review__head">
-            <span className="review__who">@{review.user.handle}</span>
-            {review.rating ? (
-              <span className="mono review__rating" aria-label={t("checkin.rateCups", { count: review.rating })}>
-                {"●".repeat(review.rating)}
-                <span className="review__rating-rest">{"●".repeat(5 - review.rating)}</span>
-              </span>
-            ) : null}
-          </div>
-          {review.drink ? <span className="review__drink">{review.drink}</span> : null}
-          {review.note ? <p className="review__note">{review.note}</p> : null}
-        </li>
-      ))}
-    </ul>
   );
 }

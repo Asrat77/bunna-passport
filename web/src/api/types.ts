@@ -7,6 +7,7 @@
  * wins and this file is wrong.
  */
 
+import type { AvatarTraits } from "@/design/doodle/traits";
 import type { StampLevel } from "@/design/seal/levels";
 
 export type OpaqueId = number;
@@ -27,6 +28,8 @@ export type User = {
   stamps_count: number;
   home_neighborhood_id: OpaqueId | null;
   avatar_seed: string | null;
+  /** Profile picture parts chosen in the editor; null until someone edits theirs. */
+  avatar_traits: Partial<AvatarTraits> | null;
   /** Server-computed against the 04:00 Addis coffee day. */
   had_cup_today: boolean;
   shares_cup_status: boolean;
@@ -34,6 +37,10 @@ export type User = {
   shares_visits: boolean;
   /** Whether the bot sends the afternoon "had a cup?" nudge. */
   daily_nudges: boolean;
+  /** Whether the bot sends the evening round-up of friends' stamps and reactions. */
+  friend_updates: boolean;
+  /** The language the bot writes in; the app reports what it shows. Null until known. */
+  language: "en" | "am" | null;
   joined_at: Timestamp;
 };
 
@@ -75,8 +82,12 @@ export type Shop = {
   longitude: number;
   status: ShopStatus;
   price_band: PriceBand | null;
+  /** People whose reported prices set price_band; 0 when the catalog did. */
+  price_band_reports?: number;
   attributes: ShopAttributes;
   hours?: ShopHours;
+  /** How many public reviews picked each quick tag. Older cached catalogs lack it. */
+  review_tags?: Partial<Record<ReviewTag, number>>;
   updated_at: Timestamp;
 };
 
@@ -141,9 +152,27 @@ export type CheckInInput = {
   longitude: number;
   accuracy_meters: number;
   mock_location?: boolean;
+} & Saying;
+
+/** Quick things to say about a café, as codes each reader sees in their language. */
+export type ReviewTag =
+  | "great_coffee"
+  | "cozy"
+  | "friendly_staff"
+  | "quick_service"
+  | "good_for_work"
+  | "good_value"
+  | "quiet"
+  | "lively";
+
+/** What someone says about a visit; every part optional. */
+export type Saying = {
+  /** A drink code (macchiato, buna, …). Older visits may hold free text. */
   drink?: string;
   rating?: number;
   note?: string;
+  tags?: ReviewTag[];
+  price_birr?: number;
 };
 
 /**
@@ -164,6 +193,8 @@ export type CheckIn = {
   drink: string | null;
   rating: number | null;
   note: string | null;
+  tags: ReviewTag[];
+  price_birr: number | null;
   occurred_at: Timestamp;
   /** True when this visit created the user's first stamp at this shop. */
   stamp_earned: boolean;
@@ -209,17 +240,36 @@ export type ShareCards = {
 
 export type Review = {
   id: OpaqueId;
-  user: { id: OpaqueId; handle: string; display_name: string };
+  user: {
+    id: OpaqueId;
+    handle: string;
+    display_name: string;
+    avatar_seed: string | null;
+    avatar_traits: Partial<AvatarTraits> | null;
+  };
   rating: number | null;
   note: string | null;
   drink: string | null;
+  tags: ReviewTag[];
+  price_birr: number | null;
+  photo: { thumb: string; full: string } | null;
   occurred_at: Timestamp;
 };
 
+export type ReviewFilter = "notes" | "photos";
+
 export type ReviewSummary = {
+  /** Each person counted once, by their latest rating. */
   rating_average: number | null;
   rating_count: number;
+  /** People who gave each score, keyed "1" to "5". */
+  distribution: Record<string, number>;
+  top_tags: { tag: ReviewTag; count: number }[];
+  /** Median paid per drink over the last six months. */
+  typical_prices: { drink: string; median_birr: number; count: number }[];
+  /** Reviews matching the filter. */
   total: number;
+  next_cursor: OpaqueId | null;
 };
 
 export type PassportStamp = {
@@ -280,6 +330,7 @@ export type LeaderboardEntry = {
     handle: string;
     display_name: string;
     avatar_seed: string | null;
+    avatar_traits: Partial<AvatarTraits> | null;
     /** null when that person has turned off sharing their coffee status. */
     had_cup_today: boolean | null;
   };
@@ -358,6 +409,7 @@ export type Friend = {
   handle: string;
   display_name: string;
   avatar_seed: string | null;
+  avatar_traits: Partial<AvatarTraits> | null;
   /** null when they've turned off sharing it. */
   had_cup_today: boolean | null;
   stamps_count: number;
@@ -367,8 +419,17 @@ export type Friend = {
 /** GET /invite. */
 export type Invite = { token: string; url: string; friends_count: number };
 
+/** POST /invite/message: the invite as a prepared Telegram message, if one could be made. */
+export type InviteMessage = Invite & { prepared_message_id: string | null };
+
 /** GET /invites/{token}: who sent the link that was just opened. */
-export type InvitePreview = { inviter: Friend; own: boolean; already_friends: boolean };
+export type InvitePreview = {
+  inviter: Friend;
+  own: boolean;
+  already_friends: boolean;
+  /** The viewer hasn't checked in anywhere yet, so the screen explains the app. */
+  new_here: boolean;
+};
 
 /**
  * A friend's verified visit. It names the coffee day, never the time, so the
@@ -385,4 +446,23 @@ export type FeedItem = {
   drink: string | null;
   rating: number | null;
   note: string | null;
+  reactions: Reactions;
+};
+
+export const REACTION_KINDS = ["coffee", "heart", "fire", "clap"] as const;
+export type ReactionKind = (typeof REACTION_KINDS)[number];
+
+/** Counts per kind on one visit, and the viewer's own reaction. Never who. */
+export type Reactions = {
+  counts: { kind: ReactionKind; count: number }[];
+  mine: ReactionKind | null;
+};
+
+/** A friend's reaction to one of your own visits. */
+export type ReceivedReaction = {
+  id: OpaqueId;
+  kind: ReactionKind;
+  user: Friend;
+  check_in: { id: OpaqueId; shop: { id: OpaqueId; name: string; name_am: string }; coffee_day: string };
+  reacted_at: Timestamp;
 };

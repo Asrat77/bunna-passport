@@ -13,6 +13,8 @@ import "./invite.css";
 /**
  * Opened from someone's invite link. Shows who sent it and asks before
  * making the two of you friends, since friends see each other's visits.
+ * Someone who hasn't checked in anywhere yet also gets a short note on
+ * what the app is, since the link may be how they first heard of it.
  */
 export function Invite({ token }: { token: string }) {
   const { t } = useI18n();
@@ -65,11 +67,24 @@ export function Invite({ token }: { token: string }) {
               ? t("invite.own")
               : data.already_friends
                 ? t("invite.already", { handle: inviter.handle })
-                : t("invite.from", { handle: inviter.handle })}
+                : t(data.new_here ? "invite.fromNew" : "invite.from", { handle: inviter.handle })}
           </p>
           {data.own || data.already_friends ? null : <p className="invite__body muted">{t("invite.body")}</p>}
         </div>
       )}
+
+      {data && inviter && data.new_here && !data.own && !data.already_friends ? (
+        <section className="card invite__about" aria-labelledby="invite-about-title">
+          <h2 id="invite-about-title" className="invite__about-title">
+            {t("invite.aboutTitle")}
+          </h2>
+          <ul className="invite__about-list">
+            <li>{t("invite.about1")}</li>
+            <li>{t("invite.about2")}</li>
+            <li>{t("invite.about3")}</li>
+          </ul>
+        </section>
+      ) : null}
 
       {accept.isError ? <p className="notice notice--caution">{t("common.somethingWrong")}</p> : null}
 

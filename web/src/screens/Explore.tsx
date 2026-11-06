@@ -1,6 +1,7 @@
 import { phCoffeeBean, phCrosshair, phMagnifyingGlass, phMapTrifold, phPlusCircle } from "@/ui/icons";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthProvider";
+import { activeFilterCount, NO_FILTERS, setCafeFilters, useCafeFilters, type CafeFilters } from "@/data/cafeFilters";
 import { rankShops, type ShopFilter } from "@/data/nearby";
 import { useMyDoodle } from "@/data/me";
 import { useCatalog, useProfile } from "@/data/queries";
@@ -15,6 +16,7 @@ import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import { ShopRow } from "@/ui/ShopRow";
+import { CafeFilterChips } from "@/ui/CafeFilters";
 import { AddMissing } from "./contribute/AddMissing";
 import "./explore.css";
 
@@ -32,23 +34,19 @@ export function Explore() {
   const location = useLocation();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ShopFilter>("all");
+  const filters = useCafeFilters();
   useMochaChrome();
 
-  const ranked = useMemo(
-    () =>
-      rankShops(catalog.data ?? [], {
-        origin: location.fix,
-        query,
-        filter,
-        stamped: new Set(stamps.keys()),
-      }),
-    [catalog.data, location.fix, query, filter, stamps],
-  );
+  const stamped = useMemo(() => new Set(stamps.keys()), [stamps]);
+  const rank = (with_: CafeFilters) =>
+    rankShops(catalog.data ?? [], { origin: location.fix, query, filter, stamped, filters: with_ });
+  const ranked = useMemo(() => rank(filters), [catalog.data, location.fix, query, filter, stamped, filters]);
 
   const searching = query.trim().length > 0;
+  const filtering = activeFilterCount(filters) > 0;
   // A preview only: the whole catalog, paged, lives on All cafés.
   const visible = ranked.slice(0, PREVIEW_COUNT);
-  const title = searching
+  const title = searching || filtering
     ? t("explore.results")
     : filter === "jebena"
       ? t("explore.jebenaShops")
@@ -71,7 +69,7 @@ export function Explore() {
           aria-label={`${t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}. ${t("explore.openStudio")}`}
           onClick={() => push({ name: "studio" })}
         >
-          <Doodle seed={doodle.seed} mood={doodle.awake ? "awake" : "sleepy"} size={46} decorative />
+          <Doodle seed={doodle.seed} traits={doodle.traits} mood={doodle.awake ? "awake" : "sleepy"} size={46} decorative />
         </button>
         <div className="greeting__text">
           <span className="greeting__hello">{t("explore.greeting", { name })}</span>
@@ -119,6 +117,8 @@ export function Explore() {
         </button>
       </div>
 
+      <CafeFilterChips count={(next) => rank(next).length} />
+
       <div className="section-head">
         <h2 className="section-title">{title}</h2>
         {ranked.length > PREVIEW_COUNT ? (
@@ -147,7 +147,19 @@ export function Explore() {
         </div>
       ) : visible.length === 0 ? (
         <div className="notice">
-          {filter === "notYet" && !searching ? t("explore.allStamped") : t("explore.noResults")}
+          {filtering && !searching
+            ? t("cafes.none")
+            : filter === "notYet" && !searching
+              ? t("explore.allStamped")
+              : t("explore.noResults")}
+          {filtering && !searching ? (
+            <>
+              {" "}
+              <button type="button" className="link-button" onClick={() => setCafeFilters(NO_FILTERS)}>
+                {t("cafes.clear")}
+              </button>
+            </>
+          ) : null}
           {searching ? (
             <>
               <br />

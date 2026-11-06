@@ -1,4 +1,5 @@
-import type { OpaqueId, Shop } from "@/api/types";
+import type { OpaqueId, PriceBand, Shop } from "@/api/types";
+import { hasFeature, matchesPrice, type CafeFilters, type FeatureTag } from "./cafeFilters";
 import { distanceMeters, type Coordinate } from "@/lib/distance";
 import { openStatus } from "@/lib/hours";
 import { normalizeName } from "@/lib/searchKey";
@@ -15,6 +16,10 @@ export type ShopQuery = {
   stamped: Set<OpaqueId>;
   jebena?: boolean;
   openNow?: boolean;
+  /** Any of these price levels. */
+  prices?: readonly PriceBand[];
+  /** Every one of these: Wi-Fi or what reviewers say. */
+  tags?: readonly FeatureTag[];
   /** Only shops in the passport (true), only shops not in it (false), or both. */
   visited?: boolean | null;
   neighborhoodId?: OpaqueId | null;
@@ -41,6 +46,8 @@ export function findShops(shops: Shop[], options: ShopQuery): ShopWithDistance[]
       if (options.visited === false && options.stamped.has(shop.id)) return false;
       if (options.neighborhoodId != null && shop.neighborhood.id !== options.neighborhoodId) return false;
       if (options.openNow && !isOpen(shop, now)) return false;
+      if (options.prices && !matchesPrice(shop, options.prices)) return false;
+      if (options.tags?.some((tag) => !hasFeature(shop, tag))) return false;
       if (!needle) return true;
       return [shop.name, shop.name_am, shop.neighborhood.name, shop.neighborhood.name_am].some((text) =>
         normalizeName(text).includes(needle),
@@ -56,10 +63,10 @@ export function findShops(shops: Shop[], options: ShopQuery): ShopWithDistance[]
     });
 }
 
-/** The Explore tab's view: one quick filter at a time, nearest first. */
+/** The Explore tab's view: one quick filter at a time plus the shared filters, nearest first. */
 export function rankShops(
   shops: Shop[],
-  options: { origin: Coordinate | null; query: string; filter: ShopFilter; stamped: Set<OpaqueId> },
+  options: { origin: Coordinate | null; query: string; filter: ShopFilter; stamped: Set<OpaqueId>; filters?: CafeFilters; now?: Date },
 ): ShopWithDistance[] {
   return findShops(shops, {
     origin: options.origin,
@@ -67,7 +74,14 @@ export function rankShops(
     stamped: options.stamped,
     jebena: options.filter === "jebena",
     visited: options.filter === "notYet" ? false : null,
+    ...filterOptions(options.filters),
+    now: options.now,
   });
+}
+
+/** The shared filters as findShops options. */
+export function filterOptions(filters: CafeFilters | undefined): Pick<ShopQuery, "openNow" | "prices" | "tags"> {
+  return filters ? { openNow: filters.openNow, prices: filters.prices, tags: filters.tags } : {};
 }
 
 /** Closing soon still counts: you can get a cup in. */

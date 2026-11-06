@@ -3,7 +3,7 @@ import type { Neighborhood, OpaqueId, PriceBand, Weekday } from "@/api/types";
 import { ApiRequestError } from "@/api/errors";
 import { useI18n, type Key } from "@/i18n/context";
 import type { Coordinate } from "@/lib/distance";
-import { PRICE_GLYPHS } from "@/lib/price";
+import { PRICE_LABEL_KEYS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { AddChip, FilterChip } from "@/ui/Chip";
 import { Icon } from "@/ui/Icon";
@@ -67,7 +67,7 @@ export function PriceField({ value, onChange }: { value: PriceBand | null; onCha
       <div className="chip-wrap">
         {PRICE_BANDS.map((band) => (
           <FilterChip key={band} selected={value === band} onClick={() => onChange(value === band ? null : band)}>
-            {PRICE_GLYPHS[band]}
+            {t(PRICE_LABEL_KEYS[band])}
           </FilterChip>
         ))}
       </div>

@@ -183,3 +183,22 @@
 .cafe-card__button:active {
   scale: 0.98;
 }
+
+/* When the filters leave nothing to pin, say so over the map's middle. */
+.map-none {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  translate: -50% -50%;
+  max-width: calc(100% - 48px);
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--raised);
+  color: var(--ink);
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px var(--shadow);
+  pointer-events: none;
+}

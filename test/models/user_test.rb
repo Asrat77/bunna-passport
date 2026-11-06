@@ -65,6 +65,37 @@ class UserTest < ActiveSupport::TestCase
     assert_nil user.public_cup_status(Set[user.id])
   end
 
+  test "only known profile picture parts can be saved" do
+    user = create_user
+
+    assert user.update(avatar_traits: { "hair" => "afro", "skin" => "espresso" })
+    assert_not user.update(avatar_traits: { "hair" => "mohawk" })
+    assert_not user.update(avatar_traits: { "wings" => "on" })
+    assert_not user.update(avatar_traits: "afro")
+    assert user.update(avatar_traits: nil)
+  end
+
+  test "a face saved with pencil-only hair saves again as black hair" do
+    user = create_user
+    user.update_column(:avatar_traits, { "hair" => "afro", "hair_color" => "graphite" })
+
+    assert user.reload.update(shares_visits: false)
+    assert_equal({ "hair" => "afro", "hair_color" => "black" }, user.reload.avatar_traits)
+    assert_equal "black", Avatar.clean({ "hair_color" => "graphite" })["hair_color"]
+  end
+
+  test "the share card face changes whenever the profile picture does" do
+    user = create_user(telegram_user_id: 412345678)
+    seeded = user.avatar_digest
+
+    assert_equal "412345678", user.avatar_seed_or_default
+    user.update!(avatar_traits: { "glasses" => "square" })
+    assert_not_equal seeded, user.avatar_digest
+    edited = user.avatar_digest
+    user.update!(avatar_seed: "412345678-3")
+    assert_not_equal edited, user.avatar_digest
+  end
+
   test "promotes a newcomer to regular from verified breadth and volume" do
     user = create_user
     user.update_column(:verified_check_ins_count, 10)

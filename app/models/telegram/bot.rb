@@ -25,14 +25,16 @@ class Telegram::Bot
   # Stores a message the user can then send to any chat with the Mini App's
   # shareMessage. Returns the prepared message id. Bot API 8.0.
   def save_prepared_inline_message(user_id:, result:)
-    call("savePreparedInlineMessage",
+    # The params are a hash in braces: as bare keywords Ruby would read them
+    # as call's own keyword arguments and raise ArgumentError.
+    call("savePreparedInlineMessage", {
       user_id: user_id,
       result: result,
       allow_user_chats: true,
       allow_bot_chats: true,
       allow_group_chats: true,
       allow_channel_chats: true
-    ).fetch("id")
+    }).fetch("id")
   end
 
   def send_message(chat_id:, text:, reply_markup: nil)
@@ -65,8 +67,21 @@ class Telegram::Bot
     call("deleteWebhook", {})
   end
 
-  def set_my_commands(commands)
-    call("setMyCommands", { commands: commands })
+  # A language_code sets the menu for people whose Telegram app is in that
+  # language; without one it is the menu for everyone else.
+  def set_my_commands(commands, language_code: nil)
+    call("setMyCommands", { commands: commands, language_code: language_code }.compact)
+  end
+
+  # What the bot's profile and an invite link's preview say about it
+  # (up to 120 characters), and the "What can this bot do?" text in an empty
+  # chat (up to 512). A language_code sets the text for that app language.
+  def set_my_short_description(text, language_code: nil)
+    call("setMyShortDescription", { short_description: text, language_code: language_code }.compact)
+  end
+
+  def set_my_description(text, language_code: nil)
+    call("setMyDescription", { description: text, language_code: language_code }.compact)
   end
 
   # The button beside the message box that opens the Mini App.

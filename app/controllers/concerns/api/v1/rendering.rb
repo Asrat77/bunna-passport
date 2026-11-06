@@ -24,15 +24,18 @@ module Api::V1::Rendering
         stamps_count: user.stamps_count,
         home_neighborhood_id: user.home_neighborhood_id,
         avatar_seed: user.avatar_seed,
+        avatar_traits: user.avatar_traits,
         had_cup_today: user.had_cup_today?,
         shares_cup_status: user.shares_cup_status,
         shares_visits: user.shares_visits,
         daily_nudges: user.daily_nudges,
+        friend_updates: user.friend_updates,
+        language: user.language,
         joined_at: user.created_at.iso8601
       }
     end
 
-    # Someone else as a friend sees them: the doodle and handle, never an
+    # Someone else as a friend sees them: the profile picture and handle, never an
     # email or a Telegram id.
     def friend_json(user, cup_today_ids)
       {
@@ -40,9 +43,19 @@ module Api::V1::Rendering
         handle: user.handle,
         display_name: user.display_name,
         avatar_seed: user.avatar_seed,
+        avatar_traits: user.avatar_traits,
         had_cup_today: user.public_cup_status(cup_today_ids),
         stamps_count: user.stamps_count,
         verified_check_ins_count: user.verified_check_ins_count
+      }
+    end
+
+    # How friends reacted to a visit: a count per kind, and the viewer's own.
+    # Counts only, so a friend can't see who else knows the person.
+    def reactions_json(counts, mine)
+      {
+        counts: CheckInReaction::KINDS.filter_map { |kind| { kind: kind, count: counts[kind] } if counts[kind].to_i.positive? },
+        mine: mine
       }
     end
 
@@ -75,9 +88,14 @@ module Api::V1::Rendering
         longitude: shop.longitude.to_f,
         status: shop.status,
         price_band: shop.price_band,
+        # How many people's reported prices set price_band; 0 means the
+        # catalog or a moderator did.
+        price_band_reports: shop.price_band_reports_count,
         attributes: shop.api_attributes,
         # In the catalog too, so a list can say "Open" without a request per shop.
         hours: hours_json(shop.hours),
+        # How many reviews picked each quick tag, for "quiet" or "good for work" filters.
+        review_tags: shop.review_tags,
         updated_at: shop.updated_at.iso8601(6)
       }
       return data unless detailed
@@ -156,6 +174,8 @@ module Api::V1::Rendering
         drink: check_in.drink,
         rating: check_in.rating,
         note: check_in.note,
+        tags: check_in.tags,
+        price_birr: check_in.price_birr,
         occurred_at: check_in.occurred_at.iso8601
       }
       return data unless ceremony

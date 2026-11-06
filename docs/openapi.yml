@@ -311,15 +311,27 @@ paths:
       operationId: listShopReviews
       summary: What visitors said about a shop
       description: >
-        Reviews are not a separate record. Each one is the rating or note left
-        on a check-in the server verified, so only people who were physically
-        at the shop can appear here. Rejected and flagged visits never surface.
+        Reviews are not a separate record. Each one is the rating, note or tags
+        left on a check-in the server verified, so only people who were
+        physically at the shop can appear here. Rejected and flagged visits
+        never surface, and neither do reviews a moderator hid after a report.
+        Newest first, twenty a page. The score counts each person once, by
+        their latest rating; the summary covers the whole shop whatever the
+        filter.
       security: []
       parameters:
         - $ref: "#/components/parameters/ShopId"
+        - name: cursor
+          in: query
+          description: The next_cursor from the previous page.
+          schema: { $ref: "#/components/schemas/OpaqueId" }
+        - name: filter
+          in: query
+          description: notes keeps reviews with words; photos keeps reviews with a photo.
+          schema: { type: string, enum: [notes, photos] }
       responses:
         "200":
-          description: Verified visits that carried a rating or a note
+          description: Verified visits that carried a rating, a note or tags
           content:
             application/json:
               schema:
@@ -332,14 +344,40 @@ paths:
                       $ref: "#/components/schemas/Review"
                   meta:
                     type: object
-                    required: [rating_average, rating_count, total]
+                    required: [rating_average, rating_count, distribution, top_tags, typical_prices, total, next_cursor]
                     properties:
                       rating_average:
                         type: number
                         format: float
                         nullable: true
-                      rating_count: { type: integer }
-                      total: { type: integer }
+                      rating_count: { type: integer, description: People who rated, each counted once. }
+                      distribution:
+                        type: object
+                        description: How many people gave each score, keyed "1" to "5".
+                        additionalProperties: { type: integer }
+                      top_tags:
+                        type: array
+                        items:
+                          type: object
+                          required: [tag, count]
+                          properties:
+                            tag: { $ref: "#/components/schemas/ReviewTag" }
+                            count: { type: integer }
+                      typical_prices:
+                        type: array
+                        description: Median price paid per drink over the last 180 days.
+                        items:
+                          type: object
+                          required: [drink, median_birr, count]
+                          properties:
+                            drink: { $ref: "#/components/schemas/Drink" }
+                            median_birr: { type: integer }
+                            count: { type: integer }
+                      total: { type: integer, description: Reviews matching the filter. }
+                      next_cursor:
+                        oneOf:
+                          - $ref: "#/components/schemas/OpaqueId"
+                          - type: "null"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -559,11 +597,10 @@ paths:
       operationId: updateCheckIn
       summary: Say something about a visit already recorded
       description: >
-        Fills in the rating, note and drink for a check-in the caller made.
-        This finishes a check-in rather than editing a review: it is allowed
-        for 24 hours after the visit, refused on a rejected one, and cannot
-        revise where or when the visit happened. Someone else's check-in is
-        not found.
+        Fills in or changes the rating, note, drink, tags and price for a
+        check-in the caller made. Allowed for seven days after the visit,
+        refused on a rejected one, and never revises where or when the visit
+        happened. Someone else's check-in is not found.
       parameters:
         - $ref: "#/components/parameters/Id"
       requestBody:
@@ -579,7 +616,12 @@ paths:
                   properties:
                     rating: { type: integer, minimum: 1, maximum: 5 }
                     note: { type: string, maxLength: 280 }
-                    drink: { type: string }
+                    drink: { $ref: "#/components/schemas/Drink" }
+                    price_birr: { type: integer, minimum: 1, maximum: 5000 }
+                    tags:
+                      type: array
+                      maxItems: 4
+                      items: { $ref: "#/components/schemas/ReviewTag" }
       responses:
         "200":
           description: The visit, with what was said about it
@@ -784,7 +826,7 @@ paths:
     patch:
       tags: [Activity]
       operationId: updateProfile
-      summary: Choose a doodle or stop sharing cup status
+      summary: Edit the profile picture or stop sharing cup status
       requestBody:
         required: true
         content:
@@ -990,6 +1032,92 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /feed/{check_in_id}/reaction:
+    parameters:
+      - name: check_in_id
+        in: path
+        required: true
+        schema: { $ref: "#/components/schemas/OpaqueId" }
+    put:
+      tags: [Friends]
+      operationId: reactToFeedItem
+      summary: React to a friend's visit
+      description: >
+        Sets the caller's one reaction to a visit in their feed, replacing any
+        earlier one. Visits outside the caller's feed are 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { $ref: "#/components/schemas/ReactionKind" }
+      responses:
+        "200":
+          description: The visit's reactions after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Reactions" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    delete:
+      tags: [Friends]
+      operationId: unreactToFeedItem
+      summary: Take back a reaction
+      responses:
+        "200":
+          description: The visit's reactions after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Reactions" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /reactions:
+    get:
+      tags: [Friends]
+      operationId: listReceivedReactions
+      summary: Reactions friends left on the caller's visits
+      description: >
+        The newest 30 reactions on the caller's visits from the last 30 days,
+        from people who are still their friends.
+      responses:
+        "200":
+          description: Received reactions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ReceivedReaction" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /invite:
     get:
       tags: [Friends]
@@ -1014,6 +1142,47 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /invite/message:
+    post:
+      tags: [Friends]
+      operationId: prepareInviteMessage
+      summary: The invite as a prepared Telegram message with an open button
+      description: >
+        Saves a prepared inline message (Bot API savePreparedInlineMessage)
+        holding the caller's invite card (GET /invite_cards/{token}.png), the
+        text as its caption, and a button that opens the caller's invite link,
+        for the Mini App's shareMessage. prepared_message_id is null off
+        Telegram, without a bot, or when the Bot API fails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 500 }
+                button: { type: string, maxLength: 64 }
+      responses:
+        "200":
+          description: The invite link and the prepared message, if any
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [token, url, friends_count, prepared_message_id]
+                    properties:
+                      token: { type: string }
+                      url: { type: string, format: uri }
+                      friends_count: { type: integer, minimum: 0 }
+                      prepared_message_id: { type: string, nullable: true }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /invites/{token}:
     get:
       tags: [Friends]
@@ -1035,11 +1204,12 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [inviter, own, already_friends]
+                    required: [inviter, own, already_friends, new_here]
                     properties:
                       inviter: { $ref: "#/components/schemas/Friend" }
                       own: { type: boolean, description: The caller's own link }
                       already_friends: { type: boolean }
+                      new_here: { type: boolean, description: The caller has never checked in, so the app explains itself }
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -1244,9 +1414,14 @@ components:
             - $ref: "#/components/schemas/OpaqueId"
             - type: "null"
         avatar_seed:
-          description: Seed for the generative doodle avatar; clients fall back to the Telegram user id
+          description: Seed for the generative profile picture; clients fall back to the Telegram user id
           oneOf:
             - { type: string, maxLength: 64 }
+            - type: "null"
+        avatar_traits:
+          description: Profile picture parts from the editor; null until the user edits theirs
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
             - type: "null"
         had_cup_today:
           type: boolean
@@ -1264,7 +1439,33 @@ components:
           description: |
             Whether the Telegram bot sends an afternoon "had a cup?" nudge on
             days without a check-in. Only reaches people who started the bot.
+        friend_updates:
+          type: boolean
+          description: |
+            Whether the Telegram bot sends an evening round-up of friends' new
+            stamps and reactions to this user's visits, at most once a day.
         joined_at: { type: string, format: date-time }
+    AvatarTraits:
+      type: object
+      additionalProperties: false
+      description: |
+        Profile picture parts chosen in the editor. The seed still draws the
+        face's proportions; any trait left out comes from the seed. "paper"
+        skin and "graphite" hair and eyes are the original pencil doodle.
+        Values match web/src/design/doodle/catalog.json and app/models/avatar.rb.
+      properties:
+        skin: { type: string, enum: [paper, porcelain, sand, honey, caramel, mocha, espresso] }
+        hair: { type: string, enum: [bald, buzz, side, curls, afro, cornrows, bun, long, locs] }
+        hair_color: { type: string, enum: [graphite, black, espresso, chestnut, auburn, honey, silver] }
+        eyes: { type: string, enum: [dot, round, almond] }
+        eye_color: { type: string, enum: [graphite, brown, hazel, green, blue, grey] }
+        nose: { type: string, enum: [point, round, curve] }
+        facial_hair: { type: string, enum: [none, stubble, mustache, beard] }
+        freckles: { type: string, enum: [none, freckles] }
+        glasses: { type: string, enum: [none, round, square, shades] }
+        hat: { type: string, enum: [none, cap, beanie, wrap] }
+        headphones: { type: string, enum: [none, headphones] }
+        earrings: { type: string, enum: [none, studs, hoops] }
     ProfileInput:
       type: object
       properties:
@@ -1272,12 +1473,18 @@ components:
           oneOf:
             - { type: string, maxLength: 64 }
             - type: "null"
+        avatar_traits:
+          description: Unknown traits or values are rejected with 422
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
+            - type: "null"
         shares_cup_status: { type: boolean }
         shares_visits: { type: boolean }
         daily_nudges: { type: boolean }
+        friend_updates: { type: boolean }
     Friend:
       type: object
-      required: [id, handle, display_name, avatar_seed, had_cup_today, stamps_count, verified_check_ins_count]
+      required: [id, handle, display_name, avatar_seed, avatar_traits, had_cup_today, stamps_count, verified_check_ins_count]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         handle: { type: string }
@@ -1285,6 +1492,11 @@ components:
         avatar_seed:
           oneOf:
             - type: string
+            - type: "null"
+        avatar_traits:
+          description: Profile picture parts from the editor; null until the user edits theirs
+          oneOf:
+            - $ref: "#/components/schemas/AvatarTraits"
             - type: "null"
         had_cup_today:
           description: Null when that person has turned off sharing it.
@@ -1295,7 +1507,7 @@ components:
         verified_check_ins_count: { type: integer, minimum: 0 }
     FeedItem:
       type: object
-      required: [id, user, shop, coffee_day, stamp_earned]
+      required: [id, user, shop, coffee_day, stamp_earned, reactions]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         user: { $ref: "#/components/schemas/Friend" }
@@ -1328,6 +1540,48 @@ components:
           oneOf:
             - type: string
             - type: "null"
+        reactions: { $ref: "#/components/schemas/Reactions" }
+    ReactionKind:
+      type: string
+      enum: [coffee, heart, fire, clap]
+    Reactions:
+      type: object
+      required: [counts, mine]
+      description: Counts only; who reacted is shown to the visit's owner alone.
+      properties:
+        counts:
+          type: array
+          items:
+            type: object
+            required: [kind, count]
+            properties:
+              kind: { $ref: "#/components/schemas/ReactionKind" }
+              count: { type: integer, minimum: 1 }
+        mine:
+          oneOf:
+            - $ref: "#/components/schemas/ReactionKind"
+            - type: "null"
+    ReceivedReaction:
+      type: object
+      required: [id, kind, user, check_in, reacted_at]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        kind: { $ref: "#/components/schemas/ReactionKind" }
+        user: { $ref: "#/components/schemas/Friend" }
+        check_in:
+          type: object
+          required: [id, shop, coffee_day]
+          properties:
+            id: { $ref: "#/components/schemas/OpaqueId" }
+            shop:
+              type: object
+              required: [id, name, name_am]
+              properties:
+                id: { $ref: "#/components/schemas/OpaqueId" }
+                name: { type: string }
+                name_am: { type: string }
+            coffee_day: { type: string, format: date }
+        reacted_at: { type: string, format: date-time }
     Passport:
       type: object
       required: [stamps, stamped_count, total_shops, completion_percentage, had_cup_today, streak]
@@ -1376,7 +1630,7 @@ components:
         value: { type: integer, minimum: 0 }
         user:
           type: object
-          required: [id, handle, display_name, avatar_seed, had_cup_today]
+          required: [id, handle, display_name, avatar_seed, avatar_traits, had_cup_today]
           properties:
             id: { $ref: "#/components/schemas/OpaqueId" }
             handle: { type: string }
@@ -1384,6 +1638,10 @@ components:
             avatar_seed:
               oneOf:
                 - type: string
+                - type: "null"
+            avatar_traits:
+              oneOf:
+                - $ref: "#/components/schemas/AvatarTraits"
                 - type: "null"
             had_cup_today:
               description: |
@@ -1623,6 +1881,12 @@ components:
             - type: "null"
         attributes: { $ref: "#/components/schemas/ShopAttributes" }
         hours: { $ref: "#/components/schemas/ShopHours" }
+        review_tags:
+          type: object
+          description: How many public reviews picked each quick tag, most common first. Tags nobody picked are left out.
+          additionalProperties: { type: integer, minimum: 1 }
+          propertyNames:
+            enum: [great_coffee, cozy, friendly_staff, quick_service, good_for_work, good_value, quiet, lively]
         updated_at: { type: string, format: date-time }
     ShopHours:
       type: object
@@ -1729,25 +1993,47 @@ components:
       unevaluatedProperties: false
     Review:
       type: object
-      required: [id, user, rating, note, drink, occurred_at]
+      required: [id, user, rating, note, drink, tags, price_birr, photo, occurred_at]
       properties:
         id: { $ref: "#/components/schemas/OpaqueId" }
         user:
           type: object
-          required: [id, handle, display_name]
+          required: [id, handle, display_name, avatar_seed, avatar_traits]
           properties:
             id: { $ref: "#/components/schemas/OpaqueId" }
             handle: { type: string }
             display_name: { type: string }
+            avatar_seed: { type: string, nullable: true }
+            avatar_traits: { type: object, nullable: true }
         rating:
           type: integer
           minimum: 1
           maximum: 5
           nullable: true
         note: { type: string, nullable: true }
-        drink: { type: string, nullable: true }
+        drink:
+          type: string
+          nullable: true
+          description: A Drink code, or free text on visits from before codes.
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/ReviewTag" }
+        price_birr: { type: integer, nullable: true }
+        photo:
+          type: object
+          nullable: true
+          required: [thumb, full]
+          properties:
+            thumb: { type: string, format: uri }
+            full: { type: string, format: uri }
         occurred_at: { type: string, format: date-time }
       unevaluatedProperties: false
+    ReviewTag:
+      type: string
+      enum: [great_coffee, cozy, friendly_staff, quick_service, good_for_work, good_value, quiet, lively]
+    Drink:
+      type: string
+      description: One of macchiato, buna, spris, espresso, latte. Older clients may send free text.
     Contribution:
       type: object
       required: [id, type, status, confirmation_count, created_at]
@@ -1786,9 +2072,14 @@ components:
         longitude: { type: number, minimum: -180, maximum: 180 }
         accuracy_meters: { type: integer, minimum: 0 }
         mock_location: { type: boolean, default: false }
-        drink: { type: string }
+        drink: { $ref: "#/components/schemas/Drink" }
         rating: { type: integer, minimum: 1, maximum: 5 }
         note: { type: string, maxLength: 280 }
+        price_birr: { type: integer, minimum: 1, maximum: 5000, description: What the visitor paid for the drink. }
+        tags:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ReviewTag" }
         photo:
           type: string
           format: binary
@@ -1835,6 +2126,13 @@ components:
         note:
           oneOf:
             - type: string
+            - type: "null"
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/ReviewTag" }
+        price_birr:
+          oneOf:
+            - { type: integer, minimum: 1, maximum: 5000 }
             - type: "null"
         occurred_at: { type: string, format: date-time }
     CheckInResult:

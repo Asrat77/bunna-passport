@@ -1,7 +1,7 @@
 import { phCaretDown } from "@/ui/icons";
 import { useMemo, useState } from "react";
 import type { LeaderboardEntry, LeaderboardMetric } from "@/api/types";
-import { doodleSeedFor, useMyDoodle } from "@/data/me";
+import { doodleSeedFor, doodleTraitsFor, useMyDoodle } from "@/data/me";
 import { useCatalog, useFriends, useLeaderboard, usePassport, useProfile } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
@@ -129,7 +129,7 @@ export function BoardsSection() {
       {profile ? (
         <div className="board-me">
           <span className="board-me__rank mono">{me ? `#${me.rank}` : "–"}</span>
-          <Doodle seed={mine.seed} mood={mine.awake ? "awake" : "sleepy"} size={38} label={t(mine.awake ? "doodle.mineAwake" : "doodle.mineSleepy")} />
+          <Doodle seed={mine.seed} traits={mine.traits} mood={mine.awake ? "awake" : "sleepy"} size={38} label={t(mine.awake ? "doodle.mineAwake" : "doodle.mineSleepy")} />
           <span className="board-row__who">
             <span className="board-row__handle">{t("boards.you")}</span>
             <span className="board-row__note">{me ? t("boards.yourRank", { rank: me.rank }) : t("boards.unranked")}</span>
@@ -156,5 +156,5 @@ function EntryDoodle({ entry, size }: { entry: LeaderboardEntry; size: number })
     entry.user.had_cup_today === null
       ? t("doodle.other", { handle })
       : t(awake ? "doodle.otherAwake" : "doodle.otherSleepy", { handle });
-  return <Doodle seed={doodleSeedFor(entry.user)} mood={awake ? "awake" : "sleepy"} size={size} label={label} />;
+  return <Doodle seed={doodleSeedFor(entry.user)} traits={doodleTraitsFor(entry.user)} mood={awake ? "awake" : "sleepy"} size={size} label={label} />;
 }

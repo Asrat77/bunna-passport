@@ -25,10 +25,25 @@ production:
     class: SendDailyNudgesJob
     schedule: "0 15 * * * Africa/Addis_Ababa"
 
+  # Evening round-up of friends' new stamps and reactions, once a day at most.
+  send_friend_digests:
+    class: SendFriendDigestsJob
+    schedule: "30 19 * * * Africa/Addis_Ababa"
+
   # Morning summary of the moderation queues, with buttons for easy cases.
   send_moderation_digest:
     class: SendModerationDigestJob
     schedule: "0 9 * * * Africa/Addis_Ababa"
+
+  # Last week's numbers, before the moderation digest.
+  send_weekly_report:
+    class: SendWeeklyReportJob
+    schedule: "45 8 * * 1 Africa/Addis_Ababa"
+
+  # Price bands from what people paid, so old reports age out.
+  refresh_price_bands:
+    class: RefreshPriceBandsJob
+    schedule: "30 3 * * * Africa/Addis_Ababa"
 
   # Telegram alert before the shared disk fills.
   check_host_health:

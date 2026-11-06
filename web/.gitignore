@@ -3,3 +3,8 @@ dist
 .env.local
 i18n-review.csv
 .env
+
+# Stray tsc output: the source is TypeScript, and tsconfig sets noEmit.
+src/**/*.js
+vite.config.js
+*.tsbuildinfo

@@ -39,6 +39,7 @@ class Api::V1::LeaderboardsController < Api::V1::BaseController
             handle: entry.user.handle,
             display_name: entry.user.display_name,
             avatar_seed: entry.user.avatar_seed,
+            avatar_traits: entry.user.avatar_traits,
             had_cup_today: entry.user.public_cup_status(cup_today_ids)
           }
         }

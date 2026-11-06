@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -66,6 +66,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
     t.check_constraint "threshold > 0", name: "badges_threshold"
   end
 
+  create_table "check_in_reactions", force: :cascade do |t|
+    t.integer "check_in_id", null: false
+    t.integer "user_id", null: false
+    t.string "kind", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["check_in_id", "user_id"], name: "index_check_in_reactions_on_check_in_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_check_in_reactions_on_user_id"
+    t.check_constraint "kind IN ('coffee', 'heart', 'fire', 'clap')", name: "check_in_reactions_kind"
+  end
+
   create_table "check_ins", force: :cascade do |t|
     t.integer "accuracy_meters", null: false
     t.datetime "counted_at"
@@ -85,6 +96,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.datetime "verified_at"
+    t.integer "price_birr"
+    t.json "tags", default: [], null: false
+    t.datetime "review_prompted_at"
+    t.datetime "review_hidden_at"
     t.index ["shop_id", "occurred_at"], name: "index_check_ins_on_shop_id_and_occurred_at"
     t.index ["shop_id"], name: "index_check_ins_on_shop_id"
     t.index ["status", "occurred_at"], name: "index_check_ins_on_status_and_occurred_at"
@@ -95,6 +110,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
     t.check_constraint "distance_meters >= 0", name: "check_ins_distance"
     t.check_constraint "latitude BETWEEN -90 AND 90", name: "check_ins_latitude"
     t.check_constraint "longitude BETWEEN -180 AND 180", name: "check_ins_longitude"
+    t.check_constraint "price_birr IS NULL OR price_birr BETWEEN 1 AND 5000", name: "check_ins_price_birr"
     t.check_constraint "rating IS NULL OR rating BETWEEN 1 AND 5", name: "check_ins_rating"
     t.check_constraint "status IN ('verified', 'flagged', 'rejected')", name: "check_ins_status"
   end
@@ -205,6 +221,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
   end
 
   create_table "share_images", force: :cascade do |t|
+    t.string "avatar_digest"
     t.integer "check_in_id", null: false
     t.datetime "created_at", null: false
     t.boolean "doodle", default: true, null: false
@@ -293,6 +310,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
     t.string "status", default: "pending", null: false
     t.integer "submitted_by_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "price_band_reports_count", default: 0, null: false
+    t.json "review_tags", default: {}, null: false
     t.index ["latitude", "longitude"], name: "index_shops_on_latitude_and_longitude"
     t.index ["merged_into_id"], name: "index_shops_on_merged_into_id"
     t.index ["name_am_key"], name: "index_shops_on_name_am_key"
@@ -326,6 +345,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
 
   create_table "users", force: :cascade do |t|
     t.string "avatar_seed"
+    t.json "avatar_traits"
     t.datetime "created_at", null: false
     t.boolean "daily_nudges", default: true, null: false
     t.string "display_name", null: false
@@ -343,12 +363,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
     t.string "trust_level", default: "newcomer", null: false
     t.datetime "updated_at", null: false
     t.integer "verified_check_ins_count", default: 0, null: false
+    t.boolean "friend_updates", default: true, null: false
+    t.datetime "last_friend_digest_at"
+    t.string "language"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
     t.index ["invite_token"], name: "index_users_on_invite_token", unique: true
     t.index ["telegram_user_id"], name: "index_users_on_telegram_user_id", unique: true
     t.check_constraint "email_address IS NOT NULL OR telegram_user_id IS NOT NULL", name: "users_have_a_sign_in"
+    t.check_constraint "language IN ('en', 'am')", name: "users_language"
     t.check_constraint "trust_level IN ('newcomer', 'regular', 'curator', 'moderator')", name: "users_trust_level"
     t.check_constraint "verified_check_ins_count >= 0 AND stamps_count >= 0", name: "users_non_negative_counters"
   end
@@ -358,6 +382,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_170000) do
   add_foreign_key "awards", "badges"
   add_foreign_key "awards", "check_ins"
   add_foreign_key "awards", "users"
+  add_foreign_key "check_in_reactions", "check_ins"
+  add_foreign_key "check_in_reactions", "users"
   add_foreign_key "check_ins", "shops"
   add_foreign_key "check_ins", "users"
   add_foreign_key "contribution_confirmations", "contributions"

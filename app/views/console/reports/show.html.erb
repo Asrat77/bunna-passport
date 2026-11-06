@@ -6,6 +6,22 @@
   <p><strong>Target:</strong> <%= @report.reportable_type %> #<%= @report.reportable_id %></p>
   <p><strong>Note:</strong> <%= @report.note.presence || "No note supplied." %></p>
 </section>
+<% if (review = @report.reportable).is_a?(CheckIn) %>
+  <section class="panel">
+    <p class="eyebrow">The review</p>
+    <p><strong>@<%= review.user.handle %></strong> at <%= review.shop.name %>, <%= review.occurred_at.to_date %></p>
+    <p><strong>Rating:</strong> <%= review.rating ? "#{review.rating}/5" : "none" %>
+      · <strong>Drink:</strong> <%= review.drink.presence || "—" %>
+      · <strong>Paid:</strong> <%= review.price_birr ? "#{review.price_birr} birr" : "—" %></p>
+    <p><strong>Tags:</strong> <%= review.tags.presence&.map(&:humanize)&.join(", ") || "none" %></p>
+    <p><strong>Note:</strong> <%= review.note.presence || "none" %></p>
+    <% if review.photo.attached? %>
+      <p><%= link_to "Open the photo", rails_blob_path(review.photo, disposition: "inline"), target: "_blank", rel: "noopener" %></p>
+    <% end %>
+    <p class="muted">Upholding hides this review from the café page. The visit and its stamp still count.
+      <%= "Hidden since #{review.review_hidden_at.to_date}." if review.review_hidden_at %></p>
+  </section>
+<% end %>
 <div class="actions">
   <% if @report.pending? %>
     <%= button_to "Uphold", console_report_upholding_path(@report),

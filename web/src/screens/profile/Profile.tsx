@@ -33,6 +33,7 @@ export function Profile() {
       <header className="profile__header">
         <Doodle
           seed={doodle.seed}
+          traits={doodle.traits}
           mood={doodle.awake ? "awake" : "sleepy"}
           size={96}
           label={t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}
@@ -68,10 +69,10 @@ function Settings({ profile }: { profile: User | undefined }) {
     }
   }
 
-  async function toggleNudges(next: boolean) {
+  async function toggleBot(change: { daily_nudges: boolean } | { friend_updates: boolean }) {
     setSaving(true);
     try {
-      const { data } = await api.updateProfile({ daily_nudges: next });
+      const { data } = await api.updateProfile(change);
       queryClient.setQueryData(["profile"], data);
     } finally {
       setSaving(false);
@@ -134,7 +135,22 @@ function Settings({ profile }: { profile: User | undefined }) {
             role="switch"
             checked={profile.daily_nudges}
             disabled={saving}
-            onChange={(event) => void toggleNudges(event.target.checked)}
+            onChange={(event) => void toggleBot({ daily_nudges: event.target.checked })}
+          />
+        </label>
+      ) : null}
+      {profile && inTelegram ? (
+        <label className="settings__row settings__toggle">
+          <span className="settings__text">
+            {t("passport.friendUpdates")}
+            <span className="muted">{t("passport.friendUpdatesHint")}</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={profile.friend_updates}
+            disabled={saving}
+            onChange={(event) => void toggleBot({ friend_updates: event.target.checked })}
           />
         </label>
       ) : null}

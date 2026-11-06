@@ -19,12 +19,17 @@ class User < ApplicationRecord
   has_many :friendships, dependent: :delete_all
   has_many :friends, through: :friendships
   has_many :inverse_friendships, class_name: "Friendship", foreign_key: :friend_id, dependent: :delete_all
+  has_many :check_in_reactions, dependent: :delete_all
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :handle, with: ->(handle) { handle.strip.downcase.delete_prefix("@") }
   normalizes :display_name, with: ->(name) { name.strip }
+
+  # Languages the bot can write in. Anything else gets English.
+  LANGUAGES = %w[en am].freeze
+  validates :language, inclusion: { in: LANGUAGES }, allow_nil: true
 
   enum :trust_level, {
     newcomer: "newcomer",
@@ -39,6 +44,8 @@ class User < ApplicationRecord
   validates :password, confirmation: true, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_nil: true
   validates :telegram_user_id, uniqueness: true, allow_nil: true
   validates :avatar_seed, length: { maximum: 64 }
+  validate :avatar_traits_are_known, if: -> { avatar_traits.present? }
+  before_validation :upgrade_avatar_traits, if: -> { avatar_traits.present? }
   validates :handle,
     presence: true,
     uniqueness: { case_sensitive: false },
@@ -70,16 +77,30 @@ class User < ApplicationRecord
         .where("last_nudged_at IS NULL OR last_nudged_at < ?", coffee_day_start(now))
     end
 
+    # People the bot may send the evening friends round-up to: they started
+    # it, kept friend updates on, and haven't had one this coffee day.
+    def friend_digestable(now = Time.current)
+      where.not(telegram_user_id: nil).where.not(telegram_chat_started_at: nil).where(friend_updates: true)
+        .where("last_friend_digest_at IS NULL OR last_friend_digest_at < ?", coffee_day_start(now))
+    end
+
     # Finds or creates the account behind a verified Telegram user.
     def from_telegram!(telegram_user)
       telegram_id = Integer(telegram_user.fetch("id"))
-      find_by(telegram_user_id: telegram_id) || create!(
+      user = find_by(telegram_user_id: telegram_id) || create!(
         telegram_user_id: telegram_id,
         handle: available_handle(telegram_user["username"], telegram_id),
         display_name: telegram_display_name(telegram_user, telegram_id)
       )
+      user.adopt_telegram_language(telegram_user["language_code"])
+      user
     rescue ActiveRecord::RecordNotUnique
       find_by!(telegram_user_id: telegram_id)
+    end
+
+    # "am", "am-ET" and the like read as Amharic; any other code as English.
+    def language_from_telegram(code)
+      code.to_s.downcase.start_with?("am") ? "am" : "en"
     end
 
     private
@@ -97,10 +118,32 @@ class User < ApplicationRecord
       end
   end
 
+  # The seed the Mini App draws your own profile picture from (web/src/data/me.ts).
+  def avatar_seed_or_default
+    avatar_seed.presence || telegram_user_id&.to_s || id.to_s
+  end
+
+  # Changes whenever the face on this person's share cards would, so a stored
+  # card is drawn again after they edit their profile picture.
+  def avatar_digest
+    Digest::SHA256.hexdigest([ avatar_seed_or_default, Avatar.clean(avatar_traits).sort.to_h ].to_json)[0, 16]
+  end
+
   # Whether the bot may write to this person: they started it and haven't
   # blocked it since.
   def bot_chat?
     telegram_user_id.present? && telegram_chat_started_at.present?
+  end
+
+  # The locale the bot writes to this person in.
+  def bot_locale
+    language == "am" ? :am : :en
+  end
+
+  # Takes the Telegram app's language until we know better. Once set, only
+  # the Mini App's language switch changes it (it reports what's on screen).
+  def adopt_telegram_language(code)
+    update_column(:language, self.class.language_from_telegram(code)) if language.nil? && code.present?
   end
 
   def start_bot_chat!
@@ -171,4 +214,16 @@ class User < ApplicationRecord
 
     update!(trust_level: next_level) unless trust_level == next_level.to_s
   end
+
+  private
+    # A face saved with a retired option (pencil-only hair) keeps saving.
+    def upgrade_avatar_traits
+      upgraded = Avatar.upgrade(avatar_traits)
+      self.avatar_traits = upgraded unless upgraded == avatar_traits
+    end
+
+    def avatar_traits_are_known
+      problem = Avatar.problems(avatar_traits)
+      errors.add(:avatar_traits, problem) if problem
+    end
 end

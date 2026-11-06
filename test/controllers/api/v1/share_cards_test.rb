@@ -35,6 +35,20 @@ class Api::V1::ShareCardsTest < ActionDispatch::IntegrationTest
     assert_equal 2, check_in.share_images.count
   end
 
+  test "a new profile picture draws the card again" do
+    user = create_user(created_at: 2.days.ago)
+    check_in = visit(user)
+    post api_v1_check_in_share_cards_path(check_in), headers: bearer_headers(user), as: :json
+    before = check_in.share_images.find_by!(format: "post").png.blob.checksum
+
+    user.update!(avatar_traits: { "skin" => "espresso", "hair" => "long", "hat" => "none" })
+    post api_v1_check_in_share_cards_path(check_in), headers: bearer_headers(user), as: :json
+
+    image = check_in.share_images.find_by!(format: "post")
+    assert_equal user.avatar_digest, image.avatar_digest
+    assert_not_equal before, image.png.blob.checksum
+  end
+
   test "hiding the doodle is a separate card" do
     user = create_user(created_at: 2.days.ago)
     check_in = visit(user)

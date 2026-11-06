@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
-import type { CatalogPage, LeaderboardMetric, LeaderboardScope, OpaqueId, ReviewSummary, Shop } from "@/api/types";
+import type { CatalogPage, LeaderboardMetric, LeaderboardScope, OpaqueId, ReviewFilter, ReviewSummary, Shop } from "@/api/types";
 import { useAuth } from "@/auth/AuthProvider";
 
 const CATALOG_KEY = "bunna.catalog";
@@ -57,23 +57,29 @@ export function useShop(id: OpaqueId) {
 }
 
 /** One fetch serves both the review list and its rating summary. */
-function reviewsQuery(id: OpaqueId) {
+/**
+ * A shop's reviews, a page at a time. The unfiltered first page doubles as
+ * the shop's summary, so the café page and its Reviews tab share one request.
+ */
+function reviewsQuery(id: OpaqueId, filter: ReviewFilter | null) {
   return {
-    queryKey: ["reviews", id],
-    queryFn: async () => {
-      const { data, meta } = await api.listReviews(id);
-      return { reviews: data, summary: meta as ReviewSummary | undefined };
+    queryKey: ["reviews", id, filter ?? "all"],
+    queryFn: async ({ pageParam }: { pageParam: OpaqueId | undefined }) => {
+      const { data, meta } = await api.listReviews(id, { cursor: pageParam, filter: filter ?? undefined });
+      return { reviews: data, summary: (meta as ReviewSummary | undefined) ?? null };
     },
+    initialPageParam: undefined as OpaqueId | undefined,
+    getNextPageParam: (page: { summary: ReviewSummary | null }) => page.summary?.next_cursor ?? undefined,
   };
 }
 
-export function useReviews(id: OpaqueId, enabled: boolean) {
-  return useQuery({ ...reviewsQuery(id), enabled, select: (page) => page.reviews });
+export function useReviews(id: OpaqueId, filter: ReviewFilter | null = null) {
+  return useInfiniteQuery({ ...reviewsQuery(id, filter) });
 }
 
-/** The average rating and how many rated, for the map's café card. */
+/** The score, its breakdown, top tags and typical prices, for the whole shop. */
 export function useReviewSummary(id: OpaqueId) {
-  return useQuery({ ...reviewsQuery(id), select: (page) => page.summary ?? null });
+  return useInfiniteQuery({ ...reviewsQuery(id, null), select: (data) => data.pages[0]?.summary ?? null });
 }
 
 /** Recent check-ins, enough to count a weekly streak. */
@@ -125,6 +131,12 @@ export function useFeed() {
     getNextPageParam: (page) => page.nextCursor,
     enabled,
   });
+}
+
+/** Reactions friends left on your own visits. */
+export function useReceivedReactions() {
+  const enabled = useSignedIn();
+  return useQuery({ queryKey: ["reactions"], queryFn: async () => (await api.listReceivedReactions()).data, enabled });
 }
 
 export function usePersonalStats() {
