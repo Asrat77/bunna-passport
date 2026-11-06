@@ -35,6 +35,8 @@ class CheckIn < ApplicationRecord
   has_many :share_images, dependent: :destroy
   # Badges this visit tipped over, shown in its ceremony.
   has_many :awards, dependent: :nullify
+  # Friends' reactions from the feed.
+  has_many :reactions, class_name: "CheckInReaction", dependent: :delete_all
 
   enum :status, {
     verified: "verified",

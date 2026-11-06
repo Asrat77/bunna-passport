@@ -37,6 +37,8 @@ export type User = {
   shares_visits: boolean;
   /** Whether the bot sends the afternoon "had a cup?" nudge. */
   daily_nudges: boolean;
+  /** Whether the bot sends the evening round-up of friends' stamps and reactions. */
+  friend_updates: boolean;
   joined_at: Timestamp;
 };
 
@@ -440,4 +442,23 @@ export type FeedItem = {
   drink: string | null;
   rating: number | null;
   note: string | null;
+  reactions: Reactions;
+};
+
+export const REACTION_KINDS = ["coffee", "heart", "fire", "clap"] as const;
+export type ReactionKind = (typeof REACTION_KINDS)[number];
+
+/** Counts per kind on one visit, and the viewer's own reaction. Never who. */
+export type Reactions = {
+  counts: { kind: ReactionKind; count: number }[];
+  mine: ReactionKind | null;
+};
+
+/** A friend's reaction to one of your own visits. */
+export type ReceivedReaction = {
+  id: OpaqueId;
+  kind: ReactionKind;
+  user: Friend;
+  check_in: { id: OpaqueId; shop: { id: OpaqueId; name: string; name_am: string }; coffee_day: string };
+  reacted_at: Timestamp;
 };

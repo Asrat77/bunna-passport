@@ -133,6 +133,12 @@ export function useFeed() {
   });
 }
 
+/** Reactions friends left on your own visits. */
+export function useReceivedReactions() {
+  const enabled = useSignedIn();
+  return useQuery({ queryKey: ["reactions"], queryFn: async () => (await api.listReceivedReactions()).data, enabled });
+}
+
 export function usePersonalStats() {
   const enabled = useSignedIn();
   return useQuery({ queryKey: ["stats", "me"], queryFn: async () => (await api.getPersonalStats()).data, enabled });
