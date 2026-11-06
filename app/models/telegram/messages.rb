@@ -141,6 +141,30 @@ module Telegram::Messages
     { text: text, reply_markup: keyboard([ console_button("Open the console", "/console/dashboard") ]) }
   end
 
+  WEEKLY_LABELS = {
+    new_users: "new users",
+    check_ins: "check-ins",
+    drinkers: "people checking in",
+    reviews: "reviews",
+    accepted_invites: "invites accepted",
+    new_stamps: "new stamps"
+  }.freeze
+
+  # Monday's numbers for the people running Bunna; see Ops::WeeklyReport.
+  def weekly_report(report)
+    first = report.week.begin
+    last = report.week.end - 1.day
+    span = first.month == last.month ? "#{first.strftime('%b %-d')}–#{last.day}" : "#{first.strftime('%b %-d')} – #{last.strftime('%b %-d')}"
+
+    lines = Ops::WeeklyReport::METRICS.map do |metric|
+      now, before = report.this_week.fetch(metric), report.last_week.fetch(metric)
+      "• <b>#{now}</b> #{WEEKLY_LABELS.fetch(metric)} #{weekly_change(now, before)}"
+    end
+
+    text = "📊 <b>Bunna last week (#{span})</b>\n\n#{lines.join("\n")}\n\n#{report.total_users} people have signed up so far."
+    { text: text, reply_markup: keyboard([ console_button("Open the console", "/console/dashboard") ]) }
+  end
+
   # One flagged check-in or pending café edit, with its buttons while it is
   # still waiting and the outcome once someone has settled it.
   def moderation_item(record, outcome: nil)
@@ -224,6 +248,12 @@ module Telegram::Messages
     def console_button(text, path)
       base = ENV["PUBLIC_BASE_URL"].to_s
       base.start_with?("https://") ? { text: text, url: "#{base.chomp('/')}#{path}" } : nil
+    end
+
+    def weekly_change(now, before)
+      return "(same as the week before)" if now == before
+
+      "(#{now > before ? '↑' : '↓'} from #{before})"
     end
 
     def person(user)

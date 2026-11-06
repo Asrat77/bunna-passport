@@ -30,6 +30,11 @@ production:
     class: SendModerationDigestJob
     schedule: "0 9 * * * Africa/Addis_Ababa"
 
+  # Last week's numbers, before the moderation digest.
+  send_weekly_report:
+    class: SendWeeklyReportJob
+    schedule: "45 8 * * 1 Africa/Addis_Ababa"
+
   # Telegram alert before the shared disk fills.
   check_host_health:
     class: CheckHostHealthJob
