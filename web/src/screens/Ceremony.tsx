@@ -1,4 +1,4 @@
-import { phArrowRight, phCheck } from "@/ui/icons";
+import { phArrowRight, phCheck, phUserPlus } from "@/ui/icons";
 import { useEffect, useState } from "react";
 import type { Badge, CheckInResult } from "@/api/types";
 import { badgeText } from "@/data/badges";
@@ -12,6 +12,7 @@ import { Seal } from "@/design/seal/Seal";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { stampDate, stampRotation } from "@/design/stamp/geometry";
 import { useI18n } from "@/i18n/context";
+import { forgetInviter, readInviter } from "@/lib/invite";
 import { useNavigation } from "@/nav/Navigation";
 import { PrimaryAction, SecondaryAction } from "@/telegram/buttons";
 import { hapticBadge, hapticSuccess } from "@/telegram/haptics";
@@ -19,6 +20,7 @@ import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import { ReviewComposer } from "./review/ReviewComposer";
+import { showFriendsNext } from "./Stats";
 import "./ceremony.css";
 
 /** Skippable from 0.8 s; everything has landed by about 1.6 s (DESIGN.md §6.2). */
@@ -38,7 +40,7 @@ const celebrated = new Set<number>();
  * day, since that's the only time it wakes. Both are Mocha in either phone
  * theme, under the same dither header as Explore (docs/DESIGN.md §2.2.1).
  */
-export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwake: boolean }) {
+export function Ceremony({ checkIn, wasAwake, firstStamp = false }: { checkIn: CheckInResult; wasAwake: boolean; firstStamp?: boolean }) {
   const { t, language, ordinal } = useI18n();
   const { switchTab, push } = useNavigation();
   const { data: passport } = usePassport();
@@ -112,6 +114,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
   ) : null;
 
   const badgeCards = badges.length > 0 ? <BadgeCards badges={badges} /> : null;
+  const firstCard = firstStamp && checkIn.stamp_earned ? <FirstStampCard /> : null;
 
   // Asked while the visit is fresh: one tap on a cup is a whole review.
   const reviewCard = checkIn.rating ? null : (
@@ -233,6 +236,7 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
         </div>
       ) : null}
 
+      {firstCard}
       {doodleCard}
       {badgeCards}
       {reviewCard}
@@ -241,6 +245,49 @@ export function Ceremony({ checkIn, wasAwake }: { checkIn: CheckInResult; wasAwa
       <SecondaryAction text={t("ceremony.share")} onClick={share} />
       <PrimaryAction text={t("ceremony.done")} onClick={done} mocha />
     </main>
+  );
+}
+
+/**
+ * The end of the first-stamp guide: who brought them in will see it, or a
+ * nudge to bring someone themselves. Whoever invited them is forgotten here,
+ * since the guide that named them is done.
+ */
+function FirstStampCard() {
+  const { t } = useI18n();
+  const { switchTab } = useNavigation();
+  const [inviter, setInviter] = useState<string | null>(null);
+
+  useEffect(() => {
+    void readInviter().then((handle) => {
+      setInviter(handle);
+      if (handle) void forgetInviter();
+    });
+  }, []);
+
+  return (
+    <div className="ceremony__doodle ceremony__first">
+      <span className="ceremony__first-mark" aria-hidden="true">
+        <Icon path={phCheck} size={22} />
+      </span>
+      <div className="ceremony__doodle-text">
+        <span className="ceremony__doodle-title">{t("ceremony.firstTitle")}</span>
+        <span className="muted">{inviter ? t("ceremony.firstInvited", { handle: inviter }) : t("ceremony.firstBody")}</span>
+        {inviter ? null : (
+          <button
+            type="button"
+            className="ceremony__first-invite"
+            onClick={() => {
+              showFriendsNext();
+              switchTab("stats");
+            }}
+          >
+            <Icon path={phUserPlus} size={16} />
+            {t("ceremony.firstInvite")}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

@@ -14,11 +14,21 @@ class TelegramJobsTest < ActiveJob::TestCase
     end
 
     assert_equal [ asleep.telegram_user_id ], bot.sent.map { |message| message[:chat_id] }
-    assert_match "Had a cup today?", bot.sent.sole[:text]
+    # No stamp yet, so the nudge points to the first one.
+    assert_match "Your passport is still empty", bot.sent.sole[:text]
     assert_equal Telegram::Messages::NUDGES_OFF, bot.sent.sole[:reply_markup][:inline_keyboard].dig(1, 0, :callback_data)
     assert asleep.reload.last_nudged_at
     assert_nil opted_out.reload.last_nudged_at
     assert_nil never_started.reload.last_nudged_at
+  end
+
+  test "someone with a stamp gets the usual nudge" do
+    user = telegram_user(telegram_chat_started_at: 2.days.ago)
+    user.update!(stamps_count: 1)
+
+    message = Telegram::Messages.nudge(user)
+
+    assert_match "Had a cup today?", message[:text]
   end
 
   test "the next coffee day starts at 04:00 Addis" do

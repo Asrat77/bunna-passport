@@ -62,12 +62,26 @@ module Telegram::Messages
   end
 
   def nudge(user)
+    return first_stamp_nudge if user.stamps_count.zero?
+
     text = <<~TEXT
       Had a cup today? ☕
 
       Your doodle is still asleep. Check in at your next buna to wake it up.
     TEXT
     { text: text.strip, reply_markup: keyboard([ app_button("Check in") ], [ callback_button("Stop daily nudges", NUDGES_OFF) ]) }
+  end
+
+  # The daily nudge for someone who hasn't checked in anywhere yet, whether a
+  # friend's invite brought them or they found the bot themselves. The app's
+  # first-stamp guide picks the café; this only points them to it.
+  def first_stamp_nudge
+    text = <<~TEXT
+      Your passport is still empty ☕
+
+      Your first stamp is one check-in away. Open the app and it will point you to the café closest to you. Check in once you're there.
+    TEXT
+    { text: text.strip, reply_markup: keyboard([ app_button("Find my first café") ], [ callback_button("Stop daily nudges", NUDGES_OFF) ]) }
   end
 
   # Sent when a counted visit takes a stamp to a level, the first being the
