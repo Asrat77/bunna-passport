@@ -1,4 +1,5 @@
 import type { AvatarTraits } from "@/design/doodle/traits";
+import type { Language } from "@/i18n/strings";
 import { ApiRequestError, NetworkError } from "./errors";
 import type {
   ApiError,
@@ -287,6 +288,7 @@ export const api = {
     shares_visits?: boolean;
     daily_nudges?: boolean;
     friend_updates?: boolean;
+    language?: Language;
   }) {
     return request<User>("/profile", { method: "PATCH", body: { profile } });
   },

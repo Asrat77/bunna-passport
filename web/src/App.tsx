@@ -24,6 +24,7 @@ import { AddCafe } from "./screens/contribute/AddCafe";
 import { ReportCafe } from "./screens/contribute/ReportCafe";
 import { SuggestEdit } from "./screens/contribute/SuggestEdit";
 import { setErrorScreen } from "./lib/errorReporting";
+import { useSyncBotLanguage } from "./data/me";
 import { takeLaunchInvite } from "./lib/invite";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
@@ -95,6 +96,7 @@ function Gate() {
 
 function Screens() {
   const { route, push } = useNavigation();
+  useSyncBotLanguage();
 
   // Opened from a friend's invite link: ask about it over Explore.
   useEffect(() => {

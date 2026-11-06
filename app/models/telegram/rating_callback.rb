@@ -11,16 +11,16 @@ class Telegram::RatingCallback
   end
 
   def handle
-    user = User.find_by(telegram_user_id: @callback.dig("from", "id"))
-    check_in = user && @id && user.check_ins.find_by(id: @id)
-    return answer("That button is out of date.") unless check_in && (1..5).cover?(@rating)
-    return answer("That visit can't be rated any more.") unless check_in.verified? && check_in.open_for_saying?
+    @user = User.find_by(telegram_user_id: @callback.dig("from", "id"))
+    check_in = @user && @id && @user.check_ins.find_by(id: @id)
+    return answer(:out_of_date) unless check_in && (1..5).cover?(@rating)
+    return answer(:closed) unless check_in.verified? && check_in.open_for_saying?
 
     if check_in.rating.nil?
       check_in.update!(rating: @rating)
-      answer("Thanks! Saved #{@rating}/5.")
+      answer(:saved, rating: @rating)
     else
-      answer("You already rated this visit #{check_in.rating}/5.")
+      answer(:already_rated, rating: check_in.rating)
     end
     redraw(check_in)
   end
@@ -35,7 +35,8 @@ class Telegram::RatingCallback
       Rails.logger.warn("Rating prompt could not be redrawn: #{error.message}")
     end
 
-    def answer(text)
+    def answer(key, rating: nil)
+      text = Telegram::Messages.rating_answer(@user, key, rating: rating)
       @bot.answer_callback_query(callback_query_id: @callback["id"], text: text)
     end
 end

@@ -39,6 +39,8 @@ export type User = {
   daily_nudges: boolean;
   /** Whether the bot sends the evening round-up of friends' stamps and reactions. */
   friend_updates: boolean;
+  /** The language the bot writes in; the app reports what it shows. Null until known. */
+  language: "en" | "am" | null;
   joined_at: Timestamp;
 };
 

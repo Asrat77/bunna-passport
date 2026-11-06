@@ -105,6 +105,30 @@ class TelegramJobsTest < ActiveJob::TestCase
     assert_not user.reload.bot_chat?
   end
 
+  test "Amharic speakers get their stamp and badge messages in Amharic" do
+    user = telegram_user(telegram_chat_started_at: 2.days.ago, created_at: 2.days.ago, language: "am")
+
+    bot = with_fake_bot do
+      perform_enqueued_jobs(only: [ SendStampNotificationJob, SendBadgeNotificationJob ]) { visit(user) }
+    end
+
+    stamp = bot.sent.find { |message| message[:text].include?("ማህተም፦") }
+    badge = bot.sent.find { |message| message[:text].include?("ባጅ") }
+    assert_match "አዲስ ማህተም፦ <b>Buna House</b>", stamp[:text]
+    assert_match "ለብር 4 ተጨማሪ ስኒዎች ይቀራሉ።", stamp[:text]
+    assert_equal "ፓስፖርቱን ይክፈቱ", stamp[:reply_markup][:inline_keyboard].dig(0, 0, :text)
+    assert_match "ባጅ አግኝተዋል፦ <b>የመጀመሪያ ስኒ</b>", badge[:text]
+    assert_equal :en, I18n.locale
+  end
+
+  test "the nudge follows the person's language" do
+    user = telegram_user(telegram_chat_started_at: 2.days.ago, language: "am")
+
+    assert_match "ዛሬ ቡና ጠጥተዋል?", Telegram::Messages.nudge(user)[:text]
+    user.update!(language: "en")
+    assert_match "Had a cup today?", Telegram::Messages.nudge(user)[:text]
+  end
+
   private
     # Visits Buna House, backdated so the shop cooldown doesn't reject repeats.
     def visit(user, occurred_at: nil, mock_location: false)

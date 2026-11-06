@@ -1,7 +1,32 @@
-import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { api } from "@/api/client";
 import { useAuth } from "@/auth/AuthProvider";
 import { cleanTraits, type AvatarTraits } from "@/design/doodle/traits";
+import { useI18n } from "@/i18n/context";
 import { useProfile } from "./queries";
+
+/**
+ * Tells the server which language the app is showing, so the bot writes to
+ * this person in the same one. Runs whenever the two differ.
+ */
+export function useSyncBotLanguage() {
+  const { language } = useI18n();
+  const { data: profile } = useProfile();
+  const queryClient = useQueryClient();
+  const signedIn = profile != null;
+  const saved = profile?.language;
+
+  useEffect(() => {
+    if (!signedIn || saved === language) return;
+    api
+      .updateProfile({ language })
+      .then(({ data }) => queryClient.setQueryData(["profile"], data))
+      .catch(() => {
+        // Not worth bothering anyone over: the bot keeps its last language.
+      });
+  }, [signedIn, saved, language, queryClient]);
+}
 
 /**
  * The signed-in person's profile picture: their chosen seed, else their
