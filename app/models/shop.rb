@@ -98,8 +98,16 @@ class Shop < ApplicationRecord
     update_columns(
       check_ins_count: check_ins.verified.count,
       stamps_count: stamps.count,
+      review_tags: check_ins.tag_counts,
       updated_at: Time.current
     )
+  end
+
+  # Kept on the shop so the whole catalog can carry it in one request. Only
+  # writes, and so only bumps updated_at for the catalog's ETag, on a change.
+  def refresh_review_tags!
+    counts = check_ins.tag_counts
+    update_columns(review_tags: counts, updated_at: Time.current) unless counts == review_tags
   end
 
   def api_attributes

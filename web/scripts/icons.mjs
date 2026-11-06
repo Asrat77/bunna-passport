@@ -43,6 +43,7 @@ const ICONS = [
   "plus-circle",
   "share-network",
   "shuffle",
+  "sliders-horizontal",
   "stamp",
   "user-plus",
   "warning",

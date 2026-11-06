@@ -80,6 +80,8 @@ export type Shop = {
   price_band: PriceBand | null;
   attributes: ShopAttributes;
   hours?: ShopHours;
+  /** How many public reviews picked each quick tag. Older cached catalogs lack it. */
+  review_tags?: Partial<Record<ReviewTag, number>>;
   updated_at: Timestamp;
 };
 
