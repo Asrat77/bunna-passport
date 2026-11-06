@@ -190,6 +190,10 @@ class CheckIn < ApplicationRecord
     [ :verified, nil ]
   end
 
+  # A price said, changed, unsaid, hidden or reinstated can move the shop's
+  # price band.
+  after_commit :refresh_shop_price_band, if: :price_report_changed?
+
   def verify!
     return self if verified? && counted_at.present?
     raise InvalidTransition unless flagged? || verified?
@@ -311,6 +315,15 @@ class CheckIn < ApplicationRecord
   class InvalidTransition < StandardError; end
 
   private
+    def price_report_changed?
+      (price_birr.present? || price_birr_previously_was.present?) &&
+        (%w[price_birr drink review_hidden_at status] & previous_changes.keys).any?
+    end
+
+    def refresh_shop_price_band
+      RefreshPriceBandsJob.perform_later(shop)
+    end
+
     # Blank notes are nothing said; tags arrive as a list from forms and JSON.
     def tidy_saying
       self.note = note.strip.presence if note

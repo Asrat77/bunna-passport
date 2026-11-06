@@ -78,6 +78,8 @@ export type Shop = {
   longitude: number;
   status: ShopStatus;
   price_band: PriceBand | null;
+  /** People whose reported prices set price_band; 0 when the catalog did. */
+  price_band_reports?: number;
   attributes: ShopAttributes;
   hours?: ShopHours;
   updated_at: Timestamp;
