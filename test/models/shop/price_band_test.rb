@@ -89,6 +89,27 @@ class Shop::PriceBandTest < ActiveSupport::TestCase
     assert_equal "splurge", @shop.reload.price_band
   end
 
+  test "the nightly run carries on past a shop that fails today's validations" do
+    3.times { report(price: 400) }
+    @shop.update_column(:landmark, "")
+
+    RefreshPriceBandsJob.perform_now
+
+    assert_equal "splurge", @shop.reload.price_band
+  end
+
+  test "a merge moves the loser's reported prices to the winner" do
+    3.times { report(price: 400) }
+    @shop.refresh_price_band_from_reports!
+    winner = shops(:piassa) # catalog says budget
+
+    @shop.merge_into!(winner, by: users(:two))
+
+    assert_equal "splurge", winner.reload.price_band
+    assert_equal 3, winner.price_band_reports_count
+    assert_equal 0, @shop.reload.price_band_reports_count
+  end
+
   private
     def report(price:, drink: "macchiato", user: create_user, at: 1.hour.ago, hidden: false, status: :verified)
       CheckIn.create!(

@@ -91,12 +91,15 @@ class Shop < ApplicationRecord
 
   # Reports win over the catalog once there are enough of them. When they
   # drop below that again, the last band stays but no longer claims reports.
+  # Writes the columns directly, like recount_activity!: the nightly run goes
+  # through every reported shop, and one old catalog row that fails today's
+  # validations mustn't stop the rest. updated_at still moves for the ETag.
   def refresh_price_band_from_reports!(now: Time.current)
     band, reporters = reported_price_band(now: now)
     if band
-      update!(price_band: band, price_band_reports_count: reporters) if band != price_band || reporters != price_band_reports_count
+      update_columns(price_band: band, price_band_reports_count: reporters, updated_at: Time.current) if band != price_band || reporters != price_band_reports_count
     elsif price_band_reports_count.positive?
-      update!(price_band_reports_count: 0)
+      update_columns(price_band_reports_count: 0, updated_at: Time.current)
     end
   end
 
@@ -128,6 +131,10 @@ class Shop < ApplicationRecord
       update!(status: :merged, merged_into: winner)
       winner.recount_activity!
       recount_activity!
+      # The visits moved without callbacks, so their prices haven't been
+      # counted for the winner yet, and no longer count here.
+      winner.refresh_price_band_from_reports!
+      refresh_price_band_from_reports!
       User.where(id: affected_user_ids).find_each do |user|
         user.update_columns(stamps_count: user.stamps.count, updated_at: Time.current)
       end

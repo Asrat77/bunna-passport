@@ -1,8 +1,9 @@
 class Api::V1::CheckInReactionsController < Api::V1::BaseController
   RECEIVED_LIMIT = 30
 
-  # Generous for tapping through a feed, but not a script.
-  rate_limit to: 200, within: 1.hour, only: %i[ update destroy ],
+  # Generous for tapping through a feed, but not a script. Counted per
+  # person, not per IP: phones on the same mobile network share addresses.
+  rate_limit to: 200, within: 1.hour, only: %i[ update destroy ], by: -> { Current.user.id },
     with: -> { render_error(:too_many_requests, "rate_limit_exceeded", "Too many reactions. Try again later.") }
 
   # Reactions friends left on your own visits over the feed's month, newest
