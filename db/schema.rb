@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -300,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_040000) do
     t.integer "submitted_by_id", null: false
     t.datetime "updated_at", null: false
     t.integer "price_band_reports_count", default: 0, null: false
+    t.json "review_tags", default: {}, null: false
     t.index ["latitude", "longitude"], name: "index_shops_on_latitude_and_longitude"
     t.index ["merged_into_id"], name: "index_shops_on_merged_into_id"
     t.index ["name_am_key"], name: "index_shops_on_name_am_key"

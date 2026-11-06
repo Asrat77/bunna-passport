@@ -52,6 +52,9 @@ class CheckIn < ApplicationRecord
   validate :acceptable_photo
 
   before_validation :tidy_saying
+  # The shop's catalog entry carries its tag counts, so the apps can filter
+  # by them; any visit that says or said something keeps those counts true.
+  after_commit :refresh_shop_review_tags, if: -> { tags.present? || saved_change_to_tags? }
 
   scope :reverse_chronologically, -> { order(occurred_at: :desc, id: :desc) }
   scope :rated, -> { verified.where.not(rating: nil) }
@@ -103,11 +106,17 @@ class CheckIn < ApplicationRecord
 
   # The tags people pick most here, most common first.
   def self.top_tags(limit: 4)
+    tag_counts.first(limit).map { |tag, count| { tag: tag, count: count } }
+  end
+
+  # How many public reviews picked each tag, most common first. Only visits
+  # we verified and nobody hid count, so a removed review stops vouching.
+  def self.tag_counts
     counts = Hash.new(0)
     verified.where(review_hidden_at: nil).where("json_array_length(tags) > 0").pluck(:tags).each do |tags|
       Array(tags).uniq.each { |tag| counts[tag] += 1 if TAGS.include?(tag) }
     end
-    counts.sort_by { |tag, count| [ -count, TAGS.index(tag) ] }.first(limit).map { |tag, count| { tag: tag, count: count } }
+    counts.sort_by { |tag, count| [ -count, TAGS.index(tag) ] }.to_h
   end
 
   # What people paid lately, per drink: the median, so one odd price can't
@@ -322,6 +331,10 @@ class CheckIn < ApplicationRecord
 
     def refresh_shop_price_band
       RefreshPriceBandsJob.perform_later(shop)
+    end
+
+    def refresh_shop_review_tags
+      shop.refresh_review_tags!
     end
 
     # Blank notes are nothing said; tags arrive as a list from forms and JSON.

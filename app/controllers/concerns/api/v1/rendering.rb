@@ -83,6 +83,8 @@ module Api::V1::Rendering
         attributes: shop.api_attributes,
         # In the catalog too, so a list can say "Open" without a request per shop.
         hours: hours_json(shop.hours),
+        # How many reviews picked each quick tag, for "quiet" or "good for work" filters.
+        review_tags: shop.review_tags,
         updated_at: shop.updated_at.iso8601(6)
       }
       return data unless detailed

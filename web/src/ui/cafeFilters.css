@@ -1,0 +1,123 @@
+.cafe-filters .chip svg {
+  margin-left: -2px;
+}
+
+/* On Mocha screens a picked chip reads like Explore's pills, not a white slab. */
+.mocha .chip--filter[aria-pressed="true"] {
+  background: var(--mocha-surface-active);
+  border-color: transparent;
+  color: var(--primary);
+}
+
+/* The filter sheet: paper rising from the bottom over a dimmed screen. */
+.filter-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(11, 10, 9, 0.5);
+  animation: filter-sheet-fade 180ms ease-out both;
+}
+
+.filter-sheet__panel {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-float);
+  outline: none;
+  animation: filter-sheet-rise 260ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes filter-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes filter-sheet-rise {
+  from {
+    translate: 0 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-sheet,
+  .filter-sheet__panel {
+    animation: none;
+  }
+}
+
+.filter-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-sheet__head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.filter-sheet__close {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  margin-right: -12px;
+  color: var(--muted);
+}
+
+.filter-sheet__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-sheet__section h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.filter-sheet__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.filter-sheet__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.filter-sheet__actions .link-button:disabled {
+  opacity: 0.4;
+}
+
+.filter-sheet__show {
+  flex: 1;
+  max-width: 260px;
+  min-height: 52px;
+  border-radius: var(--radius-button);
+  background: var(--action);
+  color: var(--on-action);
+  font-size: 16px;
+  font-weight: 600;
+}

@@ -61,6 +61,33 @@ class Api::V1::ShopReviewsTest < ActionDispatch::IntegrationTest
     assert_equal 3, meta["total"], "every visit is still listed"
   end
 
+  test "the catalog counts each shop's review tags and drops hidden ones" do
+    visit(rating: 5, tags: %w[ quiet good_for_work ])
+    hidden = visit(rating: 4, tags: %w[ quiet ], key: "second")
+
+    get api_v1_shops_url
+    shop = response_json.dig("data", "shops").find { |s| s["id"] == @shop.id }
+    assert_equal({ "quiet" => 2, "good_for_work" => 1 }, shop["review_tags"])
+
+    Report.create!(user: create_user, reportable: hidden, reason: "spam").uphold!(by: create_user(trust_level: :moderator))
+    assert_equal({ "quiet" => 1, "good_for_work" => 1 }, @shop.reload.review_tags)
+
+    hidden.reload.update!(tags: [])
+    assert_equal({ "quiet" => 1, "good_for_work" => 1 }, @shop.reload.review_tags)
+  end
+
+  test "a merge moves review tags to the surviving shop" do
+    visit(rating: 5, tags: %w[ cozy ])
+    winner = shops(:bole).dup.tap { |s| s.assign_attributes(slug: "bole-two", name: "Bole Two", name_am: "ቦሌ ሁለት") }
+    winner.save!(validate: false)
+    winner.update_columns(status: "live")
+
+    @shop.merge_into!(winner, by: create_user(trust_level: :moderator))
+
+    assert_equal({ "cozy" => 1 }, winner.reload.review_tags)
+    assert_equal({}, @shop.reload.review_tags)
+  end
+
   test "a review carries who wrote it, their tags, price and photo" do
     check_in = visit(rating: 4, tags: %w[ cozy ], drink: "macchiato", price_birr: 40)
     check_in.photo.attach(io: StringIO.new(TINY_PNG), filename: "cup.png", content_type: "image/png")

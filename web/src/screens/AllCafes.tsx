@@ -1,13 +1,15 @@
 import { phCaretDown, phCaretLeft, phCaretRight, phMagnifyingGlass } from "@/ui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { OpaqueId } from "@/api/types";
-import { catalogStats, findShops, type ShopSort } from "@/data/nearby";
+import { activeFilterCount, NO_FILTERS, setCafeFilters, useCafeFilters, type CafeFilters } from "@/data/cafeFilters";
+import { catalogStats, filterOptions, findShops, type ShopSort } from "@/data/nearby";
 import { useCatalog } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { useI18n } from "@/i18n/context";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation, type Route } from "@/nav/Navigation";
 import { BackControl } from "@/telegram/buttons";
+import { CafeFilterChips } from "@/ui/CafeFilters";
 import { FilterChip } from "@/ui/Chip";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
@@ -22,7 +24,6 @@ type CafesRoute = Extract<Route, { name: "cafes" }>;
 
 type Filters = {
   query: string;
-  openNow: boolean;
   jebena: boolean;
   visited: boolean | null;
   neighborhoodId: OpaqueId | null;
@@ -39,7 +40,6 @@ function initialFilters(route: CafesRoute): Filters {
   return (
     remembered.get(route) ?? {
       query: route.query ?? "",
-      openNow: false,
       jebena: route.filter === "jebena",
       visited: route.filter === "notYet" ? false : null,
       neighborhoodId: null,
@@ -62,6 +62,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
   const stamps = useStampsByShop();
   const location = useLocation();
   const [filters, setFilters] = useState(() => initialFilters(route));
+  const shared = useCafeFilters();
   const listTop = useRef<HTMLDivElement>(null);
   const shops = catalog.data ?? [];
   const stamped = useMemo(() => new Set(stamps.keys()), [stamps]);
@@ -71,30 +72,36 @@ export function AllCafes({ route }: { route: CafesRoute }) {
     () => [...stats.neighborhoods].sort((a, b) => a.name.localeCompare(b.name)),
     [stats.neighborhoods],
   );
-  const results = useMemo(
-    () =>
-      findShops(shops, {
-        origin: location.fix,
-        query: filters.query,
-        stamped,
-        openNow: filters.openNow,
-        jebena: filters.jebena,
-        visited: filters.visited,
-        neighborhoodId: filters.neighborhoodId,
-        sort: filters.sort,
-      }),
-    [shops, location.fix, stamped, filters],
-  );
+  const find = (with_: CafeFilters) =>
+    findShops(shops, {
+      origin: location.fix,
+      query: filters.query,
+      stamped,
+      jebena: filters.jebena,
+      visited: filters.visited,
+      neighborhoodId: filters.neighborhoodId,
+      sort: filters.sort,
+      ...filterOptions(with_),
+    });
+  const results = useMemo(() => find(shared), [shops, location.fix, stamped, filters, shared]);
 
   const pages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const page = Math.min(filters.page, pages - 1);
   const visible = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const filtered =
-    filters.query.trim() !== "" || filters.openNow || filters.jebena || filters.visited !== null || filters.neighborhoodId !== null;
+    filters.query.trim() !== "" || activeFilterCount(shared) > 0 || filters.jebena || filters.visited !== null || filters.neighborhoodId !== null;
 
   useEffect(() => {
     remembered.set(route, filters);
   }, [route, filters]);
+
+  // The shared filters live outside this page, so a change there starts again from page one too.
+  const firstShared = useRef(shared);
+  useEffect(() => {
+    if (firstShared.current === shared) return;
+    firstShared.current = shared;
+    setFilters((current) => ({ ...current, page: 0 }));
+  }, [shared]);
 
   // Back from a shop lands where you left the list, after the app's own
   // scroll-to-top on every screen change.
@@ -156,10 +163,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
         </span>
       </label>
 
-      <div className="chip-row" role="group" aria-label={t("cafes.filters")}>
-        <FilterChip selected={filters.openNow} onClick={() => update({ openNow: !filters.openNow })}>
-          {t("cafes.openNow")}
-        </FilterChip>
+      <CafeFilterChips count={(next) => find(next).length}>
         <FilterChip selected={filters.jebena} onClick={() => update({ jebena: !filters.jebena })}>
           {t("cafes.jebena")}
         </FilterChip>
@@ -169,7 +173,7 @@ export function AllCafes({ route }: { route: CafesRoute }) {
         <FilterChip selected={filters.visited === false} onClick={() => update({ visited: filters.visited === false ? null : false })}>
           {t("cafes.notVisited")}
         </FilterChip>
-      </div>
+      </CafeFilterChips>
 
       <div className="cafes__selects">
         <label className="select-pill cafes__area-select">
@@ -212,7 +216,10 @@ export function AllCafes({ route }: { route: CafesRoute }) {
           <button
             type="button"
             className="link-button"
-            onClick={() => update({ query: "", openNow: false, jebena: false, visited: null, neighborhoodId: null })}
+            onClick={() => {
+              setCafeFilters(NO_FILTERS);
+              update({ query: "", jebena: false, visited: null, neighborhoodId: null });
+            }}
           >
             {t("cafes.clear")}
           </button>
