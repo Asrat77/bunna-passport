@@ -56,6 +56,18 @@ en:
       next_level:
         one: "%{count} more cup for %{level}."
         other: "%{count} more cups for %{level}."
+    contribution:
+      approved:
+        submission: "✅ The café you added, <b>%{shop}</b>, was approved. It's on Bunna Passport now."
+        edit: "✅ Your edit to <b>%{shop}</b> was approved and is live."
+        photo_submission: "✅ Your photo of <b>%{shop}</b> was approved. It's on the café's page now."
+        thanks: "Thanks for helping keep the map right ☕"
+      rejected:
+        submission: "The café you added, <b>%{shop}</b>, wasn't approved."
+        edit: "Your edit to <b>%{shop}</b> wasn't approved."
+        photo_submission: "Your photo of <b>%{shop}</b> wasn't approved."
+        thanks: "Thanks for sending it anyway. If you can fix what's missing, you're welcome to send it again."
+      reason: "Moderator's note: %{reason}"
     badge:
       earned: "🏅 Badge earned: <b>%{name}</b>"
       tally: "%{description} That's %{count} of %{total} badges."

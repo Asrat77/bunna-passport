@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Neighborhood, OpaqueId, PriceBand, Weekday } from "@/api/types";
 import { ApiRequestError } from "@/api/errors";
 import { useI18n, type Key } from "@/i18n/context";
@@ -7,7 +7,7 @@ import { PRICE_LABEL_KEYS } from "@/lib/price";
 import { useLocation } from "@/location/LocationProvider";
 import { AddChip, FilterChip } from "@/ui/Chip";
 import { Icon } from "@/ui/Icon";
-import { phCrosshair, phPlus } from "@/ui/icons";
+import { phCamera, phCrosshair, phPlus, phX } from "@/ui/icons";
 import { hoursValid, MAX_PIN_ACCURACY_METERS, PRICE_BANDS, WEEK, type HoursForm } from "./form";
 
 export function TextField({
@@ -179,6 +179,84 @@ export function PinField({
           {state === "set" ? t("contribute.pinAgain") : t("contribute.pinHere")}
         </button>
       </div>
+    </fieldset>
+  );
+}
+
+/** The kinds of picture the server accepts, and how big. */
+export const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * An optional picture of the café. Opens the camera on a phone, shows what
+ * was picked, and refuses a file the server would turn away anyway.
+ */
+export function PhotoField({ value, onChange }: { value: File | null; onChange: (file: File | null) => void }) {
+  const { t } = useI18n();
+  const input = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [problem, setProblem] = useState<"type" | "size" | null>(null);
+
+  useEffect(() => {
+    if (!value) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(value);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [value]);
+
+  function pick(file: File | undefined) {
+    if (input.current) input.current.value = "";
+    if (!file) return;
+    if (!PHOTO_TYPES.includes(file.type)) return setProblem("type");
+    if (file.size > PHOTO_MAX_BYTES) return setProblem("size");
+    setProblem(null);
+    onChange(file);
+  }
+
+  return (
+    <fieldset className="form-field">
+      <legend className="form-field__label">
+        {t("contribute.photo")} <span className="form-field__optional">{t("common.optional")}</span>
+      </legend>
+      {value && preview ? (
+        <div className="photo-field photo-field--set">
+          <img className="photo-field__preview" src={preview} alt={t("contribute.photoPicked")} />
+          <div className="photo-field__actions">
+            <button type="button" className="pin-field__button" onClick={() => input.current?.click()}>
+              <Icon path={phCamera} size={18} />
+              {t("contribute.photoChange")}
+            </button>
+            <button type="button" className="pin-field__button" onClick={() => onChange(null)}>
+              <Icon path={phX} size={18} />
+              {t("contribute.photoRemove")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="photo-field">
+          <span className="pin-field__status">{t("contribute.photoHint")}</span>
+          <button type="button" className="pin-field__button" onClick={() => input.current?.click()}>
+            <Icon path={phCamera} size={18} />
+            {t("contribute.photoAdd")}
+          </button>
+        </div>
+      )}
+      {problem ? (
+        <span className="form-field__hint form-field__hint--caution" role="alert">
+          {t(problem === "type" ? "contribute.photoWrongType" : "contribute.photoTooBig")}
+        </span>
+      ) : null}
+      <input
+        ref={input}
+        type="file"
+        accept={PHOTO_TYPES.join(",")}
+        capture="environment"
+        hidden
+        onChange={(event) => pick(event.target.files?.[0])}
+      />
     </fieldset>
   );
 }

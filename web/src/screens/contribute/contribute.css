@@ -184,6 +184,36 @@
   opacity: 0.6;
 }
 
+/* An optional photo of the café. */
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--border-strong);
+  background: var(--raised);
+}
+
+.photo-field--set {
+  border-style: solid;
+  border-color: var(--positive);
+}
+
+.photo-field__preview {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.photo-field__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* The way into these forms from a café page. */
 .shop-fix {
   display: flex;

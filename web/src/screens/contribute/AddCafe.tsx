@@ -11,7 +11,7 @@ import { BackControl, PrimaryAction, SecondaryAction } from "@/telegram/buttons"
 import { hapticError } from "@/telegram/haptics";
 import { Headline } from "@/ui/Headline";
 import { ShopRow } from "@/ui/ShopRow";
-import { AreaField, FormError, HoursField, PinField, PriceField, sendFailure, TextField } from "./Fields";
+import { AreaField, FormError, HoursField, PhotoField, PinField, PriceField, sendFailure, TextField } from "./Fields";
 import { DEFAULT_HOURS, hoursValid, nearestNeighborhood, neighborhoodsOf, submissionFor, type HoursForm } from "./form";
 import { Sent } from "./Sent";
 import "./contribute.css";
@@ -36,6 +36,7 @@ export function AddCafe({ cafeName: initialName = "" }: { cafeName?: string }) {
   const [priceBand, setPriceBand] = useState<PriceBand | null>(null);
   const [hours, setHours] = useState<HoursForm>(DEFAULT_HOURS);
   const [pin, setPin] = useState<Coordinate | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
   const [duplicates, setDuplicates] = useState<Shop[] | null>(null);
 
   const areas = useMemo(() => neighborhoodsOf(shops, language), [shops, language]);
@@ -51,7 +52,7 @@ export function AddCafe({ cafeName: initialName = "" }: { cafeName?: string }) {
   const send = useMutation({
     mutationFn: async (override: boolean) => {
       if (!pin || neighborhoodId === null) throw new Error("incomplete");
-      return (await api.submitShop(submissionFor({ name, nameAm, landmark, neighborhoodId, priceBand, hours, pin }, override))).data;
+      return (await api.submitShop(submissionFor({ name, nameAm, landmark, neighborhoodId, priceBand, hours, pin }, override), photo)).data;
     },
     onSuccess: (contribution) => {
       if (contribution.status !== "pending") void queryClient.invalidateQueries({ queryKey: ["catalog"] });
@@ -104,6 +105,7 @@ export function AddCafe({ cafeName: initialName = "" }: { cafeName?: string }) {
       <AreaField areas={areas} value={neighborhoodId} onChange={setNeighborhoodId} />
       <HoursField value={hours} onChange={setHours} />
       <PriceField value={priceBand} onChange={setPriceBand} />
+      <PhotoField value={photo} onChange={setPhoto} />
 
       {send.isError && !(send.error instanceof ApiRequestError && send.error.isDuplicateCandidates) ? (
         <FormError>{t(sendFailure(send.error))}</FormError>

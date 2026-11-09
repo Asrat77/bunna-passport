@@ -23,7 +23,7 @@
     title: "Pending contributions",
     records: @pending_contributions,
     path_for: ->(record) { console_contribution_path(record) },
-    label_for: ->(record) { "#{record.contributable_type.demodulize} from @#{record.user.handle}" },
+    label_for: ->(record) { "#{contribution_title(record)} from @#{record.user.handle}" },
     all_path: console_contributions_path(status: "pending") %>
 
   <%= render "console/shared/queue_panel",

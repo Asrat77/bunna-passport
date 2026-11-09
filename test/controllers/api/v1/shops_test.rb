@@ -73,6 +73,35 @@ class Api::V1::ShopsTest < ActionDispatch::IntegrationTest
     assert_equal "pending", response_json.dig("data", "status")
   end
 
+  test "a new café can come with a photo, which becomes its first photo once approved" do
+    photo = Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
+    # Multipart, as the Mini App sends it when a photo is attached.
+    post api_v1_shops_path,
+      params: { shop: submission_params.merge(name: "Photo Corner Coffee", name_am: "የፎቶ ቡና", latitude: 9.05, longitude: 38.70, photo: photo) },
+      headers: bearer_headers(users(:one))
+
+    assert_response :created
+    contribution = Contribution.find(response_json.dig("data", "id"))
+    submission = contribution.contributable
+    assert submission.photo.attached?
+    assert_equal [ { "opens" => "07:00", "closes" => "18:00" } ], submission.hours["monday"]
+
+    contribution.approve!(reviewer: users(:two))
+
+    shop = submission.reload.created_shop
+    assert_equal 1, shop.photos.count
+    assert_equal users(:one), shop.photos.first.contributor
+  end
+
+  test "a new café's photo has to be an image" do
+    text = Rack::Test::UploadedFile.new(Rails.root.join("README.md"), "text/plain")
+    post api_v1_shops_path,
+      params: { shop: submission_params.merge(name: "Text Coffee", latitude: 9.05, longitude: 38.70, photo: text) },
+      headers: bearer_headers(users(:one))
+
+    assert_response :unprocessable_entity
+  end
+
   test "invalid sync input is a structured bad request" do
     get api_v1_shops_path, params: { updated_since: "not-a-time" }, as: :json
 

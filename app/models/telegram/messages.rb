@@ -107,6 +107,28 @@ module Telegram::Messages
     end
   end
 
+  # Sent when a moderator (or two people confirming a new café) settles
+  # something the person sent in. The reason is what the moderator typed, so
+  # it is passed on as written; the stock reason from a Telegram button says
+  # nothing useful and is left out.
+  def contribution_decision(contribution)
+    in_language_of(contribution.user) do
+      kind = contribution.contributable_type.demodulize.underscore
+      outcome = contribution.approved? ? "approved" : "rejected"
+      text = t("contribution.#{outcome}.#{kind}", shop: h(contribution.shop_name))
+
+      if contribution.rejected?
+        reason = contribution.rejection_reason.to_s.strip
+        text += "\n\n#{t('contribution.reason', reason: h(reason))}" if reason.present? && reason != Telegram::ModerationCallback::REJECTION_REASON
+        text += "\n\n#{t('contribution.rejected.thanks')}"
+      else
+        text += "\n\n#{t('contribution.approved.thanks')}"
+      end
+
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.open_app")) ]) }
+    end
+  end
+
   # A while after a visit nobody rated: one tap on a cup saves the rating.
   def review_prompt(check_in)
     in_language_of(check_in.user) do

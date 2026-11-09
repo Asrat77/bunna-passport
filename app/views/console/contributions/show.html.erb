@@ -1,25 +1,161 @@
-<p class="eyebrow">Contribution #<%= @contribution.id %></p>
-<h1><%= @contribution.contributable_type.demodulize %></h1>
-<p>Submitted by <%= link_to "@#{@contribution.user.handle}", console_user_path(@contribution.user) %>
-  · <span class="status status--<%= @contribution.status %>"><%= @contribution.status.humanize %></span></p>
+<% item = @contribution.contributable %>
+<% content_for :title, "#{contribution_title(@contribution)} · Bunna Passport" %>
 
-<section class="panel">
-  <h2>Proposal</h2>
-  <pre><%= JSON.pretty_generate(@contribution.contributable.attributes.except("created_at", "updated_at")) %></pre>
-  <% if @contribution.rejection_reason.present? %><p><strong>Rejection:</strong> <%= @contribution.rejection_reason %></p><% end %>
-</section>
+<p class="crumbs">
+  <%= link_to "← Contributions", console_contributions_path(status: @contribution.pending? ? "pending" : "all") %>
+  <% if @next_pending %> · <%= link_to "Skip to next waiting →", console_contribution_path(@next_pending) %><% end %>
+</p>
 
-<div class="actions">
-  <% if @contribution.pending? %>
-    <%= button_to "Approve", console_contribution_approval_path(@contribution),
-      class: "button button--secondary", form: { data: { turbo: false } } %>
-    <%= form_with url: console_contribution_rejection_path(@contribution),
-      class: "actions", data: { turbo: false } do |form| %>
-      <%= form.text_field :reason, required: true, placeholder: "Reason for rejection" %>
-      <%= form.submit "Reject", class: "button--danger" %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow"><%= contribution_kind(@contribution) %> · #<%= @contribution.id %></p>
+    <h1>
+      <%= @contribution.shop_name %>
+      <% if @contribution.shop_submission? %><span class="title-am" lang="am"><%= item.name_am %></span><% end %>
+    </h1>
+    <p class="muted">
+      Sent <%= time_ago_in_words(@contribution.created_at) %> ago by
+      <%= link_to "@#{@contributor.handle}", console_user_path(@contributor) %>
+      · <span class="status status--<%= @contribution.status %>"><%= @contribution.status.humanize %></span>
+    </p>
+  </div>
+</div>
+
+<div class="review-layout">
+  <div class="review-main">
+    <% case item %>
+    <% when Shop::Submission %>
+      <section class="panel">
+        <h2>The café they want to add</h2>
+        <dl class="facts">
+          <dt>Name</dt><dd><%= item.name %></dd>
+          <dt>Amharic name</dt><dd lang="am"><%= item.name_am %></dd>
+          <dt>Neighborhood</dt><dd><%= item.neighborhood&.name %></dd>
+          <dt>Landmark</dt><dd><%= item.landmark %></dd>
+          <dt>Pin</dt><dd><%= map_link(item.latitude, item.longitude) %> <small class="muted">from their phone's GPS</small></dd>
+          <dt>Price</dt><dd><%= contribution_value("price_band", item.price_band) || tag.span("Not given", class: "muted") %></dd>
+          <dt>Hours</dt><dd><%= hours_lines(item.hours) || tag.span("Not given", class: "muted") %></dd>
+          <% if amenity_words(item.amenities) %><dt>Amenities</dt><dd><%= amenity_words(item.amenities) %></dd><% end %>
+        </dl>
+        <% if item.created_shop %>
+          <p>Created <%= link_to item.created_shop.name, console_shop_path(item.created_shop) %>.</p>
+        <% end %>
+      </section>
+
+      <% if item.photo.attached? %>
+        <section class="panel">
+          <h2>Their photo</h2>
+          <%= link_to url_for(item.photo), target: "_blank", rel: "noopener" do %>
+            <%= image_tag url_for(item.photo), class: "review-photo", alt: "Photo of #{item.name}" %>
+          <% end %>
+          <p class="muted">Becomes the café's first photo if you approve.</p>
+        </section>
+      <% end %>
+
+      <% if @contribution.pending? %>
+        <% candidates = item.duplicate_candidates %>
+        <section class="panel <%= "panel--warning" if candidates.any? %>">
+          <h2>Possible duplicates</h2>
+          <% if candidates.any? %>
+            <% if item.duplicate_override? %><p><strong>They saw these and said theirs is a different café.</strong></p><% end %>
+            <ul class="record-list">
+              <% candidates.each do |shop| %>
+                <li>
+                  <%= link_to shop.name, console_shop_path(shop) %>
+                  <small><span lang="am"><%= shop.name_am %></span> · <%= shop.distance_from(latitude: item.latitude, longitude: item.longitude).round %> m away · <%= shop.landmark %></small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="muted">No café with a similar name nearby.</p>
+          <% end %>
+        </section>
+      <% end %>
+
+    <% when Shop::Edit %>
+      <section class="panel">
+        <h2>Changes to <%= link_to item.shop.name, console_shop_path(item.shop) %></h2>
+        <table class="diff">
+          <thead><tr><th>Field</th><th><%= @contribution.accepted? ? "Before" : "Now" %></th><th>Suggested</th></tr></thead>
+          <tbody>
+            <% edit_rows(item, @contribution).each do |row| %>
+              <tr>
+                <th scope="row"><%= row[:label] %></th>
+                <td class="diff__before"><%= row[:before] || tag.span("—", class: "muted") %></td>
+                <td class="diff__after"><%= row[:after] || tag.span("—", class: "muted") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </section>
+
+    <% when Shop::PhotoSubmission %>
+      <section class="panel">
+        <h2>Photo of <%= link_to item.shop.name, console_shop_path(item.shop) %></h2>
+        <% if item.image.attached? %>
+          <%= link_to url_for(item.image), target: "_blank", rel: "noopener" do %>
+            <%= image_tag url_for(item.image), class: "review-photo", alt: item.caption.presence || "Photo of #{item.shop.name}" %>
+          <% end %>
+        <% end %>
+        <p><%= item.caption.presence || tag.span("No caption", class: "muted") %></p>
+        <p class="muted"><%= item.shop.landmark %> · <%= pluralize(item.shop.photos.count, "photo") %> already</p>
+      </section>
     <% end %>
-  <% else %>
-    <%= button_to "Reverse decision", console_contribution_reversal_path(@contribution),
-      class: "button--danger", form: { data: { turbo: false } } %>
-  <% end %>
+  </div>
+
+  <aside class="review-side">
+    <section class="panel decision">
+      <% if @contribution.pending? %>
+        <h2>Your call</h2>
+        <% if @contribution.confirmations.any? %>
+          <p class="muted"><%= pluralize(@contribution.confirmations.size, "person") %> confirmed it already.</p>
+        <% end %>
+        <%= button_to "Approve", console_contribution_approval_path(@contribution),
+          class: "button button--secondary button--wide", form: { data: { turbo: false } } %>
+
+        <%= form_with url: console_contribution_rejection_path(@contribution), class: "reject-form", data: { turbo: false } do |form| %>
+          <fieldset>
+            <legend>Or reject it, saying why</legend>
+            <% rejection_reasons_for(@contribution).each_with_index do |reason, index| %>
+              <label class="choice">
+                <%= radio_button_tag :preset, reason, false, id: "preset_#{index}" %>
+                <span><%= reason %></span>
+              </label>
+            <% end %>
+          </fieldset>
+          <%= form.label :reason, "Note for them (optional with a reason above)" %>
+          <%= form.text_area :reason, rows: 3, maxlength: 500, placeholder: "e.g. It closed last year." %>
+          <%= form.submit "Reject", class: "button--danger button--wide" %>
+        <% end %>
+        <p class="muted small">@<%= @contributor.handle %> <%= @contributor.bot_chat? ? "gets a Telegram message with the outcome." : "hasn't started the bot, so they won't be told." %></p>
+      <% else %>
+        <h2><%= @contribution.status.humanize %></h2>
+        <p>
+          <% if @contribution.auto_approved? %>
+            Went live straight away (trusted contributor).
+          <% else %>
+            By <%= @contribution.reviewed_by ? "@#{@contribution.reviewed_by.handle}" : "someone" %>
+            <%= time_ago_in_words(@contribution.reviewed_at) %> ago.
+          <% end %>
+        </p>
+        <% if @contribution.rejection_reason.present? %>
+          <blockquote class="reason"><%= @contribution.rejection_reason %></blockquote>
+        <% end %>
+        <%= button_to "Reverse decision", console_contribution_reversal_path(@contribution),
+          class: "button--danger button--wide", form: { data: { turbo: false }, onsubmit: "return confirm('Undo this decision and put it back in the queue?')" } %>
+      <% end %>
+    </section>
+
+    <section class="panel">
+      <h2>From</h2>
+      <p><strong><%= @contributor.display_name %></strong> <%= link_to "@#{@contributor.handle}", console_user_path(@contributor) %></p>
+      <dl class="facts facts--compact">
+        <dt>Trust</dt><dd><%= @contributor.trust_level.humanize %></dd>
+        <dt>Accepted</dt><dd><%= @history["approved"].to_i + @history["auto_approved"].to_i %></dd>
+        <dt>Rejected</dt><dd><%= @history["rejected"].to_i %></dd>
+        <dt>Waiting</dt><dd><%= @history["pending"].to_i %></dd>
+        <dt>Joined</dt><dd><%= time_ago_in_words(@contributor.created_at) %> ago</dd>
+      </dl>
+    </section>
+  </aside>
 </div>

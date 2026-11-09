@@ -66,7 +66,7 @@ class Api::V1::ShopsController < Api::V1::BaseController
     def shop_params
       params.expect(shop: [
         :name, :name_am, :neighborhood_id, :landmark, :latitude, :longitude,
-        :price_band, :duplicate_override, { amenities: {}, hours: {} }
+        :price_band, :duplicate_override, :photo, { amenities: {}, hours: {} }
       ])
     end
 end

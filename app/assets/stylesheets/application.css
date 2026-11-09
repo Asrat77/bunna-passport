@@ -98,8 +98,8 @@ tr:last-child td { border-bottom: 0; }
   padding: .65rem .9rem;
   text-decoration: none;
 }
-.button--secondary { background: var(--leaf); }
-.button--danger { background: var(--danger); }
+.button--secondary, input[type="submit"].button--secondary { background: var(--leaf); }
+.button--danger, input[type="submit"].button--danger { background: var(--danger); }
 .link-button { background: transparent; color: var(--coffee); padding: 0; }
 
 form.stack, .form-grid { display: grid; gap: 1rem; }
@@ -118,13 +118,55 @@ textarea { min-height: 9rem; resize: vertical; }
 .checkboxes { display: flex; flex-wrap: wrap; gap: .75rem; }
 .checkboxes label { align-items: center; display: flex; font-weight: 500; }
 .checkboxes input { width: auto; }
-.flash { border-radius: 8px; padding: .8rem 1rem; }
+.flash { border-radius: 8px; margin-bottom: 1rem; padding: .8rem 1rem; }
 .flash--notice { background: #ddf5e9; }
 .flash--alert { background: #fde3de; }
 .errors { color: var(--danger); }
 pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; padding: 1rem; }
 
+/* Contribution review */
+.tabs { border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: 1.25rem; }
+.tab { border-bottom: 3px solid transparent; color: var(--muted); font-weight: 700; padding: .6rem .85rem; text-decoration: none; }
+.tab--current { border-color: var(--coffee); color: var(--ink); }
+.tab__count { background: var(--line); border-radius: 999px; font-size: .75rem; margin-left: .3rem; padding: .1rem .45rem; }
+.empty-state { text-align: center; }
+.queue-table td small { display: block; }
+.queue-table__title { display: block; font-weight: 700; margin-top: .3rem; text-decoration: none; }
+.kind { border-radius: 4px; font-size: .7rem; font-weight: 800; letter-spacing: .04em; padding: .15rem .4rem; text-transform: uppercase; }
+.kind--submission { background: #ddf5e9; color: #1f6849; }
+.kind--edit { background: #e6eefc; color: #2c4f8a; }
+.kind--photo_submission { background: #f6e6f7; color: #74307a; }
+.crumbs { font-size: .875rem; margin: 0 0 .5rem; }
+.title-am { color: var(--muted); font-size: .6em; margin-left: .35rem; }
+.review-layout { align-items: start; display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr) 340px; }
+.review-main, .review-side { display: grid; gap: 1.25rem; }
+.review-side { position: sticky; top: 5.5rem; }
+.panel--warning { border-color: #e9c46a; background: #fffbea; }
+.facts { display: grid; gap: .55rem 1rem; grid-template-columns: max-content 1fr; margin: 0; }
+.facts dt { color: var(--muted); font-size: .8rem; font-weight: 700; padding-top: .1rem; }
+.facts dd { margin: 0; }
+.facts--compact { gap: .35rem 1rem; }
+.review-photo { border-radius: 8px; display: block; max-height: 520px; max-width: 100%; object-fit: contain; }
+.diff th[scope="row"] { color: var(--ink); font-size: .875rem; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.diff__before { color: var(--muted); text-decoration: line-through; text-decoration-color: rgb(158 63 50 / 45%); }
+.diff__after { background: #f0faf4; font-weight: 600; }
+.diff tr:last-child th { border-bottom: 0; }
+.decision h2 { margin-bottom: .75rem; }
+.button--wide { width: 100%; }
+.decision form.button_to { margin: 0; }
+.reject-form { border-top: 1px solid var(--line); display: grid; gap: .6rem; margin-top: 1.25rem; padding-top: 1rem; }
+.reject-form fieldset { border: 0; display: grid; gap: .35rem; margin: 0; padding: 0; }
+.reject-form legend { font-size: .875rem; font-weight: 700; margin-bottom: .4rem; }
+.choice { align-items: center; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; display: flex; font-weight: 500; gap: .5rem; padding: .45rem .6rem; }
+.choice:has(input:checked) { background: #fdf0ed; border-color: var(--danger); }
+.choice input { margin: 0; width: auto; }
+.reject-form textarea { min-height: 4.5rem; }
+.reason { border-left: 3px solid var(--danger); margin: 0 0 1rem; padding: .25rem 0 .25rem .75rem; }
+.small { font-size: .8rem; }
+
 @media (max-width: 760px) {
   .site-header { align-items: flex-start; flex-direction: column; gap: .75rem; position: static; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+  .review-layout { grid-template-columns: 1fr; }
+  .review-side { position: static; }
 }
