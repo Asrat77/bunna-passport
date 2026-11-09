@@ -47,6 +47,7 @@ class Contribution < ApplicationRecord
 
     EvaluateTrustJob.perform_later(user)
     AwardBadgesJob.perform_later(user)
+    SendContributionDecisionJob.perform_later(self) unless automatically
     self
   end
 
@@ -60,6 +61,8 @@ class Contribution < ApplicationRecord
       reviewed_at: Time.current,
       rejection_reason: reason
     )
+    SendContributionDecisionJob.perform_later(self)
+    self
   end
 
   def confirm!(by:)
@@ -85,6 +88,20 @@ class Contribution < ApplicationRecord
 
   def accepted?
     approved? || auto_approved?
+  end
+
+  # The café this is about: the one being edited or photographed, or, for a
+  # suggested new café, the one it created once approved.
+  def shop
+    case contributable
+    when Shop::Submission then contributable.created_shop
+    else contributable.shop
+    end
+  end
+
+  # What to call the café in a message or a list, even before it exists.
+  def shop_name
+    shop_submission? ? contributable.name : contributable.shop.name
   end
 
   def confirmable_by?(candidate)

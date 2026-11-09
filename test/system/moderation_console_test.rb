@@ -35,14 +35,15 @@ class ModerationConsoleTest < ApplicationSystemTestCase
     sign_in
 
     assert_text "Community health"
-    assert_text "Submission from @#{@contributor.handle}"
+    assert_text "New café: Console Coffee from @#{@contributor.handle}"
     assert_text "Spam: User"
     assert_text "@#{@contributor.handle} at #{shops(:bole).name}"
 
     visit console_contribution_path(@contribution)
-    assert_text "Submission"
+    assert_text "New café"
+    assert_text "Near the operations queue"
     click_on "Approve"
-    assert_text "Contribution approved."
+    assert_text "Approved “Console Coffee”."
     assert @contribution.reload.approved?
     assert @contribution.shop_submission.created_shop.live?
 

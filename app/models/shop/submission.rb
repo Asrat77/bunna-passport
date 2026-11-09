@@ -1,9 +1,13 @@
 class Shop::Submission < ApplicationRecord
   include Locatable
+  include ImageAttachable
 
   has_one :contribution, as: :contributable, touch: true
   belongs_to :neighborhood
   belongs_to :created_shop, class_name: "Shop", optional: true
+  # A picture of the café, if the person adding it took one. It becomes the
+  # café's first photo once the café is approved.
+  has_one_attached :photo
 
   enum :price_band, {
     budget: "budget",
@@ -16,6 +20,7 @@ class Shop::Submission < ApplicationRecord
 
   validates :name, :name_am, :landmark, presence: true
   validate :hours_are_valid
+  validate :acceptable_photo
 
   def duplicate_candidates
     Shop.duplicate_candidates(
@@ -46,6 +51,11 @@ class Shop::Submission < ApplicationRecord
         confirmed_at: Time.current
       )
     end
+    if photo.attached?
+      first_photo = shop.photos.build(contributor: contributor)
+      first_photo.image.attach(photo.blob)
+      first_photo.save!
+    end
     update!(created_shop: shop)
   end
 
@@ -54,6 +64,10 @@ class Shop::Submission < ApplicationRecord
   end
 
   private
+    def acceptable_photo
+      acceptable_image(photo, required: false)
+    end
+
     def hours_are_valid
       candidate = Shop::Hours.new(schedule: hours)
       candidate.valid?

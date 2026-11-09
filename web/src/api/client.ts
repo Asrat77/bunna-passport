@@ -372,8 +372,17 @@ export const api = {
     return request<CityStats>("/stats/city", { anonymous: true });
   },
 
-  submitShop(shop: Record<string, unknown>) {
-    return request<Contribution>("/shops", { method: "POST", body: { shop } });
+  /**
+   * A photo of the café, when there is one, makes this multipart: the rest
+   * of the form goes along as Rails-style bracketed fields.
+   */
+  submitShop(shop: Record<string, unknown>, photo?: File | null) {
+    if (!photo) return request<Contribution>("/shops", { method: "POST", body: { shop } });
+
+    const form = new FormData();
+    appendFields(form, "shop", shop);
+    form.append("shop[photo]", photo);
+    return request<Contribution>("/shops", { method: "POST", body: form, timeoutMs: 60_000 });
   },
 
   /**
@@ -452,3 +461,19 @@ export const api = {
 };
 
 export type { Shop, ShopDetail };
+
+/**
+ * Flattens nested values into FormData the way Rails reads them back:
+ * `shop[hours][monday][][opens]`. Arrays of objects rely on each object's
+ * keys arriving together, which this keeps.
+ */
+export function appendFields(form: FormData, key: string, value: unknown): void {
+  if (value === undefined || value === null) return;
+  if (Array.isArray(value)) {
+    for (const item of value) appendFields(form, `${key}[]`, item);
+  } else if (typeof value === "object" && !(value instanceof Blob)) {
+    for (const [name, inner] of Object.entries(value as Record<string, unknown>)) appendFields(form, `${key}[${name}]`, inner);
+  } else {
+    form.append(key, value instanceof Blob ? value : String(value));
+  }
+}

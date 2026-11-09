@@ -55,6 +55,18 @@ am:
       next_level:
         one: "ለ%{level} %{count} ተጨማሪ ስኒ ይቀራል።"
         other: "ለ%{level} %{count} ተጨማሪ ስኒዎች ይቀራሉ።"
+    contribution:
+      approved:
+        submission: "✅ ያከሉት ካፌ <b>%{shop}</b> ጸድቋል፤ አሁን በቡና ፓስፖርት ላይ ይገኛል።"
+        edit: "✅ በ<b>%{shop}</b> ላይ ያቀረቡት ማስተካከያ ጸድቋል።"
+        photo_submission: "✅ ያቀረቡት የ<b>%{shop}</b> ፎቶ ጸድቋል፤ አሁን በካፌው ገጽ ላይ ይታያል።"
+        thanks: "ካርታውን ትክክለኛ ለማድረግ ስላገዙ እናመሰግናለን ☕"
+      rejected:
+        submission: "ያከሉት ካፌ <b>%{shop}</b> አልጸደቀም።"
+        edit: "በ<b>%{shop}</b> ላይ ያቀረቡት ማስተካከያ አልጸደቀም።"
+        photo_submission: "ያቀረቡት የ<b>%{shop}</b> ፎቶ አልጸደቀም።"
+        thanks: "ስለላኩልን እናመሰግናለን። የጎደለውን ማስተካከል ከቻሉ እንደገና መላክ ይችላሉ።"
+      reason: "የአወያዩ ማስታወሻ፦ %{reason}"
     badge:
       earned: "🏅 ባጅ አግኝተዋል፦ <b>%{name}</b>"
       tally: "%{description} እስካሁን ከ%{total} ባጆች %{count} አግኝተዋል።"
