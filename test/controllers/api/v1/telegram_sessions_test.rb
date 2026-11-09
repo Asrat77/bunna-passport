@@ -28,6 +28,17 @@ class Api::V1::TelegramSessionsTest < ActionDispatch::IntegrationTest
     assert_response :created
   end
 
+  test "the bot may write to someone Telegram says allows it, even without a /start" do
+    allowed = signed_init_data(user: { id: 5550010, first_name: "Bete", username: "bete318", allows_write_to_pm: true })
+    silent = signed_init_data(user: { id: 5550011, first_name: "Hana", username: "hana_k" })
+
+    post api_v1_telegram_sessions_path, params: { init_data: allowed }, as: :json
+    post api_v1_telegram_sessions_path, params: { init_data: silent }, as: :json
+
+    assert User.find_by!(telegram_user_id: 5550010).bot_chat?
+    assert_not User.find_by!(telegram_user_id: 5550011).bot_chat?
+  end
+
   test "a tampered payload is refused" do
     init_data = signed_init_data(user: { id: 5550002, first_name: "Dawit" }).sub("Dawit", "Admin")
 

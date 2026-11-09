@@ -8,6 +8,11 @@ class Api::V1::TelegramSessionsController < Api::V1::BaseController
   def create
     init_data = Telegram::InitData.verify!(params.require(:init_data))
     user = User.from_telegram!(init_data.user)
+    # Telegram says the bot may write to them (they started it, or allowed it
+    # when opening the app), even if we never saw a /start: say, it came
+    # before the webhook was set, or a link opened the app straight away.
+    # A later failed send turns this off again.
+    user.start_bot_chat! if init_data.user["allows_write_to_pm"] == true
 
     session, token = Session.start_for(user, ip_address: request.remote_ip, user_agent: request.user_agent)
     render_data(
