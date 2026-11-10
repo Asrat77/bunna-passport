@@ -310,6 +310,40 @@ already settled, in Telegram or the console, is left alone. Links to the
 console appear when `PUBLIC_BASE_URL` is HTTPS. To send one now:
 `bin/kamal app exec 'bin/rails runner "SendModerationDigestJob.perform_now"'`.
 
+## Launch tools
+
+**Where signups come from.** Every way into the Mini App can carry a source
+tag, kept on the account when it is made (`users.signup_source`, see
+`LaunchLink`). Friend invites count as `invite`, the button on a shared stamp
+card as `card`, a café's counter sticker as `qr-<shop id>`, and anything else
+as the tag you give the link. The Monday report says where last week's new
+people came from, stickers by café name. To make a tagged link for a post,
+use the console's Stickers page or
+`bin/kamal app exec 'bin/rails bunna:link SOURCE=ig-addiscoffee'`.
+
+**Counter stickers.** Console → Stickers: pick the neighborhood and the
+partner cafés, then print at 100% on A4 (six 90 mm stickers a page). Each QR
+opens that café's page in the Mini App. A café's console page has a "Print QR
+sticker" button for one at a time. The links point at the bot, so
+`TELEGRAM_BOT_USERNAME` (and `TELEGRAM_MINI_APP_NAME`) must be the final ones
+before printing.
+
+**Bole 10.** A time-boxed badge for visiting every café on a list between two
+dates; there are no trails. Once the ten cafés are agreed:
+
+```sh
+bin/kamal app exec 'bin/rails bunna:challenge SHOPS=slug-1,slug-2,... STARTS=2026-12-08 ENDS=2026-12-29'
+```
+
+Dates are Addis time and `ENDS` is the first day after it closes. Running it
+again changes the list or dates. The badge stays hidden until `STARTS`, sits
+at the front of the Passport tab while it runs, with the cafés still to visit,
+and afterwards stays only on the shelves of people who earned it.
+
+**First-stamp funnel.** The Monday report also says how many of the people who
+joined the week before last had a stamp within seven days of signing up, and
+how last week's newcomers are doing so far.
+
 ## Telegram Mini App
 
 The Mini App lives in `web/` and signs people in with Telegram's signed

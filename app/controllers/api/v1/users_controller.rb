@@ -4,7 +4,8 @@ class Api::V1::UsersController < Api::V1::BaseController
     with: -> { render_error(:too_many_requests, "rate_limit_exceeded", "Too many signup attempts. Try again later.") }
 
   def create
-    user = User.create!(user_params)
+    # The web app passes on the ?src= its link carried (LaunchLink).
+    user = User.create!(user_params.merge(signup_source: LaunchLink.clean_source(params[:source])))
     session, token = Session.start_for(user, ip_address: request.remote_ip, user_agent: request.user_agent)
 
     render_data(

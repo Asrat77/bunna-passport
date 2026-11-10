@@ -72,6 +72,7 @@ Rails.application.routes.draw do
       resource :merge, only: %i[ new create ], module: :shops
     end
     resources :shop_batches, only: %i[ new create ]
+    resources :stickers, only: :index
     resources :users, only: %i[ index show update ]
   end
 

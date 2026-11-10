@@ -17,6 +17,7 @@ import { Dock } from "@/ui/Dock";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
 import { BadgeShelf } from "./BadgeShelf";
+import { ChallengeCards } from "./ChallengeCard";
 import { paginate } from "./layout";
 import { PassportPage, type PageEntry } from "./PassportPage";
 import "./passport.css";
@@ -199,6 +200,7 @@ export function Passport() {
         </>
       ) : null}
 
+      <ChallengeCards />
       <BadgeShelf />
 
       <Dock />

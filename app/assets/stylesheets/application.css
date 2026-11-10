@@ -170,3 +170,24 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
   .review-layout { grid-template-columns: 1fr; }
   .review-side { position: static; }
 }
+
+/* Café QR stickers (console/stickers). Two across, three down on A4. */
+.sticker-picker { border: 1px solid var(--line); border-radius: 8px; display: grid; gap: .35rem; max-height: 22rem; overflow-y: auto; padding: .75rem; }
+.sticker-picker label { align-items: baseline; display: flex; font-weight: 500; gap: .5rem; }
+.sticker-picker input { margin: 0; width: auto; }
+.inline-form { display: flex; gap: .5rem; }
+.no-print > form + .panel { margin-top: 1.25rem; }
+.tracked-link { user-select: all; word-break: break-all; }
+.sticker-sheet { display: grid; gap: 6mm; grid-template-columns: repeat(2, 90mm); justify-content: center; margin-top: 1.5rem; }
+.sticker { align-items: center; background: #fff; border: 1px dashed #b9ada3; border-radius: 6mm; box-sizing: border-box; break-inside: avoid; color: #2b1d14; display: flex; flex-direction: column; height: 90mm; justify-content: center; padding: 5mm; text-align: center; width: 90mm; }
+.sticker__brand { font-size: 9pt; font-weight: 800; letter-spacing: .08em; margin: 0 0 4mm; text-transform: uppercase; }
+.sticker .qr { height: 46mm; width: 46mm; }
+.sticker__name { font-size: 13pt; line-height: 1.2; margin: 4mm 0 2mm; }
+.sticker__call { font-size: 8.5pt; margin: 0; }
+
+@media print {
+  @page { margin: 12mm; size: A4; }
+  .site-header, .no-print, .flash { display: none !important; }
+  .page-shell { margin: 0; max-width: none; padding: 0; }
+  .sticker-sheet { margin: 0; }
+}

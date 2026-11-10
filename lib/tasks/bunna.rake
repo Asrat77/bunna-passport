@@ -146,4 +146,36 @@ namespace :bunna do
       puts "Wrote #{path}"
     end
   end
+
+  desc "Set up a time-boxed café challenge badge: SHOPS=slug,slug,... [SLUG=bole-10 NAME='Bole 10' STARTS=2026-12-08 ENDS=2026-12-29] (dates in Addis, ENDS exclusive)"
+  task challenge: :environment do
+    refs = ENV.fetch("SHOPS", "").split(",").map(&:strip).compact_blank
+    abort "List the challenge cafés: SHOPS=slug,slug,... (slugs or ids)" if refs.empty?
+
+    shops = refs.map do |ref|
+      Shop.find_by(slug: ref) || Shop.find_by(id: Integer(ref, exception: false)) || abort("No café #{ref.inspect}")
+    end.uniq
+    zone = Time.find_zone(User::COFFEE_DAY_ZONE)
+    starts_at = zone.parse(ENV.fetch("STARTS", "2026-12-08"))
+    ends_at = zone.parse(ENV.fetch("ENDS", "2026-12-29"))
+    name = ENV.fetch("NAME", "Bole 10")
+    last_day = (ends_at - 1.second).strftime("%b %-d")
+
+    badge = Badge.install_challenge!(
+      slug: ENV.fetch("SLUG", "bole-10"), name: name,
+      description: ENV["DESCRIPTION"].presence || "Collect a stamp at all #{shops.size} #{name} cafés by #{last_day}.",
+      shops: shops, starts_at: starts_at, ends_at: ends_at
+    )
+    puts "#{badge.name} (#{badge.slug}): #{shops.size} cafés, #{starts_at.strftime('%b %-d')} to #{last_day}"
+    shops.each { |shop| puts "  #{shop.slug}  #{shop.name}" }
+  end
+
+  desc "Print a tracked Mini App link for a post or poster: SOURCE=ig-addiscoffee [SHOP=slug]"
+  task link: :environment do
+    source = LaunchLink.clean_source(ENV["SOURCE"])
+    abort "Give the link a source tag: SOURCE=ig-addiscoffee (a-z, 0-9 and -, up to 40)" unless source
+
+    shop = ENV["SHOP"].presence&.then { |ref| Shop.find_by(slug: ref) || Shop.find_by(id: Integer(ref, exception: false)) || abort("No café #{ref.inspect}") }
+    puts LaunchLink.url(base_url: ENV.fetch("PUBLIC_BASE_URL", "http://localhost:3000"), shop: shop&.id, source: source)
+  end
 end

@@ -60,16 +60,11 @@ module Api::V1::Rendering
     end
 
     # Where a friend lands from an invite: the bot's Mini App with the token
-    # as its start parameter, or the Mini App on this site when there's no bot yet.
-    def invite_url(user)
-      token = user.invite_token!
-      if (bot = ENV["TELEGRAM_BOT_USERNAME"].presence&.delete_prefix("@"))
-        app = ENV["TELEGRAM_MINI_APP_NAME"].presence
-        "https://t.me/#{[ bot, app ].compact.join('/')}?startapp=invite_#{token}"
-      else
-        base = ENV["PUBLIC_BASE_URL"].presence || request.base_url
-        "#{base.delete_suffix('/')}/app?invite=#{token}"
-      end
+    # as its start parameter, or the Mini App on this site when there's no bot
+    # yet. A signup through it counts as "invite" in the weekly report, or as
+    # `source` when given (a shared card's button says "card").
+    def invite_url(user, source: nil)
+      LaunchLink.url(base_url: request.base_url, invite: user.invite_token!, source: source)
     end
 
     def shop_json(shop, detailed: false)
@@ -197,6 +192,18 @@ module Api::V1::Rendering
         threshold: badge.threshold,
         earned_at: earned_at&.iso8601
       }
+      data[:challenge] = challenge_json(badge) if badge.challenge?
       progress.nil? ? data : data.merge(progress: progress)
+    end
+
+    def challenge_json(badge)
+      visited = Current.user ? badge.challenge_shop_ids_visited_by(Current.user).to_set : Set.new
+      {
+        starts_at: badge.starts_at.iso8601,
+        ends_at: badge.ends_at.iso8601,
+        shops: badge.challenge_shops.sort_by(&:name).map do |shop|
+          { id: shop.id, name: shop.name, name_am: shop.name_am, visited: visited.include?(shop.id) }
+        end
+      }
     end
 end

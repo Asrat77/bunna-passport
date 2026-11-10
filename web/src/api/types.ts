@@ -212,6 +212,15 @@ export type Badge = {
   tier: StampLevel | null;
   threshold: number;
   earned_at: Timestamp | null;
+  /** Only on a time-boxed challenge such as Bole 10. */
+  challenge?: BadgeChallenge;
+};
+
+/** Visit every café on the list between the two times. */
+export type BadgeChallenge = {
+  starts_at: Timestamp;
+  ends_at: Timestamp;
+  shops: { id: OpaqueId; name: string; name_am: string | null; visited: boolean }[];
 };
 
 /** GET /badges: every badge, with how far the viewer has got. */

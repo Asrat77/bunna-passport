@@ -13,5 +13,6 @@
 </section>
 <div class="actions">
   <%= link_to "Edit shop", edit_console_shop_path(@shop), class: "button" %>
+  <% if @shop.live? %><%= link_to "Print QR sticker", console_stickers_path(neighborhood_id: @shop.neighborhood_id, shop_ids: [ @shop.id ]), class: "button" %><% end %>
   <% unless @shop.merged? %><%= link_to "Merge duplicate", new_console_shop_merge_path(@shop), class: "button button--danger" %><% end %>
 </div>

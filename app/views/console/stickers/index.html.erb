@@ -1,0 +1,54 @@
+<% content_for(:title) { "Café stickers · Bunna Passport" } %>
+<div class="no-print">
+  <p class="eyebrow">Launch</p>
+  <h1>Café QR stickers</h1>
+  <p class="muted">Pick the partner cafés and print. Each QR opens that café's page in the Mini App, and anyone who signs up through it is counted under the café in the Monday report. Print at 100% scale on A4; each sticker is 90 mm square.</p>
+
+  <%= form_with url: console_stickers_path, method: :get, class: "stack", data: { turbo: false } do |form| %>
+    <%= form.label :neighborhood_id, "Neighborhood" %>
+    <%= form.select :neighborhood_id, options_from_collection_for_select(@neighborhoods, :id, :name, @neighborhood&.id), {}, onchange: "this.form.requestSubmit()" %>
+    <% if @candidates.any? %>
+      <fieldset class="sticker-picker">
+        <legend>Live cafés in <%= @neighborhood.name %> (<%= @candidates.size %>)</legend>
+        <% @candidates.each do |shop| %>
+          <label><%= check_box_tag "shop_ids[]", shop.id, @shops.include?(shop), id: "shop_#{shop.id}" %> <%= shop.name %> <span class="muted"><%= shop.landmark %></span></label>
+        <% end %>
+      </fieldset>
+      <%= form.submit "Make sticker sheet" %>
+    <% else %>
+      <p class="muted">No live cafés here yet.</p>
+    <% end %>
+  <% end %>
+
+  <section class="panel">
+    <h2>Tracked link for a post</h2>
+    <p class="muted">Tag a link with where you'll post it, like <code>ig-addiscoffee</code> or <code>tg-channel</code>. Signups through it show under that tag in the Monday report.</p>
+    <%= form_with url: console_stickers_path, method: :get, class: "inline-form", data: { turbo: false } do |form| %>
+      <%= form.text_field :source, value: @source || params[:source], placeholder: "ig-addiscoffee", "aria-label": "Source tag" %>
+      <%= form.submit "Make link" %>
+    <% end %>
+    <% if @tracked_link %>
+      <p><code class="tracked-link"><%= @tracked_link %></code></p>
+    <% elsif params[:source].present? %>
+      <p class="flash flash--alert">Use letters, numbers and dashes only.</p>
+    <% end %>
+  </section>
+
+  <% if @stickers.any? %>
+    <p><button type="button" class="button" onclick="window.print()">Print <%= pluralize(@stickers.size, "sticker") %></button></p>
+  <% end %>
+</div>
+
+<% if @stickers.any? %>
+  <section class="sticker-sheet" aria-label="Sticker sheet">
+    <% @stickers.each do |shop, link| %>
+      <article class="sticker">
+        <p class="sticker__brand">Bunna Passport <span lang="am">ቡና ፓስፖርት</span></p>
+        <%= qr_code_svg(link, label: "QR code for #{shop.name}") %>
+        <h2 class="sticker__name"><%= shop.name %><% if shop.name_am.present? %> <span lang="am"><%= shop.name_am %></span><% end %></h2>
+        <p class="sticker__call">Scan to check in and collect this café's stamp</p>
+        <p class="sticker__call" lang="am">ቼክ-ኢን ያድርጉ፣ ማህተም ያግኙ</p>
+      </article>
+    <% end %>
+  </section>
+<% end %>

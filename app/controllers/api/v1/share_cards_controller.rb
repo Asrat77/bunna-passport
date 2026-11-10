@@ -21,7 +21,7 @@ class Api::V1::ShareCardsController < Api::V1::BaseController
     doodle = ActiveModel::Type::Boolean.new.cast(params.fetch(:doodle, true))
     images = ShareCard::FORMATS.keys.index_with { |format| ShareImage.for!(check_in, format: format, doodle: doodle) }
     post_url = card_url(images.fetch("post"))
-    invite = invite_url(Current.user)
+    invite = invite_url(Current.user, source: "card")
 
     render_data({
       check_in_id: check_in.id,

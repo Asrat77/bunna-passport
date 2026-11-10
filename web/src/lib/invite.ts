@@ -1,25 +1,44 @@
 import { retrieveLaunchParams, shareMessage, shareURL } from "@telegram-apps/sdk-react";
 import { readFlag, writeFlag } from "@/telegram/storage";
 
-const START_PREFIX = "invite_";
 const TOKEN = /^[A-Za-z0-9]{8,64}$/;
+const SHOP = /^[1-9][0-9]{0,9}$/;
+
+/** What a launch link carries (app/models/launch_link.rb on the server). */
+export type LaunchLink = { invite: string | null; shopId: number | null };
 
 /**
- * The invite token a launch carries, if any. Inside Telegram it arrives as
- * the Mini App's start parameter (t.me/<bot>?startapp=invite_<token>); on the
- * plain website as ?invite=<token>.
+ * Reads a launch link. Inside Telegram it all arrives as the Mini App's
+ * start parameter, parts joined by "__" (t.me/<bot>?startapp=invite_<token>,
+ * or shop_12__src_qr-12 from a café sticker); on the plain website as
+ * ?invite=<token>&shop=<id>. The src tag is only for the server, which reads
+ * it from the signed launch data when it makes the account.
  */
+export function launchLinkFrom(startParam: string | undefined | null, search: string): LaunchLink {
+  const parts = new Map<string, string>();
+  for (const part of (startParam ?? "").split("__")) {
+    const cut = part.indexOf("_");
+    if (cut > 0) parts.set(part.slice(0, cut), part.slice(cut + 1));
+  }
+  const query = new URLSearchParams(search);
+  const invite = parts.get("invite") ?? query.get("invite");
+  const shop = parts.get("shop") ?? query.get("shop");
+  return {
+    invite: invite && TOKEN.test(invite) ? invite : null,
+    shopId: shop && SHOP.test(shop) ? Number(shop) : null,
+  };
+}
+
+/** The invite token a launch carries, if any. */
 export function inviteTokenFrom(startParam: string | undefined | null, search: string): string | null {
-  const fromStart = startParam?.startsWith(START_PREFIX) ? startParam.slice(START_PREFIX.length) : null;
-  const token = fromStart ?? new URLSearchParams(search).get("invite");
-  return token && TOKEN.test(token) ? token : null;
+  return launchLinkFrom(startParam, search).invite;
 }
 
 let taken = false;
 
-/** The launch's invite, handed out once so Back doesn't reopen it. */
-export function takeLaunchInvite(): string | null {
-  if (taken) return null;
+/** The launch's link, handed out once so Back doesn't reopen it. */
+export function takeLaunchLink(): LaunchLink {
+  if (taken) return { invite: null, shopId: null };
   taken = true;
 
   let startParam: string | undefined;
@@ -28,14 +47,14 @@ export function takeLaunchInvite(): string | null {
   } catch {
     startParam = undefined;
   }
-  const token = inviteTokenFrom(startParam, window.location.search);
-  if (token && window.location.search.includes("invite=")) {
-    // A reload shouldn't offer the same invite again.
+  const link = launchLinkFrom(startParam, window.location.search);
+  if (/[?&](invite|shop|src)=/.test(window.location.search)) {
+    // A reload shouldn't open the same invite or café again.
     const url = new URL(window.location.href);
-    url.searchParams.delete("invite");
+    for (const key of ["invite", "shop", "src"]) url.searchParams.delete(key);
     window.history.replaceState(null, "", url);
   }
-  return token;
+  return link;
 }
 
 /**

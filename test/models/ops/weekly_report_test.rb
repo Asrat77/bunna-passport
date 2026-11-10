@@ -37,6 +37,33 @@ class Ops::WeeklyReportTest < ActiveSupport::TestCase
     assert_equal User.where(created_at: ...NOW).count, report.total_users
   end
 
+  test "counts who reached a first stamp within a week of joining" do
+    User.update_all(created_at: NOW - 1.year)
+    joined = NOW - 12.days # the week before last
+    quick, slow = travel_to(joined) { [ create_user, create_user, create_user ].first(2) } # the third never checks in
+    travel_to(joined + 2.days) { check_in!(quick) }
+    travel_to(joined + 8.days) { check_in!(slow) } # too late to count
+    travel_to(NOW - 2.days) { check_in!(create_user) } # joined last week
+
+    report = Ops::WeeklyReport.new(now: NOW)
+    assert_equal({ cohort: { joined: 3, stamped: 1 }, so_far: { joined: 1, stamped: 1 } }, report.first_stamps)
+    assert_match "1 of 3 (33%) who joined Oct 27–Nov 2; 1 of 1 from last week so far", Telegram::Messages.weekly_report(report)[:text]
+  end
+
+  test "says where last week's newcomers came from, stickers by café" do
+    User.update_all(created_at: NOW - 1.year)
+    travel_to(NOW - 3.days) do
+      2.times { create_user(signup_source: "qr-#{shops(:bole).id}") }
+      create_user(signup_source: "invite")
+      create_user
+      create_user(signup_source: "ig-addiscoffee")
+    end
+
+    report = Ops::WeeklyReport.new(now: NOW)
+    assert_equal [ [ "Buna House sticker", 2 ], [ "direct", 1 ], [ "ig-addiscoffee", 1 ], [ "invite", 1 ] ], report.signup_sources
+    assert_match "New people came from:</b> Buna House sticker 2, direct 1, ig-addiscoffee 1, invite 1", Telegram::Messages.weekly_report(report)[:text]
+  end
+
   private
     def check_in!(user, rating: nil)
       shop = shops(:bole)

@@ -188,7 +188,8 @@ export const api = {
   signUp(input: SignupInput) {
     return request<AuthenticatedPayload>("/users", {
       method: "POST",
-      body: { user: input },
+      // The ?src= tag of the link that brought them here, kept on the account.
+      body: { user: input, source: new URLSearchParams(window.location.search).get("src") ?? undefined },
       anonymous: true,
     });
   },

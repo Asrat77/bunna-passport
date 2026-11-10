@@ -78,3 +78,6 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+# QR codes on the café counter stickers (console/stickers).
+gem "rqrcode", "~> 3.2"
