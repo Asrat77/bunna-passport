@@ -25,7 +25,7 @@ import { ReportCafe } from "./screens/contribute/ReportCafe";
 import { SuggestEdit } from "./screens/contribute/SuggestEdit";
 import { setErrorScreen } from "./lib/errorReporting";
 import { useSyncBotLanguage } from "./data/me";
-import { takeLaunchInvite } from "./lib/invite";
+import { takeLaunchLink } from "./lib/invite";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
 import { SchemeContext, useColorScheme } from "./telegram/theme";
@@ -98,10 +98,12 @@ function Screens() {
   const { route, push } = useNavigation();
   useSyncBotLanguage();
 
-  // Opened from a friend's invite link: ask about it over Explore.
+  // Opened from a café's sticker: that café's page over Explore. From a
+  // friend's invite: ask about it, over the café if there's both.
   useEffect(() => {
-    const token = takeLaunchInvite();
-    if (token) push({ name: "invite", token });
+    const { invite, shopId } = takeLaunchLink();
+    if (shopId) push({ name: "shop", id: shopId });
+    if (invite) push({ name: "invite", token: invite });
   }, [push]);
 
   useEffect(() => {

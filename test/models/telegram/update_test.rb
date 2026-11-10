@@ -30,6 +30,12 @@ class Telegram::UpdateTest < ActiveSupport::TestCase
     assert_match "Abebe &lt;b&gt;", @bot.sent.sole[:text]
   end
 
+  test "/start from a tagged link keeps the tag on a new account" do
+    with_fake_bot(@bot) { handle(text_message("/start src_tg-channel", from: { id: 4343, first_name: "Ruth" })) }
+
+    assert_equal "tg-channel", User.find_by!(telegram_user_id: 4343).signup_source
+  end
+
   test "without an HTTPS Mini App URL the welcome has no button" do
     with_fake_bot(@bot, env: { "TELEGRAM_MINI_APP_URL" => nil, "PUBLIC_BASE_URL" => "http://localhost:3000" }) do
       handle(text_message("/start", from: { id: 7 }))

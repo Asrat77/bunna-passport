@@ -85,12 +85,15 @@ class User < ApplicationRecord
     end
 
     # Finds or creates the account behind a verified Telegram user.
-    def from_telegram!(telegram_user)
+    # `signup_source` is kept only when this makes the account: the first
+    # link that brought someone in is the one that counts.
+    def from_telegram!(telegram_user, signup_source: nil)
       telegram_id = Integer(telegram_user.fetch("id"))
       user = find_by(telegram_user_id: telegram_id) || create!(
         telegram_user_id: telegram_id,
         handle: available_handle(telegram_user["username"], telegram_id),
-        display_name: telegram_display_name(telegram_user, telegram_id)
+        display_name: telegram_display_name(telegram_user, telegram_id),
+        signup_source: signup_source
       )
       user.adopt_telegram_language(telegram_user["language_code"])
       user

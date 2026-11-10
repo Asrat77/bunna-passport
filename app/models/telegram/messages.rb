@@ -218,7 +218,7 @@ module Telegram::Messages
       "• <b>#{now}</b> #{WEEKLY_LABELS.fetch(metric)} #{weekly_change(now, before)}"
     end
 
-    text = "📊 <b>Bunna last week (#{span})</b>\n\n#{lines.join("\n")}\n\n#{report.total_users} people have signed up so far."
+    text = "📊 <b>Bunna last week (#{span})</b>\n\n#{lines.join("\n")}\n\n#{[ weekly_funnel(report), weekly_sources(report) ].compact.join("\n")}\n\n#{report.total_users} people have signed up so far."
     { text: text, reply_markup: keyboard([ console_button("Open the console", "/console/dashboard") ]) }
   end
 
@@ -310,6 +310,38 @@ module Telegram::Messages
     def console_button(text, path)
       base = ENV["PUBLIC_BASE_URL"].to_s
       base.start_with?("https://") ? { text: text, url: "#{base.chomp('/')}#{path}" } : nil
+    end
+
+    # "First stamp within a week: 6 of 10 (60%) who joined Oct 27–Nov 2;
+    # 3 of 8 from last week so far."
+    def weekly_funnel(report)
+      cohort, so_far = report.first_stamps.values_at(:cohort, :so_far)
+      first = report.previous_week.begin
+      last = report.previous_week.end - 1.day
+      span = first.month == last.month ? "#{first.strftime('%b %-d')}–#{last.day}" : "#{first.strftime('%b %-d')}–#{last.strftime('%b %-d')}"
+      line = "🥇 <b>First stamp within a week:</b> #{share(cohort)} who joined #{span}"
+      line += "; #{cohort_fraction(so_far)} from last week so far" if so_far[:joined].positive?
+      "#{line}."
+    end
+
+    def share(counts)
+      return "nobody new" if counts[:joined].zero?
+
+      "#{cohort_fraction(counts)} (#{(100.0 * counts[:stamped] / counts[:joined]).round}%)"
+    end
+
+    def cohort_fraction(counts)
+      "#{counts[:stamped]} of #{counts[:joined]}"
+    end
+
+    # "Came from: Tomoca sticker 4, invite 3, direct 2", top five.
+    def weekly_sources(report)
+      sources = report.signup_sources
+      return if sources.empty?
+
+      shown = sources.first(5).map { |label, count| "#{h(label)} #{count}" }
+      shown << "others #{sources.drop(5).sum(&:last)}" if sources.size > 5
+      "🔗 <b>New people came from:</b> #{shown.join(', ')}"
     end
 
     def weekly_change(now, before)

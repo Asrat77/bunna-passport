@@ -38,6 +38,9 @@ paths:
               properties:
                 user:
                   $ref: "#/components/schemas/SignupInput"
+                source:
+                  type: string
+                  description: The `src` tag of the link that brought them in (see LaunchLink), kept on the new account.
       responses:
         "201":
           $ref: "#/components/responses/Authenticated"
@@ -2169,3 +2172,20 @@ components:
           oneOf:
             - { type: string, format: date-time }
             - type: "null"
+        challenge:
+          description: Only on a time-boxed challenge badge such as Bole 10. Verified visits to these cafés between starts_at and ends_at count toward it.
+          type: object
+          required: [starts_at, ends_at, shops]
+          properties:
+            starts_at: { type: string, format: date-time }
+            ends_at: { type: string, format: date-time }
+            shops:
+              type: array
+              items:
+                type: object
+                required: [id, name, name_am, visited]
+                properties:
+                  id: { $ref: "#/components/schemas/OpaqueId" }
+                  name: { type: string }
+                  name_am: { type: [string, "null"] }
+                  visited: { type: boolean, description: Whether the viewer has a verified visit there inside the window. }

@@ -10,7 +10,7 @@ class Telegram::InitData
   # that a leaked payload stops working.
   MAX_AGE = 1.day
 
-  attr_reader :user, :auth_date
+  attr_reader :user, :auth_date, :start_param
 
   def self.verify!(raw, bot_token: ENV["TELEGRAM_BOT_TOKEN"], now: Time.current)
     new(raw, bot_token: bot_token, now: now)
@@ -33,6 +33,9 @@ class Telegram::InitData
 
     @user = JSON.parse(fields.fetch("user"))
     raise Invalid, "initData has no user" unless @user.is_a?(Hash) && @user["id"].present?
+
+    # The link's startapp value, signed along with the rest: see LaunchLink.
+    @start_param = fields["start_param"].presence
   rescue KeyError, ArgumentError, TypeError, JSON::ParserError
     raise Invalid, "initData is malformed"
   end

@@ -16,19 +16,19 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "a Telegram account needs neither email nor password" do
-    user = User.from_telegram!("id" => 777_000_111, "username" => "Meklit.B", "first_name" => "Meklit", "last_name" => "B")
+    user = User.from_telegram!({ "id" => 777_000_111, "username" => "Meklit.B", "first_name" => "Meklit", "last_name" => "B" })
 
     assert user.persisted?
     assert_nil user.email_address
     assert_equal "meklitb", user.handle
     assert_equal "Meklit B", user.display_name
-    assert_equal user, User.from_telegram!("id" => 777_000_111, "username" => "renamed")
+    assert_equal user, User.from_telegram!({ "id" => 777_000_111, "username" => "renamed" })
   end
 
   test "a Telegram account without a usable username gets a free handle" do
     create_user(handle: "tg_42")
 
-    assert_equal "tg_42_2", User.from_telegram!("id" => 42, "first_name" => "ሰላም").handle
+    assert_equal "tg_42_2", User.from_telegram!({ "id" => 42, "first_name" => "ሰላም" }).handle
   end
 
   test "the coffee day starts at four in the morning in Addis" do

@@ -21,6 +21,8 @@ class SendWeeklyReportJobTest < ActiveJob::TestCase
     assert_match "Bunna last week (Nov 3–9)", text
     assert_match "• <b>2</b> new users (↑ from 1)", text
     assert_match "invites accepted (same as the week before)", text
+    assert_match "First stamp within a week:</b> 0 of 1 (0%) who joined Oct 27–Nov 2; 0 of 2 from last week so far.", text
+    assert_match "New people came from:</b> direct 2", text
     assert_match "#{User.count} people have signed up so far.", text
     assert_equal "https://bunna.example/console/dashboard", bot.sent.first[:reply_markup][:inline_keyboard].dig(0, 0, :url)
   end

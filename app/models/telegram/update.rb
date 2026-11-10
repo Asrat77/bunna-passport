@@ -21,7 +21,7 @@ class Telegram::Update
     def handle_message(message)
       return unless message.dig("chat", "type") == "private" && message["from"] && !message.dig("from", "is_bot")
 
-      user = User.from_telegram!(message["from"])
+      user = User.from_telegram!(message["from"], signup_source: start_source(message["text"]))
       user.start_bot_chat!
 
       case command(message["text"])
@@ -78,6 +78,14 @@ class Telegram::Update
 
     def deliver(chat_id, message)
       @bot.send_message(chat_id: chat_id, **message)
+    end
+
+    # A t.me/<bot>?start=<payload> link arrives as "/start <payload>", in the
+    # same format as the Mini App's start parameter (LaunchLink).
+    def start_source(text)
+      return unless command(text) == "start"
+
+      LaunchLink.parse(text.to_s.split(" ", 2).second).signup_source
     end
 
     # "/start payload" and "/start@bunnabot" both read as "start".
