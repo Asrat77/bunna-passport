@@ -58,9 +58,10 @@ because Canonical had published a newer Ubuntu image and the AMI was not
 pinned. The disk went with it. Production was restored from that night's
 00:15 UTC off-host backup (11 users, 1,633 shops, 21 check-ins; nothing newer
 was lost) onto the new instance with `kamal setup`, after copying the
-databases into a fresh `bunna_passport_storage` volume. The Terraform now
-ignores AMI changes and has `prevent_destroy`; still read every plan before
-applying, and stop if it says "must be replaced".
+databases into a fresh `bunna_passport_storage` volume. battle-arena PR #88
+makes the Terraform ignore AMI changes and adds `prevent_destroy`; until it is
+merged, and even after, read every plan before applying and stop if it says
+"must be replaced".
 
 On a rebuilt host the backup job has to be installed again: `age` and
 `rclone`, the `r2backup` rclone remote, `/etc/bunna-backup.env`,
