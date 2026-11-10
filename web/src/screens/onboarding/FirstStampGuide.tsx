@@ -53,7 +53,7 @@ export function FirstStampGuide() {
   const blocked = location.status === "denied" || location.status === "unavailable";
 
   return (
-    <section className="card first-stamp" aria-labelledby="first-stamp-title">
+    <section className="card first-stamp" data-tour="firstStamp" aria-labelledby="first-stamp-title">
       <div className="first-stamp__head">
         <span className="first-stamp__kicker mono">
           <Icon path={phStamp} size={14} />

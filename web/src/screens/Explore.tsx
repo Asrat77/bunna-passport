@@ -4,7 +4,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { activeFilterCount, NO_FILTERS, setCafeFilters, useCafeFilters, type CafeFilters } from "@/data/cafeFilters";
 import { rankShops, type ShopFilter } from "@/data/nearby";
 import { useMyDoodle } from "@/data/me";
-import { useCatalog, useProfile } from "@/data/queries";
+import { useCatalog, usePassport, useProfile } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import dither from "@/assets/dither-mocha-240.png";
 import { Doodle } from "@/design/doodle/Doodle";
@@ -19,6 +19,7 @@ import { ShopRow } from "@/ui/ShopRow";
 import { CafeFilterChips } from "@/ui/CafeFilters";
 import { AddMissing } from "./contribute/AddMissing";
 import { FirstStampGuide } from "./onboarding/FirstStampGuide";
+import { AppTour } from "./tour/AppTour";
 import "./explore.css";
 
 const PREVIEW_COUNT = 5;
@@ -31,6 +32,7 @@ export function Explore() {
   const { data: profile } = useProfile();
   const doodle = useMyDoodle();
   const catalog = useCatalog();
+  const passport = usePassport();
   const stamps = useStampsByShop();
   const location = useLocation();
   const [query, setQuery] = useState("");
@@ -67,6 +69,7 @@ export function Explore() {
         <button
           type="button"
           className="greeting__doodle"
+          data-tour="picture"
           aria-label={`${t(doodle.awake ? "doodle.mineAwake" : "doodle.mineSleepy")}. ${t("explore.openStudio")}`}
           onClick={() => push({ name: "studio" })}
         >
@@ -87,7 +90,7 @@ export function Explore() {
 
       <FirstStampGuide />
 
-      <label className="search">
+      <label className="search" data-tour="search">
         <span className="visually-hidden">{t("explore.searchLabel")}</span>
         <input
           type="search"
@@ -106,7 +109,7 @@ export function Explore() {
           <Icon path={phCrosshair} size={16} />
           {t("explore.tileNearMe")}
         </button>
-        <button type="button" className="pill" onClick={() => push({ name: "map" })}>
+        <button type="button" className="pill" data-tour="map" onClick={() => push({ name: "map" })}>
           <Icon path={phMapTrifold} size={16} />
           {t("explore.tileMap")}
         </button>
@@ -189,6 +192,7 @@ export function Explore() {
       )}
 
       <Dock />
+      <AppTour ready={!catalog.isPending && !passport.isPending} />
     </main>
   );
 }
