@@ -34,7 +34,7 @@ server. kamal-proxy on the host terminates HTTPS for both apps by host name.
 
 | Value | Setting |
 | --- | --- |
-| Instance | `i-0a490324b5f52665d`, `t3.small`, 2 vCPU, 2 GB plus 2 GB swap |
+| Instance | `i-04312149bfbc789ad` (since 2026-11-10), `t3.small`, 2 vCPU, 2 GB plus 2 GB swap |
 | Region | `eu-west-1` (Ireland) |
 | Image | Ubuntu 24.04 LTS |
 | Address | Elastic IP `34.252.38.138` |
@@ -51,6 +51,21 @@ instance's own disk for that reason, which is also why this deployment is a
 virtual machine rather than a container service backed by network storage.
 The disk is deleted if the instance is terminated, so the off-host backup
 below is what protects the data.
+
+This has happened once. On 2026-11-10 at 06:01 UTC a `terraform apply` in the
+battle-arena repo, meant only to change the SSH address, replaced the instance
+because Canonical had published a newer Ubuntu image and the AMI was not
+pinned. The disk went with it. Production was restored from that night's
+00:15 UTC off-host backup (11 users, 1,633 shops, 21 check-ins; nothing newer
+was lost) onto the new instance with `kamal setup`, after copying the
+databases into a fresh `bunna_passport_storage` volume. The Terraform now
+ignores AMI changes and has `prevent_destroy`; still read every plan before
+applying, and stop if it says "must be replaced".
+
+On a rebuilt host the backup job has to be installed again: `age` and
+`rclone`, the `r2backup` rclone remote, `/etc/bunna-backup.env`,
+`/usr/local/bin/bunna-backup-offsite` and the 00:15 UTC cron (see Off-host
+backup).
 
 Deployment values live in the gitignored `.env.deploy`. The registry password is
 never stored there:
