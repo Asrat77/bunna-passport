@@ -124,7 +124,7 @@ class Api::V1::ShareCardsTest < ActionDispatch::IntegrationTest
     assert_equal "photo", result[:type]
     assert_equal data["post_url"], result[:photo_url]
     assert_equal "My stamp", result[:caption]
-    invite = "https://t.me/bunna_bot?startapp=invite_#{user.reload.invite_token}"
+    invite = "https://t.me/bunna_bot?startapp=invite_#{user.reload.invite_token}__src_card"
     assert_equal invite, result.dig(:reply_markup, :inline_keyboard, 0, 0, :url)
     assert_equal invite, data["invite_url"]
   end
