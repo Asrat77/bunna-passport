@@ -10,7 +10,7 @@ import { DRINKS } from "@/data/reviews";
 import { useStampsByShop } from "@/data/stamps";
 import { Seal } from "@/design/seal/Seal";
 import { useI18n } from "@/i18n/context";
-import { formatMeters } from "@/lib/distance";
+import { distanceMeters, formatMeters } from "@/lib/distance";
 import { openLocationSettings } from "@/location/locate";
 import { useLocation } from "@/location/LocationProvider";
 import { useNavigation } from "@/nav/Navigation";
@@ -61,11 +61,17 @@ export function CheckIn({ shopId }: { shopId?: number }) {
   const candidates = useMemo(() => (fix ? candidatesAround(catalog.data ?? [], fix) : []), [fix, catalog.data]);
   const inRange = candidates.filter((c) => c.inRange);
 
+  // Opened from a café's page that turns out to be out of range: say so and
+  // leave the choice open, rather than quietly offering the café next door.
+  const asked = shopId ? catalog.data?.find((shop) => shop.id === shopId) : undefined;
+  const askedTooFar = asked && fix && !inRange.some((c) => c.shop.id === asked.id) ? { shop: asked, distance: distanceMeters(fix, asked) } : null;
+
   useEffect(() => {
     if (inRange.length === 0) return;
     setSelectedId((current) => {
       if (current && inRange.some((c) => c.shop.id === current)) return current;
-      return inRange.find((c) => c.shop.id === shopId)?.shop.id ?? inRange[0].shop.id;
+      if (shopId) return inRange.find((c) => c.shop.id === shopId)?.shop.id ?? null;
+      return inRange[0].shop.id;
     });
   }, [inRange, shopId]);
 
@@ -126,7 +132,11 @@ export function CheckIn({ shopId }: { shopId?: number }) {
   } else if (!fix) {
     body = (
       <>
-        <Headline first={t("checkin.locatingTitle")} second={t("checkin.locatingTitleB")} size={32} />
+        {location.status === "denied" ? (
+          <Headline first={t("checkin.deniedTitle")} second={t("checkin.deniedTitleB")} size={32} />
+        ) : (
+          <Headline first={t("checkin.locatingTitle")} second={t("checkin.locatingTitleB")} size={32} />
+        )}
         {location.status === "locating" || location.status === "idle" ? (
           <div className="radar card radar--locating" aria-busy="true">
             <span className="radar__pulse" />
@@ -146,7 +156,11 @@ export function CheckIn({ shopId }: { shopId?: number }) {
   } else if (outcome?.kind === "rejected") {
     body = (
       <>
-        <Headline first={t("checkin.rejectedTitle")} second={t("checkin.rejectedTitleB")} size={32} />
+        {outcome.code === "cooldown" ? (
+          <Headline first={t("checkin.cooldownTitle")} second={t("checkin.cooldownTitleB")} size={32} />
+        ) : (
+          <Headline first={t("checkin.rejectedTitle")} second={t("checkin.rejectedTitleB")} size={32} />
+        )}
         <div className="notice notice--caution">
           {t(`checkin.error.${outcome.code}`, { shop: outcome.shop })}
           {outcome.code === "cooldown" ? <><br />{t("checkin.cooldownHint")}</> : null}
@@ -161,12 +175,29 @@ export function CheckIn({ shopId }: { shopId?: number }) {
         <Headline first={titleFirst} second={t("checkin.titleB")} size={32} />
         <Radar fix={fix} candidates={candidates} selectedId={selectedId} />
 
-        {inRange.length === 0 ? (
-          <p className="notice">
-            {t("checkin.noneNearby")}
-            <br />
-            {t("checkin.noneNearbyHint")}
+        {askedTooFar ? (
+          <p className="notice notice--caution">
+            {t(inRange.length === 0 ? "checkin.tooFarFromAlone" : "checkin.tooFarFrom", {
+              shop: askedTooFar.shop.name,
+              distance: formatMeters(askedTooFar.distance),
+            })}
           </p>
+        ) : null}
+
+        {inRange.length === 0 ? (
+          <div className="notice">
+            {askedTooFar ? null : (
+              <>
+                {t("checkin.noneNearby")}
+                <br />
+                {t("checkin.noneNearbyHint")}
+                <br />
+              </>
+            )}
+            <button type="button" className="link-button" onClick={() => replace({ name: "cafes" })}>
+              {t("checkin.seeNearest")}
+            </button>
+          </div>
         ) : (
           <div className="candidates" role="radiogroup" aria-label={t("checkin.pickShop")}>
             {inRange.map(({ shop, distance }) => {
@@ -282,6 +313,11 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       {body}
       {desktop ? null : ready ? (
         <PrimaryAction text={ctaText} onClick={() => void submit()} loading={submitting} />
+      ) : outcome?.kind === "rejected" && outcome.code === "cooldown" ? (
+        // Asking again only gets the same answer until the four hours are up.
+        <PrimaryAction text={t("common.back")} onClick={back} />
+      ) : fix && inRange.length > 0 && !selected && outcome?.kind !== "rejected" ? (
+        <PrimaryAction text={t("checkin.pick")} onClick={() => undefined} disabled />
       ) : fix || location.status !== "locating" ? (
         <PrimaryAction
           text={outcome?.kind === "rejected" ? t("checkin.retry") : t("checkin.locate")}

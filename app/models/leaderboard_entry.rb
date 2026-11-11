@@ -31,6 +31,16 @@ class LeaderboardEntry < ApplicationRecord
     end
   end
 
+  # The boards one check-in can move: the city's and its neighbourhood's, for
+  # the periods still running. Cheap enough to run after every counted cup,
+  # so nobody waits for the next full refresh to see themselves ranked.
+  def self.refresh_around!(neighborhood, periods: %w[ week month ])
+    periods.each do |period|
+      refresh_board!(scope_key: CITY_SCOPE, period: period)
+      refresh_board!(scope_key: neighborhood.leaderboard_scope_key, period: period, neighborhood: neighborhood)
+    end
+  end
+
   def self.refresh_board!(scope_key:, period:, neighborhood: nil)
     %w[ cups shops ].each do |metric|
       values = values_for(period: period, metric: metric, neighborhood: neighborhood)

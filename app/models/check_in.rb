@@ -236,6 +236,7 @@ class CheckIn < ApplicationRecord
     # Now rather than in a job, so the check-in's own response can carry them.
     Badge.evaluate_for(user, check_in: self)
     EvaluateTrustJob.perform_later(user)
+    RefreshNeighborhoodLeaderboardsJob.perform_later(shop.neighborhood)
     notify_stamp(stamp)
     schedule_review_prompt
   end

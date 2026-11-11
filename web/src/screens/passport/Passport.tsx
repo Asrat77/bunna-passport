@@ -101,9 +101,9 @@ export function Passport() {
           </span>
           <Icon path={phCaretRight} size={18} />
         </button>
-        <button type="button" className="pill-button" onClick={() => push({ name: "studio" })}>
-          <Icon path={phPencilSimple} size={16} />
-          {t("passport.editDoodle")}
+        {/* Icon only here: the label left the name and handle too little room. Profile keeps the worded button. */}
+        <button type="button" className="pill-button passport__edit" aria-label={t("passport.editDoodle")} onClick={() => push({ name: "studio" })}>
+          <Icon path={phPencilSimple} size={18} />
         </button>
       </header>
 
@@ -176,7 +176,7 @@ export function Passport() {
             </div>
           </div>
 
-          <PassportPage neighborhood={area.neighborhood} entries={pages[page]} pageNumber={pageOffset + page + 1} />
+          <PassportPage neighborhood={area.neighborhood} entries={pages[page]} pageNumber={pageOffset + page + 1} onOpen={(shop) => push({ name: "shop", id: shop.id })} />
 
           {pages.length > 1 ? (
             <div className="page-turn">

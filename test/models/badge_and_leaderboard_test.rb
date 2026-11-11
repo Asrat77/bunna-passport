@@ -59,4 +59,23 @@ class BadgeAndLeaderboardTest < ActiveSupport::TestCase
         counted_at: (Time.current if status == :verified)
       )
     end
+
+  test "refreshing around a neighbourhood updates its board and the city's, leaving others alone" do
+    user = create_user(created_at: 2.days.ago)
+    create_check_in(user, shops(:bole), :verified, "around-1")
+    piassa = shops(:piassa).neighborhood
+    LeaderboardEntry.create!(
+      user: user, scope_key: piassa.leaderboard_scope_key, period: :week, metric: :cups,
+      period_started_at: Time.current.beginning_of_week, value: 9, rank: 1, refreshed_at: 1.hour.ago
+    )
+
+    LeaderboardEntry.refresh_around!(shops(:bole).neighborhood)
+
+    week_cups = LeaderboardEntry.where(period: :week, metric: :cups)
+    assert_equal [ user.id ], week_cups.where(scope_key: LeaderboardEntry::CITY_SCOPE).pluck(:user_id)
+    assert_equal [ 1 ], week_cups.where(scope_key: shops(:bole).neighborhood.leaderboard_scope_key).pluck(:value)
+    assert_equal [ 9 ], week_cups.where(scope_key: piassa.leaderboard_scope_key).pluck(:value)
+    assert LeaderboardEntry.where(period: :month, scope_key: LeaderboardEntry::CITY_SCOPE).exists?
+    assert_not LeaderboardEntry.where(period: :all_time).exists?
+  end
 end
