@@ -114,10 +114,19 @@ html.mocha-page body {
   color: var(--muted);
 }
 
+/* Four equal pills when the labels fit; a longer language (Amharic) lets them
+   grow and the row scroll sideways rather than cutting a label short. */
 .pills {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 6px;
+  margin-inline: calc(var(--gutter, 16px) * -1);
+  padding-inline: var(--gutter, 16px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pills::-webkit-scrollbar {
+  display: none;
 }
 
 .explore > .pills {
@@ -132,7 +141,8 @@ html.mocha-page body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 6px;
+  flex: 1 0 auto;
+  padding: 0 10px;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;

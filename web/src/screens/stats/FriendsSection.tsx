@@ -5,6 +5,7 @@ import { api } from "@/api/client";
 import { REACTION_KINDS, type FeedItem, type Friend, type ReactionKind, type Reactions, type ReceivedReaction } from "@/api/types";
 import { doodleSeedFor, doodleTraitsFor } from "@/data/me";
 import { guessReactions } from "@/data/reactions";
+import { drinkLabel } from "@/data/reviews";
 import { useFeed, useFriends, useInvite, usePassport, useReceivedReactions } from "@/data/queries";
 import { Doodle } from "@/design/doodle/Doodle";
 import { useI18n } from "@/i18n/context";
@@ -203,7 +204,7 @@ function FeedRow({ item }: { item: FeedItem }) {
   const { push } = useNavigation();
   const shop = language === "am" ? item.shop.name_am : item.shop.name;
   const area = language === "am" ? item.shop.neighborhood.name_am : item.shop.neighborhood.name;
-  const extras = [item.drink, item.rating ? "★".repeat(item.rating) : null].filter(Boolean).join(" · ");
+  const extras = [item.drink ? drinkLabel(item.drink, t) : null, item.rating ? "★".repeat(item.rating) : null].filter(Boolean).join(" · ");
 
   return (
     <li className="feed-item">

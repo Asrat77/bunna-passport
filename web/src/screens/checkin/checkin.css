@@ -207,3 +207,11 @@
   color: var(--primary);
   background: var(--primary-soft);
 }
+
+/* A way out inside a notice has to read as one, not as more of the notice. */
+.checkin .notice .link-button {
+  display: block;
+  color: var(--primary);
+  font-weight: 600;
+  text-align: left;
+}

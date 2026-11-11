@@ -32,6 +32,15 @@
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.pill-button.passport__edit {
+  flex-shrink: 0;
+  width: var(--touch);
+  padding: 0;
+  justify-content: center;
 }
 
 .passport__handle {
@@ -187,6 +196,8 @@
 
 .passport-page__slot {
   position: absolute;
+  padding: 0;
+  text-align: inherit;
 }
 
 .passport-page__slot--missing {

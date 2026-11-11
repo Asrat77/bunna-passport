@@ -38,10 +38,13 @@ export function PassportPage({
   neighborhood,
   entries,
   pageNumber,
+  onOpen,
 }: {
   neighborhood: Neighborhood;
   entries: PageEntry[];
   pageNumber: number;
+  /** A tap on a stamp, or on the outline of one still to earn, opens that café. */
+  onOpen: (shop: Shop) => void;
 }) {
   const { t, language } = useI18n();
   const { ref, scale } = usePageScale();
@@ -56,8 +59,8 @@ export function PassportPage({
       style={{ height: PAGE_HEIGHT * scale }}
       aria-label={t("passport.pageLabel", { area, stamped: stamped.join(", ") || "—", missing: missing.join(", ") || "—" })}
     >
-      <div className="passport-page__inner" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-        <svg width={PAGE_WIDTH} height={PAGE_HEIGHT} viewBox={`0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}`} className="passport-page__guilloche">
+      <div className="passport-page__inner" style={{ transform: `scale(${scale})` }}>
+        <svg aria-hidden="true" width={PAGE_WIDTH} height={PAGE_HEIGHT} viewBox={`0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}`} className="passport-page__guilloche">
           <path
             d="M-10 70c40-14 80 14 120 0s80-14 120 0 80 14 140 0M-10 150c40-14 80 14 120 0s80-14 120 0 80 14 140 0M-10 230c40-14 80 14 120 0s80-14 120 0 80 14 140 0M-10 310c40-14 80 14 120 0s80-14 120 0 80 14 140 0"
             fill="none"
@@ -71,7 +74,7 @@ export function PassportPage({
             strokeWidth="1"
           />
         </svg>
-        <div className="passport-page__header mono">
+        <div className="passport-page__header mono" aria-hidden="true">
           <span>
             {neighborhood.name.toUpperCase()} · <span className="ethiopic">{neighborhood.name_am}</span>
           </span>
@@ -83,7 +86,14 @@ export function PassportPage({
           const amharic = `${entry.shop.name_am} · ${entry.shop.neighborhood.name_am}`;
           if (entry.kind === "stamped") {
             return (
-              <div key={entry.shop.id} className="passport-page__slot" style={{ left: place.x, top: place.y }}>
+              <button
+                key={entry.shop.id}
+                type="button"
+                className="passport-page__slot"
+                style={{ left: place.x, top: place.y }}
+                aria-label={`${entry.shop.name}, ${t(`level.${entry.stamp.level}`)}`}
+                onClick={() => onOpen(entry.shop)}
+              >
                 <InkStamp
                   name={entry.shop.name}
                   amharic={amharic}
@@ -99,21 +109,24 @@ export function PassportPage({
                     {t("passport.today")}
                   </span>
                 ) : null}
-              </div>
+              </button>
             );
           }
           const offset = (place.size - UNSTAMPED_SIZE) / 2;
           return (
-            <div
+            <button
               key={entry.shop.id}
+              type="button"
               className="passport-page__slot passport-page__slot--missing"
               style={{ left: place.x + offset, top: place.y + offset - 6 }}
+              aria-label={`${entry.shop.name}, ${t("passport.notYet")}`}
+              onClick={() => onOpen(entry.shop)}
             >
               <InkStamp name={entry.shop.name} amharic={amharic} date={t("passport.notYet")} level="none" size={UNSTAMPED_SIZE} label="" />
               {entry.distance !== null ? (
                 <span className="passport-page__away mono">{t("common.distanceAway", { distance: formatMeters(entry.distance) })}</span>
               ) : null}
-            </div>
+            </button>
           );
         })}
       </div>

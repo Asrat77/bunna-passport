@@ -1,6 +1,7 @@
 import type { StampLevel } from "@/design/seal/levels";
 import { useAuth } from "@/auth/AuthProvider";
 import { usePersonalStats } from "@/data/queries";
+import { drinkLabel } from "@/data/reviews";
 import { INK } from "@/design/stamp/geometry";
 import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
@@ -148,7 +149,7 @@ export function YouSection() {
 
       <FactGrid
         facts={[
-          { label: t("stats.usual"), value: data.favorite_drink?.name ?? t("stats.none"), note: data.favorite_drink ? t("stats.cupsCount", { count: data.favorite_drink.cups }) : undefined },
+          { label: t("stats.usual"), value: data.favorite_drink ? drinkLabel(data.favorite_drink.name, t) : t("stats.none"), note: data.favorite_drink ? t("stats.cupsCount", { count: data.favorite_drink.cups }) : undefined },
           { label: t("stats.avgRating"), value: data.average_rating ? `${data.average_rating.toFixed(1)} ★` : t("stats.none") },
           { label: t("stats.reviews"), value: totals.reviews },
           { label: t("stats.contributions"), value: totals.contributions },
