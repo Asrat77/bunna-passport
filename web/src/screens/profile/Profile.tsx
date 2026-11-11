@@ -11,9 +11,11 @@ import { useI18n } from "@/i18n/context";
 import { languageNames } from "@/i18n/strings";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl } from "@/telegram/buttons";
+import { writeFlag } from "@/telegram/storage";
 import { inTelegram } from "@/telegram/sdk";
 import { Icon } from "@/ui/Icon";
 import { handleLine } from "../passport/Passport";
+import { TOUR_SEEN } from "../tour/AppTour";
 import "./profile.css";
 
 /**
@@ -55,6 +57,7 @@ export function Profile() {
 function Settings({ profile }: { profile: User | undefined }) {
   const { t, language, setLanguage } = useI18n();
   const { signOut } = useAuth();
+  const { switchTab } = useNavigation();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
@@ -154,6 +157,19 @@ function Settings({ profile }: { profile: User | undefined }) {
           />
         </label>
       ) : null}
+      <div className="settings__row">
+        <span className="settings__text">
+          {t("tour.replayLabel")}
+          <span className="muted">{t("tour.replayHint")}</span>
+        </span>
+        <button
+          type="button"
+          className="pill-button"
+          onClick={() => void writeFlag(TOUR_SEEN, "0").then(() => switchTab("explore"))}
+        >
+          {t("tour.replay")}
+        </button>
+      </div>
       {inTelegram ? null : (
         <button type="button" className="link-button" onClick={() => void signOut()}>
           {t("profile.signOut")}

@@ -25,6 +25,7 @@ export function Dock() {
         {TABS.map(({ tab, icon, label }) => (
           <button
             key={tab}
+            data-tour={tab === "explore" ? undefined : tab}
             type="button"
             className="dock__tab"
             aria-label={t(label)}
@@ -35,7 +36,7 @@ export function Dock() {
           </button>
         ))}
       </nav>
-      <button type="button" className="dock__checkin" aria-label={t("checkin.action")} onClick={() => push({ name: "checkin" })}>
+      <button type="button" className="dock__checkin" data-tour="checkIn" aria-label={t("checkin.action")} onClick={() => push({ name: "checkin" })}>
         <Icon path={phPlus} size={22} />
       </button>
     </div>
