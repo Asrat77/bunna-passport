@@ -1,8 +1,13 @@
 import { openLink, popup } from "@telegram-apps/sdk-react";
 import type { Shop } from "@/api/types";
 
+/**
+ * Directions to the café in Google Maps, which is what people here navigate
+ * with. On a phone the link opens the Maps app when it's installed and the
+ * website otherwise; either way it starts from where the person is.
+ */
 export function mapsUrl(shop: Pick<Shop, "latitude" | "longitude">): string {
-  return `https://www.openstreetmap.org/?mlat=${shop.latitude}&mlon=${shop.longitude}#map=18/${shop.latitude}/${shop.longitude}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${shop.latitude},${shop.longitude}`;
 }
 
 /** Opens a shop's location outside the Mini App. */

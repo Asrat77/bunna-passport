@@ -97,6 +97,35 @@ class CheckInTest < ActiveSupport::TestCase
     assert_equal 4, user.stamps_count
   end
 
+  test "refused tries don't count toward the first-hour limit" do
+    user = create_user
+    far = nearby_shop(0)
+    3.times do |index|
+      refused = CheckIn.record!(
+        user: user,
+        shop: far,
+        idempotency_key: "refused-#{index}",
+        latitude: far.latitude + 0.05,
+        longitude: far.longitude,
+        accuracy_meters: 20
+      )
+      assert refused.rejected?
+    end
+
+    shop = nearby_shop(1)
+    visit = CheckIn.record!(
+      user: user,
+      shop: shop,
+      idempotency_key: "real-visit",
+      latitude: shop.latitude,
+      longitude: shop.longitude,
+      accuracy_meters: 20
+    )
+
+    assert visit.verified?
+    assert_equal 1, user.reload.verified_check_ins_count
+  end
+
   test "travel faster than 120 kilometres per hour is flagged" do
     user = create_user(created_at: 2.days.ago)
     record(user: user, idempotency_key: "origin")

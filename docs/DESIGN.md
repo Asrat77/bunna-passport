@@ -147,8 +147,11 @@ Layout rules:
   presses onto a passport-paper disc instead. The area ring and doodle cards
   are flat `surface` blocks (radius 16), and Done is `text` with dark type.
 - Dock: full width, blurred (iOS natively; everywhere in the Mini App) with `rgba(11,10,9,0.82)` over it and a 1px
-  top border. The active tab is a 76×50 rectangle (radius 16), the others are
-  50pt circles, and check-in is a 52pt `text`-coloured circle with a dark plus.
+  top border. In the Mini App every tab is an icon over its name (11px), the
+  active one on a filled 52pt-high rectangle (radius 16), and check-in is a
+  52pt-high `text`-coloured pill with a pin and the words "Check in". Icons
+  alone left people guessing, and a bare plus read as "add". (The native app
+  still has the older look: a 76×50 active rectangle, 50pt circles and a plus.)
   The dock floats, so scrolling screens pad by `useDockClearance()`.
 
 ### 2.3 Typography

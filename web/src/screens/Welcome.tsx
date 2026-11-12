@@ -7,6 +7,7 @@ import { Seal } from "@/design/seal/Seal";
 import type { StampLevel } from "@/design/seal/levels";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { useI18n } from "@/i18n/context";
+import { languageNames } from "@/i18n/strings";
 import { useLocation } from "@/location/LocationProvider";
 import { PrimaryAction } from "@/telegram/buttons";
 import { inTelegram } from "@/telegram/sdk";
@@ -25,7 +26,7 @@ const STEPS = [
  * through, and the doodle waking with a check-in as the location primer.
  */
 export function Welcome({ onDone }: { onDone: () => void }) {
-  const { t } = useI18n();
+  const { t, language, setLanguage } = useI18n();
   const { telegramId, user } = useAuth();
   const catalog = useCatalog();
   const location = useLocation();
@@ -36,6 +37,15 @@ export function Welcome({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="screen screen--glow welcome">
+      {/* Telegram is in English on most phones here, so the app starts in
+          English for people who'd rather read Amharic. Ask before anything else. */}
+      <div className="segment welcome__language" role="group" aria-label={t("passport.language")}>
+        {(["en", "am"] as const).map((code) => (
+          <button key={code} type="button" aria-pressed={language === code} onClick={() => setLanguage(code)} lang={code}>
+            {languageNames[code]}
+          </button>
+        ))}
+      </div>
       <div className="welcome__art" aria-hidden="true">
         {step === 0 ? <Collage shops={catalog.data ?? []} seed={seed} /> : step === 1 ? <Metals /> : <Waking seed={seed} />}
       </div>

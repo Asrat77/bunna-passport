@@ -114,6 +114,28 @@
   color: var(--primary);
 }
 
+/* Two- or three-way switch: language, board scope. */
+.segment {
+  display: flex;
+  padding: 4px;
+  border-radius: 99px;
+  background: var(--sunken);
+}
+
+.segment button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 99px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.segment button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
 .chip--tag {
   height: 36px;
   padding: 0 14px;
@@ -244,25 +266,35 @@
   gap: 1px;
 }
 
+/* A long name takes a second line rather than being cut, so branches of one
+   chain can be told apart; the other-script name drops under it when the two
+   don't fit side by side. */
 .shop-row__name {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 1px 8px;
   min-width: 0;
 }
 
 .shop-row__latin {
   font-size: 16px;
   font-weight: 600;
-  white-space: nowrap;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .shop-row__am {
   font-size: 13px;
   color: var(--muted);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .shop-row__where {
@@ -343,40 +375,64 @@
 
 .dock__tabs {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
 }
 
 .dock__tab {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  min-width: 64px;
+  height: 52px;
+  padding: 0 8px;
+  border-radius: 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--mocha-surface);
-  border: 1px solid var(--mocha-surface-active);
+  gap: 3px;
+  border: 1px solid transparent;
   color: var(--mocha-text-2);
 }
 
+.dock__label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .dock__tab[aria-current="page"] {
-  width: 76px;
-  border-radius: 16px;
-  border-color: transparent;
   background: var(--mocha-surface-active);
   color: var(--mocha-text);
 }
 
 .dock__checkin {
-  width: 52px;
   height: 52px;
   flex: none;
-  border-radius: 50%;
+  padding: 0 18px 0 14px;
+  border-radius: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
   background: var(--mocha-text);
   color: var(--mocha-bg);
+}
+
+/* The narrowest phones: keep every name, give up some padding. */
+@media (max-width: 350px) {
+  .dock__tab {
+    min-width: 54px;
+    padding: 0 4px;
+  }
+
+  .dock__checkin {
+    padding: 0 14px 0 10px;
+    font-size: 14px;
+  }
 }
 
 .dock :focus-visible {
@@ -487,9 +543,11 @@
 }
 
 /* One-line headline (Explore): tight Latin tracking, Ethiopic keeps its room. */
+/* One line when it fits. A longer language on a narrow phone wraps instead of
+   pushing the page wider than the screen, which slid the dock out of reach. */
 .headline--one-line {
   line-height: 1.05;
-  white-space: nowrap;
+  text-wrap: balance;
 }
 
 :lang(am) .headline--one-line {
