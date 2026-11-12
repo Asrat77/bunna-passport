@@ -196,7 +196,7 @@ class CheckIn < ApplicationRecord
     return [ :rejected, "daily_limit" ] if user.check_ins.where(created_at: Time.current.all_day).count >= DAILY_LIMIT
     return [ :flagged, "implausible_travel" ] if implausible_travel?(user, occurred_at, latitude, longitude)
     return [ :flagged, "mock_location" ] if ActiveModel::Type::Boolean.new.cast(mock_location)
-    return [ :flagged, "new_account_velocity" ] if user.created_at >= 1.hour.ago && user.check_ins.where(created_at: 1.hour.ago..).count >= NEW_ACCOUNT_LIMIT
+    return [ :flagged, "new_account_velocity" ] if user.created_at >= 1.hour.ago && user.check_ins.where.not(status: :rejected).where(created_at: 1.hour.ago..).count >= NEW_ACCOUNT_LIMIT
 
     [ :verified, nil ]
   end

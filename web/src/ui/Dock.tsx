@@ -1,4 +1,4 @@
-import { phChartBar, phHouse, phPlus, phStamp } from "./icons";
+import { phChartBar, phHouse, phMapPin, phStamp } from "./icons";
 import { useI18n } from "@/i18n/context";
 import { useNavigation, type Tab } from "@/nav/Navigation";
 import { Icon } from "./Icon";
@@ -11,9 +11,10 @@ const TABS: { tab: Tab; icon: string; label: "tab.explore" | "tab.passport" | "t
 
 /**
  * The navigation dock, in Mocha on every screen (docs/DESIGN.md §2.2.1): a
- * full-width blurred bar with icon tabs on the left, the current one widened
- * into a rounded rectangle, and Check in as a light circle on the right.
- * Tab names stay as the accessible labels.
+ * full-width blurred bar with the tabs on the left, each an icon over its
+ * name, the current one filled in, and Check in as a light named pill on the
+ * right. Everything is named because icons alone left people guessing, and a
+ * bare "+" for Check in read as "add".
  */
 export function Dock() {
   const { t } = useI18n();
@@ -28,16 +29,17 @@ export function Dock() {
             data-tour={tab === "explore" ? undefined : tab}
             type="button"
             className="dock__tab"
-            aria-label={t(label)}
             aria-current={tab === current ? "page" : undefined}
             onClick={() => switchTab(tab)}
           >
             <Icon path={icon} size={20} />
+            <span className="dock__label">{t(label)}</span>
           </button>
         ))}
       </nav>
-      <button type="button" className="dock__checkin" data-tour="checkIn" aria-label={t("checkin.action")} onClick={() => push({ name: "checkin" })}>
-        <Icon path={phPlus} size={22} />
+      <button type="button" className="dock__checkin" data-tour="checkIn" onClick={() => push({ name: "checkin" })}>
+        <Icon path={phMapPin} size={20} />
+        <span>{t("checkin.action")}</span>
       </button>
     </div>
   );

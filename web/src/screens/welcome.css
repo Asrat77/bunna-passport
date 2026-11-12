@@ -1,3 +1,27 @@
+/* Language first: small, top right, clear of the tickets below it. */
+.welcome > .welcome__language {
+  position: relative;
+  z-index: 2;
+  width: fit-content;
+  margin-left: auto;
+  /* Stays on the 480px column's right edge on a wide window. */
+  margin-right: max(0px, calc((100% - (480px - 2 * var(--gutter))) / 2));
+}
+
+.welcome__language button {
+  min-height: 36px;
+}
+
+/* The art gives back the room the switch takes, so the button stays put. */
+.welcome__language + .welcome__art {
+  margin-top: -24px;
+  height: 336px;
+}
+
+.welcome__art {
+  margin-top: -56px;
+}
+
 .welcome__art {
   position: relative;
   height: 372px;

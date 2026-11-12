@@ -231,27 +231,6 @@
   gap: 16px;
 }
 
-.segment {
-  display: flex;
-  padding: 4px;
-  border-radius: 99px;
-  background: var(--sunken);
-}
-
-.segment button {
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: 99px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.segment button[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--surface);
-  font-weight: 600;
-}
-
 /* Coffee weeks (DESIGN.md §6.4): what this week means for the run, never a warning. */
 .streak-line {
   display: flex;
