@@ -46,11 +46,20 @@ The previous Azure VM (`southafricanorth`) stopped on 2026-10-22 when the
 Azure for Students credit ran out. Ireland is farther from Addis, but Cape
 Town (`af-south-1`) is an opt-in region with higher prices.
 
-SQLite requires a real local filesystem. The Docker volume sits on the
-instance's own disk for that reason, which is also why this deployment is a
+SQLite requires a real local filesystem, which is why this deployment is a
 virtual machine rather than a container service backed by network storage.
-The disk is deleted if the instance is terminated, so the off-host backup
-below is what protects the data.
+Since 2026-11-19 every Docker volume, `bunna_passport_storage` included, lives
+on a separate EBS data volume (`vol-04e73e3cf51405330`, 20 GB) bind-mounted at
+`/var/lib/docker/volumes`, so paths did not change. That volume is not deleted
+with the instance, and Docker refuses to start without it mounted. AWS also
+snapshots it and the root disk nightly at 01:00 UTC (14 kept). The off-host
+backup below still protects against losing the AWS account. Details are in
+battle-arena `deploy/README.md`, "Server access and data volume".
+
+SSH is closed to the internet. Kamal and `ssh` reach the server over
+Tailscale at `100.85.9.76` (`BUNNA_DEPLOY_HOST` in `.env.deploy`); the
+Mac must be signed in to Tailscale. If Tailscale breaks, AWS Session Manager
+opens a shell: `aws ssm start-session --target i-04312149bfbc789ad --region eu-west-1`.
 
 This has happened once. On 2026-11-10 at 06:01 UTC a `terraform apply` in the
 battle-arena repo, meant only to change the SSH address, replaced the instance
@@ -59,9 +68,9 @@ pinned. The disk went with it. Production was restored from that night's
 00:15 UTC off-host backup (11 users, 1,633 shops, 21 check-ins; nothing newer
 was lost) onto the new instance with `kamal setup`, after copying the
 databases into a fresh `bunna_passport_storage` volume. battle-arena PR #88
-makes the Terraform ignore AMI changes and adds `prevent_destroy`; until it is
-merged, and even after, read every plan before applying and stop if it says
-"must be replaced".
+makes the Terraform ignore AMI changes and adds `prevent_destroy`, and PR #130
+added the data volume, snapshots and Tailscale-only SSH. Still read every plan
+before applying and stop if it says "must be replaced".
 
 On a rebuilt host the backup job has to be installed again: `age` and
 `rclone`, the `r2backup` rclone remote, `/etc/bunna-backup.env`,
