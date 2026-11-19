@@ -12,9 +12,15 @@ require "open3"
 class ShareCard
   class RenderError < StandardError; end
 
-  # Bump when the layout changes, so stored cards are drawn again on their
-  # next share.
-  VERSION = 1
+  # Bump when the layout or the fonts change, so stored cards are drawn
+  # again on their next share. 2: redraw cards stored while the fonts were
+  # WOFF, which drew every Amharic letter as a box in production.
+  VERSION = 2
+
+  # Fingerprint of vendor/fonts/share_card. Cards are kept (ShareImage,
+  # InviteCard's cache), so a font change only shows on old cards after a
+  # VERSION bump; ShareCard::FontsTest fails until both are updated.
+  FONTS_DIGEST = "57a2cb72913f2571".freeze
 
   FORMATS = {
     "post" => { width: 1080, height: 1350, header_y: 110, stamp_y: 540, stamp_size: 720, doodle: [ 710, 850 ], footer_y: 1250 },
