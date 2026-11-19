@@ -76,7 +76,16 @@ jobs:
     #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips librsvg2-bin fontconfig
+        # security.ubuntu.com sometimes answers 503 for minutes at a time; retry
+        # each download and the whole install before failing the job.
+        run: |
+          for attempt in 1 2 3; do
+            sudo apt-get update &&
+              sudo apt-get install -o Acquire::Retries=5 --no-install-recommends -y libvips librsvg2-bin fontconfig &&
+              exit 0
+            echo "apt attempt $attempt failed, retrying in 30s"; sleep 30
+          done
+          exit 1
 
       - name: Checkout code
         uses: actions/checkout@v7
