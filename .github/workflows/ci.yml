@@ -77,30 +77,33 @@ jobs:
     steps:
       # Downloading these from the Ubuntu mirrors is slow (often 75 kB/s, 2-8
       # minutes) and sometimes fails with 503s, so keep the .debs in the
-      # Actions cache. The key includes the runner image version: a new image
-      # (about weekly) downloads once, then every run installs from the cache.
+      # Actions cache, keyed on the runner image's release date (the build
+      # number after it differs from runner to runner). A newer image falls
+      # back to the last cache; dpkg refuses to downgrade anything the image
+      # already ships, and then the step downloads fresh packages instead.
       - name: Note the runner image
         id: runner-image
-        run: echo "version=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
+        run: echo "version=$ImageOS-${ImageVersion%%.*}" >> "$GITHUB_OUTPUT"
 
       - name: Restore apt package cache
         id: apt-cache
         uses: actions/cache@v6
         with:
           path: ~/apt-debs
-          key: apt-debs-${{ steps.runner-image.outputs.version }}-libvips-librsvg2-bin-fontconfig-v1
+          key: apt-debs-v1-${{ steps.runner-image.outputs.version }}-libvips-librsvg2-bin-fontconfig
+          restore-keys: |
+            apt-debs-v1-
 
       - name: Install packages
         env:
           PACKAGES: libvips librsvg2-bin fontconfig
-          CACHE_HIT: ${{ steps.apt-cache.outputs.cache-hit }}
         run: |
           mkdir -p ~/apt-debs
           install_from_cache() {
             ls ~/apt-debs/*.deb >/dev/null 2>&1 || return 0
-            sudo dpkg -i ~/apt-debs/*.deb
+            sudo dpkg -i --refuse-downgrade ~/apt-debs/*.deb
           }
-          if [ "$CACHE_HIT" = "true" ] && install_from_cache; then
+          if ls ~/apt-debs/*.deb >/dev/null 2>&1 && install_from_cache; then
             echo "Installed from cache: $(ls ~/apt-debs)"
             exit 0
           fi
