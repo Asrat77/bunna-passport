@@ -114,7 +114,7 @@ Before the new version boots, `.kamal/hooks/pre-deploy` runs
 every migration that `db:prepare` runs on boot) has a fresh off-host restore
 point. The hook runs for deploys from the Mac too. If the new container fails
 its health check, kamal-proxy keeps sending traffic to the old one and the
-workflow fails. With `DEPLOY_ALERT_CHAT_IDS` set, a failure pings Telegram.
+workflow fails. With `DEPLOY_ALERT_CHAT_IDS` set, every deploy (success or failure) pings Telegram.
 
 **Manual deploy or rollback:** Actions → Deploy → Run workflow. Pick
 `rollback` and paste the commit SHA of the release to return to (`bin/kamal app

@@ -137,16 +137,24 @@ jobs:
           echo "https://$BUNNA_APP_HOST/up did not answer 200"
           exit 1
 
-      - name: Tell Telegram the deploy failed
-        if: failure() && vars.DEPLOY_ALERT_CHAT_IDS != ''
+      - name: Tell Telegram how the deploy went
+        if: always() && vars.DEPLOY_ALERT_CHAT_IDS != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_IDS: ${{ vars.DEPLOY_ALERT_CHAT_IDS }}
+          STATUS: ${{ job.status }}
+          ACTION: ${{ inputs.action || 'deploy' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          commit="$(git log -1 --pretty='%h %s' 2>/dev/null || echo "$GITHUB_SHA")"
+          case "$STATUS" in
+            success)   text="✅ Bunna $ACTION is live: $commit https://$BUNNA_APP_HOST/app" ;;
+            cancelled) text="⚪ Bunna $ACTION was cancelled: $commit $RUN_URL" ;;
+            *)         text="❌ Bunna $ACTION failed. Production keeps the previous version. $commit $RUN_URL" ;;
+          esac
           IFS=',' read -ra chats <<< "$CHAT_IDS"
           for chat in "${chats[@]}"; do
             curl -fsS "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
               --data-urlencode "chat_id=$chat" \
-              --data-urlencode "text=Bunna deploy failed. Production keeps the previous version. $RUN_URL" >/dev/null
+              --data-urlencode "text=$text" >/dev/null
           done
