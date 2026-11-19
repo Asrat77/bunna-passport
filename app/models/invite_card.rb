@@ -4,8 +4,10 @@
 # invite from an app rather than a bare link. Drawn like ShareCard, with
 # rsvg-convert and the same fonts and paper.
 class InviteCard
-  # Bump when the layout changes, so cached cards are drawn again.
-  VERSION = 1
+  # Bump when the layout or the fonts change, so cached cards are drawn
+  # again (and Telegram fetches the new picture, see InvitesController).
+  # 2: redraw cards cached while Amharic still drew as boxes.
+  VERSION = 2
 
   WIDTH = 1080
   HEIGHT = 1080

@@ -20,4 +20,12 @@ class ShareCard::FontsTest < ActiveSupport::TestCase
     assert names.any? { |name| name.start_with?("noto-sans-ethiopic") }
     assert names.any? { |name| name.start_with?("noto-serif-ethiopic") }
   end
+
+  test "a font change comes with a card version bump" do
+    lines = FONT_DIR.glob("*.ttf").sort.map { |path| "#{path.basename} #{Digest::SHA256.file(path).hexdigest}\n" }
+    digest = Digest::SHA256.hexdigest(lines.join).first(16)
+
+    assert_equal ShareCard::FONTS_DIGEST, digest,
+      "The share card fonts changed. Bump ShareCard::VERSION and InviteCard::VERSION so stored cards are redrawn, then set ShareCard::FONTS_DIGEST to #{digest}."
+  end
 end
