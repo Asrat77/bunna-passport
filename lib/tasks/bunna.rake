@@ -178,4 +178,45 @@ namespace :bunna do
     shop = ENV["SHOP"].presence&.then { |ref| Shop.find_by(slug: ref) || Shop.find_by(id: Integer(ref, exception: false)) || abort("No café #{ref.inspect}") }
     puts LaunchLink.url(base_url: ENV.fetch("PUBLIC_BASE_URL", "http://localhost:3000"), shop: shop&.id, source: source)
   end
+  # NEIGHBORHOODS="Bole,Rwanda" → those neighbourhoods; default Bole.
+  def gap_neighborhoods
+    names = ENV.fetch("NEIGHBORHOODS", "Bole").split(",").map(&:strip).compact_blank
+    names.map { |name| Neighborhood.find_by(name: name) || abort("No neighborhood #{name.inspect}") }
+  end
+
+  desc "List what a neighbourhood's live cafés are missing: NEIGHBORHOODS=Bole[,Rwanda,...]"
+  task data_gaps: :environment do
+    gap_neighborhoods.each do |neighborhood|
+      gaps = Shop::Gaps.new(neighborhood)
+      summary = gaps.summary
+      puts "#{neighborhood.name}: #{summary[:complete]}/#{summary[:shops]} complete · no photo #{summary[:missing_photo]} · " \
+        "weak landmark #{summary[:weak_landmark]} (#{summary[:suggested_landmark]} suggested) · duplicate pairs #{summary[:duplicate_pairs]}"
+      gaps.rows.select(&:missing_photo).each { |row| puts "  no photo   ##{row.shop.id} #{row.shop.name}" }
+      gaps.rows.select(&:weak_landmark).each do |row|
+        puts "  landmark   ##{row.shop.id} #{row.shop.name}: #{row.shop.landmark.inspect} -> #{row.suggestion.inspect}"
+      end
+      gaps.duplicate_pairs.each do |shop, other|
+        puts "  duplicate  ##{shop.id} #{shop.name} <> ##{other.id} #{other.name} (#{shop.distance_from(latitude: other.latitude, longitude: other.longitude)} m)"
+      end
+    end
+  end
+
+  desc "Replace weak landmarks with the suggested ones (dry run unless APPLY=1): NEIGHBORHOODS=Bole[,...]"
+  task fill_landmarks: :environment do
+    apply = ENV["APPLY"] == "1"
+    changed = skipped = 0
+    gap_neighborhoods.each do |neighborhood|
+      Shop::Gaps.new(neighborhood).rows.select(&:weak_landmark).each do |row|
+        unless row.suggestion
+          skipped += 1
+          puts "  skip  ##{row.shop.id} #{row.shop.name}: no landmark close enough"
+          next
+        end
+        puts "  #{apply ? "set " : "would"} ##{row.shop.id} #{row.shop.name}: #{row.shop.landmark.inspect} -> #{row.suggestion.inspect}"
+        row.shop.update_columns(landmark: row.suggestion, updated_at: Time.current) if apply
+        changed += 1
+      end
+    end
+    puts "#{apply ? "Updated" : "Would update"} #{changed} landmarks; #{skipped} had no suggestion.#{" Run again with APPLY=1 to save." unless apply}"
+  end
 end

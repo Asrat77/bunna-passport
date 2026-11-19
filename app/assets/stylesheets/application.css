@@ -191,3 +191,11 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
   .page-shell { margin: 0; max-width: none; padding: 0; }
   .sticker-sheet { margin: 0; }
 }
+
+/* Data gaps */
+.gaps-table td small { display: block; }
+.gaps-table .inline-form { margin-top: .35rem; }
+.gaps-table .inline-form input[type="text"] { min-width: 16rem; }
+.gaps-table input[type="file"] { max-width: 14rem; padding: .4rem; }
+.gaps-duplicate { margin: 0 0 .75rem; }
+.gaps-duplicate .button { font-size: .8rem; margin-top: .35rem; padding: .4rem .6rem; }
