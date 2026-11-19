@@ -1,0 +1,151 @@
+name: Deploy
+
+# Deploys main to production once CI has passed on it. The "Run workflow"
+# button deploys any branch or commit by hand, and can roll back instead.
+# Setup (secrets, Tailscale) is in docs/OPERATIONS.md, "Automatic deploys".
+
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: deploy, or rollback to the version below
+        type: choice
+        options: [ deploy, rollback ]
+        default: deploy
+      version:
+        description: For rollback, the commit SHA of the release to go back to
+        required: false
+      skip_backup:
+        description: Skip the pre-deploy backup (only if R2 is down)
+        type: boolean
+        default: false
+
+# One deploy at a time; a newer merge waits for the running deploy to finish.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    # Only after a successful CI run caused by a push to main, never for PRs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://bunna.34.252.38.138.sslip.io/app
+
+    env:
+      BUNNA_DEPLOY_IMAGE: asrat77/bunna-passport
+      BUNNA_DEPLOY_HOST: 100.85.9.76
+      BUNNA_DEPLOY_SSH_USER: ubuntu
+      BUNNA_DEPLOY_SSH_KEY: /home/runner/.ssh/deploy
+      BUNNA_REGISTRY_SERVER: ghcr.io
+      BUNNA_REGISTRY_USERNAME: Asrat77
+      BUNNA_APP_HOST: bunna.34.252.38.138.sslip.io
+      VITE_MAP_STYLE_URL: https://pub-e8a0121d48fb442685afedd622217253.r2.dev/style-light.json
+      VITE_MAP_STYLE_DARK_URL: https://pub-e8a0121d48fb442685afedd622217253.r2.dev/style-dark.json
+      VITE_SHARE_URL: https://t.me/bunnapassbot
+      # The runner is amd64, so build here instead of on the server.
+      BUNNA_BUILD_LOCAL: "1"
+      BUNNA_SKIP_PREDEPLOY_BACKUP: ${{ inputs.skip_backup && '1' || '' }}
+
+    steps:
+      - name: Checkout the commit CI passed
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Join the tailnet
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Install the deploy SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)" >/dev/null
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+          ssh-add ~/.ssh/deploy
+          ssh -o BatchMode=yes -o ConnectTimeout=20 "$BUNNA_DEPLOY_SSH_USER@$BUNNA_DEPLOY_HOST" true
+
+      - name: Write Kamal secrets
+        # Every value is read from the environment when Kamal loads the file.
+        run: |
+          cat > .kamal/secrets <<'SECRETS'
+          KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+          RAILS_MASTER_KEY=$RAILS_MASTER_KEY
+          TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+          TELEGRAM_WEBHOOK_SECRET=$TELEGRAM_WEBHOOK_SECRET
+          R2_ACCOUNT_ID=$R2_ACCOUNT_ID
+          R2_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID
+          R2_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY
+          R2_BUCKET=$R2_BUCKET
+          SECRETS
+
+      - name: Kamal ${{ inputs.action || 'deploy' }}
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          ACTION: ${{ inputs.action || 'deploy' }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$ACTION" = "rollback" ]; then
+            [ -n "$VERSION" ] || { echo "Rollback needs a version (commit SHA)"; exit 1; }
+            bin/kamal rollback "$VERSION"
+          else
+            bin/kamal deploy
+          fi
+
+      - name: Check the live app
+        run: |
+          for i in 1 2 3 4 5 6; do
+            curl -fsS --max-time 10 "https://$BUNNA_APP_HOST/up" && exit 0
+            sleep 10
+          done
+          echo "https://$BUNNA_APP_HOST/up did not answer 200"
+          exit 1
+
+      - name: Tell Telegram the deploy failed
+        if: failure() && vars.DEPLOY_ALERT_CHAT_IDS != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_IDS: ${{ vars.DEPLOY_ALERT_CHAT_IDS }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          IFS=',' read -ra chats <<< "$CHAT_IDS"
+          for chat in "${chats[@]}"; do
+            curl -fsS "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+              --data-urlencode "chat_id=$chat" \
+              --data-urlencode "text=Bunna deploy failed. Production keeps the previous version. $RUN_URL" >/dev/null
+          done

@@ -102,6 +102,80 @@ gh auth token | docker login ghcr.io -u <username> --password-stdin
 Pushing to `ghcr.io` needs a token with `write:packages`. Without the local
 login the build succeeds and the push fails with `denied`.
 
+## Automatic deploys
+
+`.github/workflows/deploy.yml` deploys `main` after CI passes on it. It joins
+the tailnet as a short-lived node tagged `tag:ci`, builds the image on the
+GitHub runner (already amd64), pushes it to ghcr with the workflow's own token
+and runs `bin/kamal deploy`. Port 22 on the public IP stays closed.
+
+Before the new version boots, `.kamal/hooks/pre-deploy` runs
+`/usr/local/bin/bunna-backup-offsite` on the server, so every release (and
+every migration that `db:prepare` runs on boot) has a fresh off-host restore
+point. The hook runs for deploys from the Mac too. If the new container fails
+its health check, kamal-proxy keeps sending traffic to the old one and the
+workflow fails. With `DEPLOY_ALERT_CHAT_IDS` set, a failure pings Telegram.
+
+**Manual deploy or rollback:** Actions → Deploy → Run workflow. Pick
+`rollback` and paste the commit SHA of the release to return to (`bin/kamal app
+versions` lists them). Only one deploy runs at a time; a second one waits.
+
+Deploying from the Mac still works exactly as before.
+
+### One-time setup
+
+1. **Tailscale policy** (admin console → Access controls). Add the tag and a
+   grant that lets it reach only SSH on the server:
+
+   ```json
+   "tagOwners": { "tag:ci": ["autogroup:admin"] },
+   "grants": [
+     { "src": ["autogroup:member"], "dst": ["*"], "ip": ["*"] },
+     { "src": ["tag:ci"], "dst": ["100.85.9.76"], "ip": ["tcp:22"] }
+   ]
+   ```
+
+   If the policy still has the default `{"src": ["*"], "dst": ["*"], ...}`
+   rule, replace it with the `autogroup:member` line above. Your own devices
+   keep full access, and CI runners reach nothing but port 22 on the server.
+
+2. **Tailscale OAuth client** (Settings → OAuth clients → Generate). Give it
+   write access to *Auth Keys* with tag `tag:ci`. Keep the client ID and secret
+   for step 5.
+
+3. **A deploy key just for CI**, on the Mac:
+
+   ```sh
+   ssh-keygen -t ed25519 -f ~/.ssh/deploy-ci -N "" -C github-actions-deploy
+   ssh ubuntu@100.85.9.76 'cat >> ~/.ssh/authorized_keys' < ~/.ssh/deploy-ci.pub
+   ssh-keyscan -t ed25519 100.85.9.76 | ssh-keygen -lf -
+   ```
+
+   The last line must print `SHA256:w+QJcexPt1Tz9SGclNbnRqQyJgrz3sYR47Itrd5ito8`.
+   Stop if it doesn't.
+
+4. **Let this repo push the image**: open
+   https://github.com/users/Asrat77/packages/container/bunna-passport/settings,
+   then under *Manage Actions access* add `bunna-passport` with the **Write** role.
+
+5. **Secrets**, from the repo folder on the Mac:
+
+   ```sh
+   R=Asrat77/bunna-passport
+   gh secret set TS_OAUTH_CLIENT_ID -R $R      # paste, Enter
+   gh secret set TS_OAUTH_SECRET -R $R         # paste, Enter
+   gh secret set DEPLOY_SSH_KEY -R $R < ~/.ssh/deploy-ci
+   gh secret set DEPLOY_SSH_KNOWN_HOSTS -R $R -b "$(ssh-keyscan -t ed25519 100.85.9.76 2>/dev/null)"
+   gh secret set RAILS_MASTER_KEY -R $R -b "$(cat config/master.key)"
+   for k in TELEGRAM_BOT_TOKEN TELEGRAM_WEBHOOK_SECRET R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
+     gh secret set $k -R $R -b "$(grep "^$k=" .kamal/secrets | cut -d= -f2-)"
+   done
+   gh variable set DEPLOY_ALERT_CHAT_IDS -R $R -b "<your Telegram id>"
+   ```
+
+The non-secret deploy values (`BUNNA_DEPLOY_HOST`, image, app host, map style
+URLs) are written into the workflow itself. Change them there if they move.
+
 ## Database initialization
 
 Prepare the schema, then explicitly install only the reference records required
