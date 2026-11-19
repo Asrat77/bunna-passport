@@ -75,17 +75,54 @@ jobs:
     #      - 6379:6379
     #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
+      # Downloading these from the Ubuntu mirrors is slow (often 75 kB/s, 2-8
+      # minutes) and sometimes fails with 503s, so keep the .debs in the
+      # Actions cache, keyed on the runner image's release date (the build
+      # number after it differs from runner to runner). A newer image falls
+      # back to the last cache; dpkg refuses to downgrade anything the image
+      # already ships, and then the step downloads fresh packages instead.
+      - name: Note the runner image
+        id: runner-image
+        run: echo "version=$ImageOS-${ImageVersion%%.*}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore apt package cache
+        id: apt-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-debs
+          key: apt-debs-v1-${{ steps.runner-image.outputs.version }}-libvips-librsvg2-bin-fontconfig
+          restore-keys: |
+            apt-debs-v1-
+
       - name: Install packages
-        # security.ubuntu.com sometimes answers 503 for minutes at a time; retry
-        # each download and the whole install before failing the job.
+        env:
+          PACKAGES: libvips librsvg2-bin fontconfig
         run: |
+          mkdir -p ~/apt-debs
+          install_from_cache() {
+            ls ~/apt-debs/*.deb >/dev/null 2>&1 || return 0
+            sudo dpkg -i --refuse-downgrade ~/apt-debs/*.deb
+          }
+          if ls ~/apt-debs/*.deb >/dev/null 2>&1 && install_from_cache; then
+            echo "Installed from cache: $(ls ~/apt-debs)"
+            exit 0
+          fi
+          # security.ubuntu.com sometimes answers 503 for minutes at a time;
+          # retry each download and the whole download before failing the job.
+          rm -f ~/apt-debs/*.deb
           for attempt in 1 2 3; do
             sudo apt-get update &&
-              sudo apt-get install -o Acquire::Retries=5 --no-install-recommends -y libvips librsvg2-bin fontconfig &&
-              exit 0
+              sudo apt-get install -o Acquire::Retries=5 -o Dir::Cache::Archives="$HOME/apt-debs" \
+                --download-only --no-install-recommends -y $PACKAGES &&
+              break
+            [ "$attempt" = 3 ] && exit 1
             echo "apt attempt $attempt failed, retrying in 30s"; sleep 30
           done
-          exit 1
+          # Install with apt (it reuses the downloaded .debs) so a half-done
+          # dpkg run from a stale cache gets repaired too.
+          sudo apt-get install -o Dir::Cache::Archives="$HOME/apt-debs" --no-install-recommends -y $PACKAGES
+          sudo rm -rf ~/apt-debs/partial ~/apt-debs/lock
+          sudo chown -R "$USER" ~/apt-debs
 
       - name: Checkout code
         uses: actions/checkout@v7
