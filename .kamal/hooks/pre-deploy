@@ -22,5 +22,8 @@ fi
 IFS=',' read -ra hosts <<< "${KAMAL_HOSTS:?KAMAL_HOSTS is not set}"
 for host in "${hosts[@]}"; do
   echo "pre-deploy: backing up $host before $KAMAL_COMMAND"
-  ssh "${ssh_opts[@]}" "$user@$host" sudo -n /usr/local/bin/bunna-backup-offsite
+  # Same as the nightly cron: run as the deploy user with /etc/bunna-backup.env
+  # loaded (the rclone remote lives in that user's config, not root's).
+  ssh "${ssh_opts[@]}" "$user@$host" \
+    'set -a; . /etc/bunna-backup.env; set +a; exec /usr/local/bin/bunna-backup-offsite'
 done
