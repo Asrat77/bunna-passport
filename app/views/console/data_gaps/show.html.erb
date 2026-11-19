@@ -1,0 +1,79 @@
+<% content_for(:title) { "Data gaps · Bunna Passport" } %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Launch catalog</p>
+    <h1>Data gaps in <%= @neighborhood&.name %></h1>
+    <p class="muted">Every live café should have a photo and a landmark someone can walk to, and no second entry. Suggested landmarks come from the nearest well-known place; check them before saving.</p>
+  </div>
+</div>
+
+<%= form_with url: console_data_gaps_path, method: :get, class: "inline-form", data: { turbo: false } do |form| %>
+  <%= form.select :neighborhood_id, options_from_collection_for_select(@neighborhoods, :id, :name, @neighborhood&.id), {}, onchange: "this.form.requestSubmit()", "aria-label": "Neighborhood" %>
+  <%= form.hidden_field :filter, value: @filter %>
+<% end %>
+
+<% summary = @gaps.summary %>
+<section class="metric-grid">
+  <article class="metric"><strong><%= summary[:complete] %>/<%= summary[:shops] %></strong><span>Live cafés complete</span></article>
+  <article class="metric"><strong><%= summary[:missing_photo] %></strong><span>No photo</span></article>
+  <article class="metric"><strong><%= summary[:weak_landmark] %></strong><span>Weak landmark (<%= summary[:suggested_landmark] %> with a suggestion)</span></article>
+  <article class="metric"><strong><%= summary[:duplicate_pairs] %></strong><span>Likely duplicate pairs</span></article>
+</section>
+
+<nav class="tabs" aria-label="Filter">
+  <% { "all" => "All gaps", "landmark" => "Landmark", "photo" => "Photo", "duplicate" => "Duplicate" }.each do |key, label| %>
+    <%= link_to label, console_data_gaps_path(neighborhood_id: @neighborhood&.id, filter: key), class: [ "tab", ("tab--current" if @filter == key) ] %>
+  <% end %>
+</nav>
+
+<% if @rows.empty? %>
+  <section class="panel empty-state"><p>Nothing to fix here.</p></section>
+<% else %>
+  <div class="table-wrap">
+    <table class="gaps-table">
+      <thead><tr><th>Café</th><th>Landmark</th><th>Photo</th><th>Duplicates</th></tr></thead>
+      <tbody>
+        <% @rows.each do |row| %>
+          <% shop = row.shop %>
+          <tr id="<%= dom_id(shop) %>">
+            <td>
+              <%= link_to shop.name, console_shop_path(shop) %>
+              <small lang="am"><%= shop.name_am %></small>
+              <small><%= link_to "Google Maps", "https://www.google.com/maps/search/?api=1&query=#{shop.latitude},#{shop.longitude}", target: "_blank", rel: "noopener" %></small>
+            </td>
+            <td>
+              <% if row.weak_landmark %>
+                <small class="muted">Now: <%= shop.landmark %></small>
+                <%= form_with url: console_shop_landmark_path(shop), method: :patch, class: "inline-form", data: { turbo: false } do |form| %>
+                  <%= form.text_field :landmark, value: row.suggestion || shop.landmark, "aria-label": "Landmark for #{shop.name}" %>
+                  <%= form.submit "Save" %>
+                <% end %>
+              <% else %>
+                <%= shop.landmark %>
+              <% end %>
+            </td>
+            <td>
+              <% if row.missing_photo %>
+                <%= form_with url: console_shop_photos_path(shop), multipart: true, class: "inline-form", data: { turbo: false } do |form| %>
+                  <%= form.file_field :image, accept: "image/jpeg,image/png,image/webp", required: true, "aria-label": "Photo for #{shop.name}" %>
+                  <%= form.submit "Add photo", class: "button--secondary" %>
+                <% end %>
+              <% else %>
+                <span class="status status--live">Has photo</span>
+              <% end %>
+            </td>
+            <td>
+              <% row.duplicates.each do |other| %>
+                <p class="gaps-duplicate">
+                  <%= link_to other.name, console_shop_path(other) %>
+                  <small><%= other.neighborhood.name %> · <%= shop.distance_from(latitude: other.latitude, longitude: other.longitude) %> m away · <%= other.check_ins_count %> cups</small>
+                  <%= link_to "Merge into this one", new_console_shop_merge_path(shop, winner_id: other.id), class: "button button--danger" %>
+                </p>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

@@ -1,0 +1,35 @@
+# Well-known places people give directions from, used to suggest a "near X"
+# landmark for cafés whose catalog landmark is only a street or the
+# neighbourhood name (see Shop::Landmark). Coordinates are from OpenStreetMap
+# (ODbL, credited in the app), looked up in November 2026. Bole and the ring
+# around it for the Bole launch; add more as other neighbourhoods open.
+- { name: "Edna Mall", name_am: "ኤድና ሞል", latitude: 8.99706, longitude: 38.78661 }
+- { name: "Millennium Hall", name_am: "ሚሊኒየም አዳራሽ", latitude: 8.99020, longitude: 38.78951 }
+- { name: "Bole Medhanialem Church", name_am: "ቦሌ መድኃኔዓለም", latitude: 8.99595, longitude: 38.78991 }
+- { name: "Friendship Hotel", name_am: "ፍሬንድሺፕ ሆቴል", latitude: 8.99401, longitude: 38.78459 }
+- { name: "Atlas Hotel", name_am: "አትላስ ሆቴል", latitude: 9.00372, longitude: 38.78067 }
+- { name: "Sapphire Addis Hotel", name_am: "ሳፋየር አዲስ ሆቴል", latitude: 9.00022, longitude: 38.78339 }
+- { name: "the National Stadium", name_am: "ብሔራዊ ስታዲየም", latitude: 9.00281, longitude: 38.79115 }
+- { name: "the airport terminal", name_am: "የቦሌ አየር ማረፊያ", latitude: 8.98430, longitude: 38.80100 }
+- { name: "Morning Star Mall", name_am: "ሞርኒንግ ስታር ሞል", latitude: 8.99652, longitude: 38.78651 }
+- { name: "Mafi City Center", name_am: "ማፊ ሲቲ ሴንተር", latitude: 8.99629, longitude: 38.78754 }
+- { name: "Kenenisa Hotel", name_am: "ቀነኒሳ ሆቴል", latitude: 8.99530, longitude: 38.78842 }
+- { name: "Alem Cinema", name_am: "ዓለም ሲኒማ", latitude: 8.99000, longitude: 38.78485 }
+- { name: "DH Geda Tower", name_am: "ዲኤች ገዳ ታወር", latitude: 8.98960, longitude: 38.78639 }
+- { name: "Skylight Hotel", name_am: "ስካይላይት ሆቴል", latitude: 8.98759, longitude: 38.79050 }
+- { name: "DoubleTree Hotel", name_am: "ደብልትሪ ሆቴል", latitude: 8.99101, longitude: 38.79280 }
+- { name: "Brass Hospital", name_am: "ብራስ ሆስፒታል", latitude: 8.99021, longitude: 38.79365 }
+- { name: "Hayat Hospital", name_am: "ሀያት ሆስፒታል", latitude: 8.99441, longitude: 38.79535 }
+- { name: "Garad City Center", name_am: "ጋራድ ሲቲ ሴንተር", latitude: 8.99307, longitude: 38.77506 }
+- { name: "Rwanda", name_am: "ሩዋንዳ", latitude: 8.99240, longitude: 38.77985 }
+- { name: "Wollo Sefer", name_am: "ወሎ ሰፈር", latitude: 8.99417, longitude: 38.77419 }
+- { name: "Bole Michael Church", name_am: "ቦሌ ሚካኤል ቤተ ክርስቲያን", latitude: 8.98054, longitude: 38.77110 }
+- { name: "Meskel Flower", name_am: "መስቀል ፍላወር", latitude: 8.98747, longitude: 38.76367 }
+- { name: "Dembel City Center", name_am: "ደምበል ሲቲ ሴንተር", latitude: 9.00471, longitude: 38.76706 }
+- { name: "Getu Commercial Center", name_am: "ጌቱ ኮሜርሻል", latitude: 9.00235, longitude: 38.76959 }
+- { name: "Olympia", name_am: "ኦሎምፒያ", latitude: 9.00391, longitude: 38.76812 }
+- { name: "Bambis", name_am: "ባምቢስ", latitude: 9.00987, longitude: 38.77199 }
+- { name: "Urael Church", name_am: "ኡራኤል ቤተ ክርስቲያን", latitude: 9.01053, longitude: 38.77567 }
+- { name: "Golagul Tower", name_am: "ጎላጉል ህንጻ", latitude: 9.01556, longitude: 38.78721 }
+- { name: "Zefmesh Grand Mall", name_am: "ዘፍመሽ ግራንድ ሞል", latitude: 9.02057, longitude: 38.80023 }
+- { name: "Bole Bulbula Giorgis Church", name_am: "ቦሌ ቡልቡላ ጊዮርጊስ", latitude: 8.96708, longitude: 38.78022 }

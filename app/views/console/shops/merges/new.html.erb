@@ -1,8 +1,18 @@
 <p class="eyebrow">Duplicate resolution</p>
 <h1>Merge <%= @shop.name %></h1>
 <p class="muted">The current shop remains as a merged tombstone. Check-ins, photos, and the earliest user stamps move to the canonical shop.</p>
+<% if @nearby.any? %>
+  <section class="panel">
+    <h2>Likely the same place</h2>
+    <ul class="record-list">
+      <% @nearby.each do |shop| %>
+        <li><%= shop.name %> <small><%= shop.neighborhood.name %> · <%= @shop.distance_from(latitude: shop.latitude, longitude: shop.longitude) %> m away · <%= shop.landmark %></small></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
 <%= form_with url: console_shop_merge_path(@shop), class: "stack", data: { turbo: false } do |form| %>
   <%= form.label :winner_id, "Canonical shop" %>
-  <%= form.collection_select :winner_id, @candidates, :id, ->(shop) { "#{shop.name} · #{shop.neighborhood.name}" } %>
+  <%= form.collection_select :winner_id, @nearby + (@candidates - @nearby), :id, ->(shop) { "#{shop.name} · #{shop.neighborhood.name}" }, selected: params[:winner_id].to_i %>
   <%= form.submit "Merge duplicate", class: "button--danger" %>
 <% end %>

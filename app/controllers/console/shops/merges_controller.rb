@@ -2,7 +2,9 @@ class Console::Shops::MergesController < Console::BaseController
   before_action :set_shop
 
   def new
-    @candidates = Shop.live.where.not(id: @shop.id).alphabetically
+    @candidates = Shop.live.where.not(id: @shop.id).includes(:neighborhood).alphabetically.to_a
+    @nearby = Shop.live.where.not(id: @shop.id).includes(:neighborhood)
+      .duplicate_candidates(name: @shop.name, name_am: @shop.name_am, latitude: @shop.latitude, longitude: @shop.longitude)
   end
 
   def create
