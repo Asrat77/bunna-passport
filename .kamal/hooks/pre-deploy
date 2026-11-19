@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Take a fresh off-host backup right before the new version boots. The new
+# container runs db:prepare on start, so this is the restore point for any
+# migration in the release. Runs for every `kamal deploy`, from the Mac or
+# from the GitHub deploy workflow.
+#
+# Skip it (for example during an incident when R2 is down) with
+# BUNNA_SKIP_PREDEPLOY_BACKUP=1.
+set -euo pipefail
+
+if [ "${BUNNA_SKIP_PREDEPLOY_BACKUP:-}" = "1" ]; then
+  echo "pre-deploy: backup skipped (BUNNA_SKIP_PREDEPLOY_BACKUP=1)"
+  exit 0
+fi
+
+user="${BUNNA_DEPLOY_SSH_USER:?BUNNA_DEPLOY_SSH_USER is not set}"
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=20)
+if [ -n "${BUNNA_DEPLOY_SSH_KEY:-}" ]; then
+  ssh_opts+=(-i "${BUNNA_DEPLOY_SSH_KEY/#\~/$HOME}")
+fi
+
+IFS=',' read -ra hosts <<< "${KAMAL_HOSTS:?KAMAL_HOSTS is not set}"
+for host in "${hosts[@]}"; do
+  echo "pre-deploy: backing up $host before $KAMAL_COMMAND"
+  ssh "${ssh_opts[@]}" "$user@$host" sudo -n /usr/local/bin/bunna-backup-offsite
+done
