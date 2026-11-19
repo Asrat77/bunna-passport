@@ -100,7 +100,15 @@ builder:
   # slow QEMU emulation on arm64 workstations and keeps build layers off the
   # developer's disk. The GitHub deploy workflow sets BUNNA_BUILD_LOCAL=1: its
   # runner is amd64 already, so it builds there and leaves the server alone.
-<% unless ENV["BUNNA_BUILD_LOCAL"] == "1" %>
+<% if ENV["BUNNA_BUILD_LOCAL"] == "1" %>
+  # Each runner starts with an empty Docker cache, so keep the build layers
+  # (apt packages, gems, npm modules) in the registry next to the app image,
+  # under the build-cache tag. Unchanged layers are then reused, not rebuilt.
+  cache:
+    type: registry
+    image: <%= ENV.fetch("BUNNA_DEPLOY_IMAGE") %>:build-cache
+    options: mode=max,image-manifest=true,oci-mediatypes=true
+<% else %>
   remote: ssh://<%= ENV.fetch("BUNNA_DEPLOY_SSH_USER") %>@<%= ENV.fetch("BUNNA_DEPLOY_HOST") %>
 <% end %>
 
