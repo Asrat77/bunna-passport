@@ -62,6 +62,24 @@ class Badge < ApplicationRecord
       artwork_key: "five-contributions",
       criterion: "approved_contributions",
       threshold: 5
+    },
+    {
+      slug: "first-referral",
+      tier: "bronze",
+      name: "Brought a Friend",
+      description: "A friend you invited got their first stamp.",
+      artwork_key: "first-referral",
+      criterion: "referrals",
+      threshold: 1
+    },
+    {
+      slug: "five-referrals",
+      tier: "silver",
+      name: "Coffee Host",
+      description: "Five friends you invited got their first stamp.",
+      artwork_key: "five-referrals",
+      criterion: "referrals",
+      threshold: 5
     }
   ].freeze
 
@@ -79,7 +97,7 @@ class Badge < ApplicationRecord
 
   # Cups, then stamps, then contributions, each climbing, as the shelf shows them.
   # A running challenge leads the shelf, so it's the first thing people see.
-  CRITERIA_ORDER = [ CHALLENGE, *%w[ verified_check_ins unique_shops approved_contributions ] ].freeze
+  CRITERIA_ORDER = [ CHALLENGE, *%w[ verified_check_ins unique_shops approved_contributions referrals ] ].freeze
 
   def self.in_display_order
     all.sort_by { |badge| [ CRITERIA_ORDER.index(badge.criterion) || CRITERIA_ORDER.size, badge.threshold, badge.slug ] }
@@ -144,6 +162,7 @@ class Badge < ApplicationRecord
     when "verified_check_ins" then user.verified_check_ins_count
     when "unique_shops" then user.stamps_count
     when "approved_contributions" then user.contributions.accepted.count
+    when "referrals" then user.rewarded_referrals.count
     when CHALLENGE then challenge_shop_ids_visited_by(user).size
     else 0
     end

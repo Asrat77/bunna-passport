@@ -103,7 +103,7 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       for (const key of [["passport"], ["profile"], ["checkIns"], ["shop", selected.shop.id], ["leaderboard"], ["stats", "me"], ["badges"]]) {
         void queryClient.invalidateQueries({ queryKey: key });
       }
-      replace({ name: "ceremony", checkIn: data, wasAwake, firstStamp: passportWasEmpty && data.stamp_earned });
+      replace({ name: "ceremony", checkIn: data, wasAwake, firstStamp: passportWasEmpty && data.stamp_earned, photo });
     } catch (error) {
       hapticError();
       const code = error instanceof ApiRequestError ? error.rejectionCode : null;
@@ -279,24 +279,20 @@ export function CheckIn({ shopId }: { shopId?: number }) {
                   </button>
                 ))}
               </div>
-              <span className="rating__divider" aria-hidden="true" />
-              <button
-                type="button"
-                className={photo ? "rating__photo rating__photo--on" : "rating__photo"}
-                aria-label={photo ? t("checkin.photoAdded") : t("shop.addPhoto")}
-                onClick={() => photoInput.current?.click()}
-              >
-                <Icon path={phCamera} size={21} />
-              </button>
-              <input
-                ref={photoInput}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                hidden
-                onChange={(event) => setPhoto(event.target.files?.[0] ?? null)}
-              />
             </div>
+
+            <DrinkPhoto photo={photo} onPick={() => photoInput.current?.click()} onClear={() => setPhoto(null)} />
+            <input
+              ref={photoInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              hidden
+              onChange={(event) => {
+                setPhoto(event.target.files?.[0] ?? null);
+                event.target.value = "";
+              }}
+            />
           </>
         ) : null}
 
@@ -331,4 +327,45 @@ export function CheckIn({ shopId }: { shopId?: number }) {
       )}
     </main>
   );
+}
+
+/**
+ * The drink photo, offered as part of the stamp: it shows on the ceremony
+ * with the stamp pressed over it. Still optional; the tap alone checks in.
+ */
+function DrinkPhoto({ photo, onPick, onClear }: { photo: File | null; onPick: () => void; onClear: () => void }) {
+  const { t } = useI18n();
+  const preview = useObjectUrl(photo);
+
+  return (
+    <div className={photo ? "drink-photo drink-photo--set" : "drink-photo"}>
+      <button type="button" className="drink-photo__pick" onClick={onPick} aria-label={photo ? t("checkin.photoChange") : t("checkin.photoPrompt")}>
+        {preview ? <img className="drink-photo__preview" src={preview} alt="" /> : <Icon path={phCamera} size={26} />}
+      </button>
+      <span className="drink-photo__text">
+        <span className="drink-photo__title">{photo ? t("checkin.photoAdded") : t("checkin.photoPrompt")}</span>
+        <span className="drink-photo__hint">{t("checkin.photoHint")}</span>
+      </span>
+      {photo ? (
+        <button type="button" className="link-button drink-photo__clear" onClick={onClear}>
+          {t("checkin.photoRemove")}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+/** A URL for showing a picked file, revoked when it changes or goes. */
+export function useObjectUrl(file: File | null | undefined): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) {
+      setUrl(null);
+      return;
+    }
+    const next = URL.createObjectURL(file);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [file]);
+  return url;
 }

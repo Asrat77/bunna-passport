@@ -22,6 +22,11 @@ class User < ApplicationRecord
   has_many :check_in_reactions, dependent: :delete_all
   has_many :shop_scans, class_name: "Shop::Scan", dependent: :delete_all
   has_many :shop_accounts, dependent: :destroy
+  # Referrals: who invited this person, and the people they invited. A
+  # referral pays out (referral_rewarded_at) at the friend's first verified
+  # check-in, never at signup, so fake accounts earn nothing.
+  belongs_to :referred_by, class_name: "User", optional: true
+  has_many :referrals, class_name: "User", foreign_key: :referred_by_id, inverse_of: :referred_by, dependent: :nullify
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 
@@ -195,6 +200,30 @@ class User < ApplicationRecord
 
   def can_merge_shops?
     curator? || moderator?
+  end
+
+  def rewarded_referrals
+    referrals.where.not(referral_rewarded_at: nil)
+  end
+
+  # Called when this person accepts `inviter`'s invite. Only a newcomer who
+  # hasn't had a verified visit yet counts as referred, and only once: two
+  # old friends connecting isn't a referral.
+  def referred_by!(inviter)
+    return if inviter == self || referred_by_id.present? || verified_check_ins_count.positive? || created_at < inviter.created_at
+
+    update_columns(referred_by_id: inviter.id, updated_at: Time.current)
+  end
+
+  # Pays the referral at their first verified visit: the inviter's referral
+  # badges, and a word from the bot. Once, even if two visits race.
+  def reward_referrer!
+    return unless referred_by_id && referral_rewarded_at.nil?
+    return unless User.where(id: id, referral_rewarded_at: nil).update_all(referral_rewarded_at: Time.current, updated_at: Time.current) == 1
+
+    reload
+    Badge.evaluate_for(referred_by)
+    SendReferralRewardJob.perform_later(self)
   end
 
   # Whether a moderator approved them as this café's owner (ShopAccount).

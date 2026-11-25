@@ -129,6 +129,15 @@ module Telegram::Messages
     end
   end
 
+  # A friend the inviter brought in just got their first stamp.
+  def referral_reward(inviter, friend)
+    in_language_of(inviter) do
+      text = t("referral.rewarded", name: h(friend.display_name))
+      text += "\n\n#{t('referral.count', count: inviter.rewarded_referrals.count)}"
+      { text: text, reply_markup: keyboard([ app_button(t("buttons.open_app")) ]) }
+    end
+  end
+
   # A moderator's answer to someone's claim on a café.
   def shop_claim_decision(account)
     in_language_of(account.user) do

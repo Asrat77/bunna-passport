@@ -68,6 +68,12 @@ am:
         thanks: "ስለላኩልን እናመሰግናለን። የጎደለውን ማስተካከል ከቻሉ እንደገና መላክ ይችላሉ።"
       reason: "የአወያዩ ማስታወሻ፦ %{reason}"
     # Machine-drafted 2026-11-25; needs a native speaker's check.
+    referral:
+      rewarded: "🎉 በግብዣዎ የተቀላቀሉት <b>%{name}</b> የመጀመሪያ ማህተማቸውን አገኙ።"
+      count:
+        one: "ወደ ቡና ፓስፖርት ያመጡት የመጀመሪያው ጓደኛዎ ነው። ☕"
+        other: "ወደ ቡና ፓስፖርት ያመጧቸው ጓደኞች %{count} ደርሰዋል። ☕"
+    # Machine-drafted 2026-11-25; needs a native speaker's check.
     shop_claim:
       approved: "✅ አሁን በቡና ፓስፖርት ላይ የ<b>%{shop}</b> ባለቤት ነዎት። ፎቶዎቹን፣ የስራ ሰዓቱን፣ ምልክቱን እና ምናሌውን ለማስተካከል የካፌውን ገጽ ይክፈቱ።"
       rejected: "<b>%{shop}</b>ን እንደሚያስተዳድሩ ማረጋገጥ ስላልቻልን ጥያቄዎ አልጸደቀም። ስህተት ከሆነ እዚህ ይመልሱልን።"
@@ -96,6 +102,12 @@ am:
       five-contributions:
         name: "አምስት አስተዋጽኦዎች"
         description: "አምስት የማህበረሰብ አስተዋጽኦዎችዎ ተቀባይነት ያግኙ።"
+      first-referral:
+        name: "ጓደኛ ያመጡ"
+        description: "የጋበዙት ጓደኛ የመጀመሪያ ማህተሙን አገኘ።"
+      five-referrals:
+        name: "የቡና አስተናጋጅ"
+        description: "የጋበዟቸው አምስት ጓደኞች የመጀመሪያ ማህተማቸውን አገኙ።"
     review:
       prompt: |-
         <b>%{shop}</b> እንዴት ነበር? ☕
