@@ -19,6 +19,7 @@ import { hapticBadge, hapticSuccess } from "@/telegram/haptics";
 import { useMochaChrome } from "@/telegram/mochaChrome";
 import { Headline } from "@/ui/Headline";
 import { Icon } from "@/ui/Icon";
+import { useObjectUrl } from "./checkin/CheckIn";
 import { ReviewComposer } from "./review/ReviewComposer";
 import { showFriendsNext } from "./Stats";
 import "./ceremony.css";
@@ -40,7 +41,18 @@ const celebrated = new Set<number>();
  * day, since that's the only time it wakes. Both are Mocha in either phone
  * theme, under the same dither header as Explore (docs/DESIGN.md §2.2.1).
  */
-export function Ceremony({ checkIn, wasAwake, firstStamp = false }: { checkIn: CheckInResult; wasAwake: boolean; firstStamp?: boolean }) {
+export function Ceremony({
+  checkIn,
+  wasAwake,
+  firstStamp = false,
+  photo = null,
+}: {
+  checkIn: CheckInResult;
+  wasAwake: boolean;
+  firstStamp?: boolean;
+  /** The drink photo sent with the visit, shown under the stamp. */
+  photo?: File | null;
+}) {
   const { t, language, ordinal } = useI18n();
   const { switchTab, push } = useNavigation();
   const { data: passport } = usePassport();
@@ -113,6 +125,25 @@ export function Ceremony({ checkIn, wasAwake, firstStamp = false }: { checkIn: C
     </div>
   ) : null;
 
+  const photoUrl = useObjectUrl(photo);
+  // The drink, with the café's stamp pressed on its corner: the stamp moment.
+  const drinkCard = photoUrl ? (
+    <figure className="ceremony__drink">
+      <img src={photoUrl} alt={t("ceremony.drinkPhoto", { shop: checkIn.shop.name })} />
+      <span className="ceremony__drink-stamp" aria-hidden="true">
+        <InkStamp
+          name={checkIn.shop.name}
+          amharic={checkIn.shop.name_am}
+          date={stampDate(checkIn.occurred_at)}
+          level="clay"
+          size={84}
+          rotation={stampRotation(`${checkIn.shop.id}`)}
+          label=""
+        />
+      </span>
+    </figure>
+  ) : null;
+
   const badgeCards = badges.length > 0 ? <BadgeCards badges={badges} /> : null;
   const firstCard = firstStamp && checkIn.stamp_earned ? <FirstStampCard /> : null;
 
@@ -156,6 +187,7 @@ export function Ceremony({ checkIn, wasAwake, firstStamp = false }: { checkIn: C
         ) : levelUp ? (
           <p className="ceremony__line">{t("ceremony.levelTop")}</p>
         ) : null}
+        {drinkCard}
         {doodleCard}
         {badgeCards}
         {reviewCard}
@@ -236,6 +268,7 @@ export function Ceremony({ checkIn, wasAwake, firstStamp = false }: { checkIn: C
         </div>
       ) : null}
 
+      {drinkCard}
       {firstCard}
       {doodleCard}
       {badgeCards}

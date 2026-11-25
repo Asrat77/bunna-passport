@@ -133,7 +133,7 @@ function Screens() {
     case "checkin":
       return <CheckIn shopId={route.shopId} />;
     case "ceremony":
-      return <Ceremony checkIn={route.checkIn} wasAwake={route.wasAwake} firstStamp={route.firstStamp ?? false} />;
+      return <Ceremony checkIn={route.checkIn} wasAwake={route.wasAwake} firstStamp={route.firstStamp ?? false} photo={route.photo ?? null} />;
     case "share":
       return <ShareCard target={route.target} shopName={route.shopName} />;
     case "profile":

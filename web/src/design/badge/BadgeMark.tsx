@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { LEVEL_METAL, type StampLevel } from "@/design/seal/levels";
-import { phCoffee, phPencilSimple, phStamp } from "@/ui/icons";
+import { phCoffee, phPencilSimple, phStamp, phUserPlus } from "@/ui/icons";
 
 type Props = {
   artworkKey: string;
@@ -13,6 +13,7 @@ type Props = {
 /** Artwork by what the badge counts: cups, stamps, or things you put on the map. */
 function artwork(key: string): string {
   if (key.includes("contribution")) return phPencilSimple;
+  if (key.includes("referral")) return phUserPlus;
   if (key.includes("shop")) return phStamp;
   return phCoffee;
 }

@@ -187,31 +187,62 @@
   color: var(--accent);
 }
 
-.rating__divider {
-  width: 1px;
-  height: 26px;
-  background: var(--border);
-}
-
-.rating__photo {
-  width: var(--touch);
-  height: var(--touch);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-}
-
-.rating__photo--on {
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-
 /* A way out inside a notice has to read as one, not as more of the notice. */
 .checkin .notice .link-button {
   display: block;
   color: var(--primary);
   font-weight: 600;
   text-align: left;
+}
+
+/* The drink photo, offered as part of the stamp. */
+.drink-photo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-tile);
+}
+
+.drink-photo--set {
+  border-style: solid;
+}
+
+.drink-photo__pick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--sunken);
+  color: var(--primary);
+}
+
+.drink-photo__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drink-photo__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.drink-photo__title {
+  font-weight: 600;
+}
+
+.drink-photo__hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.drink-photo__clear {
+  font-size: 13px;
 }

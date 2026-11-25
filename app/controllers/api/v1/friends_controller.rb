@@ -17,6 +17,7 @@ class Api::V1::FriendsController < Api::V1::BaseController
     end
 
     added = Friendship.connect!(Current.user, inviter)
+    Current.user.referred_by!(inviter)
     render_data(friend_json(inviter, User.ids_with_cup_today([ inviter.id ])), status: added ? :created : :ok)
   rescue Friendship::LimitReached
     render_error(:unprocessable_entity, "friend_limit_reached", "One of you already has #{Friendship::LIMIT} friends.")

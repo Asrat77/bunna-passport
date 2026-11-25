@@ -239,6 +239,7 @@ class CheckIn < ApplicationRecord
     RefreshNeighborhoodLeaderboardsJob.perform_later(shop.neighborhood)
     notify_stamp(stamp)
     schedule_review_prompt
+    user.reward_referrer!
   end
 
   # Telegram accounts that started the bot get one "how was it?" a while

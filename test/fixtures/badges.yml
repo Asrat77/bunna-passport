@@ -15,3 +15,12 @@ five_shops:
   tier: silver
   criterion: unique_shops
   threshold: 5
+
+first_referral:
+  slug: first-referral
+  name: Brought a Friend
+  description: A friend you invited got their first stamp.
+  artwork_key: first-referral
+  tier: bronze
+  criterion: referrals
+  threshold: 1

@@ -68,6 +68,11 @@ en:
         photo_submission: "Your photo of <b>%{shop}</b> wasn't approved."
         thanks: "Thanks for sending it anyway. If you can fix what's missing, you're welcome to send it again."
       reason: "Moderator's note: %{reason}"
+    referral:
+      rewarded: "🎉 <b>%{name}</b>, who joined from your invite, just got their first stamp."
+      count:
+        one: "That's your first friend on Bunna Passport. ☕"
+        other: "That's %{count} friends you've brought to Bunna Passport. ☕"
     shop_claim:
       approved: "✅ You're now the owner of <b>%{shop}</b> on Bunna Passport. Open the café's page to update its photos, hours, landmark and menu."
       rejected: "We couldn't confirm you run <b>%{shop}</b>, so the claim wasn't approved. Reply here if we got it wrong."
@@ -96,6 +101,12 @@ en:
       five-contributions:
         name: "Five Contributions"
         description: "Have five community contributions accepted."
+      first-referral:
+        name: "Brought a Friend"
+        description: "A friend you invited got their first stamp."
+      five-referrals:
+        name: "Coffee Host"
+        description: "Five friends you invited got their first stamp."
     review:
       prompt: |-
         How was <b>%{shop}</b>? ☕

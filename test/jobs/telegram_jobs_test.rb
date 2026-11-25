@@ -100,7 +100,7 @@ class TelegramJobsTest < ActiveJob::TestCase
     message = bot.sent.sole
     assert_equal user.telegram_user_id, message[:chat_id]
     assert_match "Badge earned: <b>First Cup</b>", message[:text]
-    assert_match "That's 1 of 2 badges.", message[:text]
+    assert_match "That's 1 of 3 badges.", message[:text]
     assert_equal "See your badges", message[:reply_markup][:inline_keyboard].dig(0, 0, :text)
   end
 

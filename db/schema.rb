@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -411,10 +411,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_110000) do
     t.datetime "last_friend_digest_at"
     t.string "language"
     t.string "signup_source"
+    t.integer "referred_by_id"
+    t.datetime "referral_rewarded_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["handle"], name: "index_users_on_handle", unique: true
     t.index ["home_neighborhood_id"], name: "index_users_on_home_neighborhood_id"
     t.index ["invite_token"], name: "index_users_on_invite_token", unique: true
+    t.index ["referred_by_id"], name: "index_users_on_referred_by_id"
     t.index ["signup_source"], name: "index_users_on_signup_source"
     t.index ["telegram_user_id"], name: "index_users_on_telegram_user_id", unique: true
     t.check_constraint "email_address IS NOT NULL OR telegram_user_id IS NOT NULL", name: "users_have_a_sign_in"
@@ -465,4 +468,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_110000) do
   add_foreign_key "stamps", "shops"
   add_foreign_key "stamps", "users"
   add_foreign_key "users", "neighborhoods", column: "home_neighborhood_id"
+  add_foreign_key "users", "users", column: "referred_by_id"
 end
