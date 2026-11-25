@@ -26,6 +26,7 @@ import { SuggestEdit } from "./screens/contribute/SuggestEdit";
 import { setErrorScreen } from "./lib/errorReporting";
 import { useSyncBotLanguage } from "./data/me";
 import { takeLaunchLink } from "./lib/invite";
+import { useCatalog } from "./data/queries";
 import { PrimaryAction } from "./telegram/buttons";
 import { readFlag, writeFlag } from "./telegram/storage";
 import { SchemeContext, useColorScheme } from "./telegram/theme";
@@ -96,15 +97,22 @@ function Gate() {
 
 function Screens() {
   const { route, push } = useNavigation();
+  const [launchSlug, setLaunchSlug] = useState<{ slug: string; invite: string | null } | null>(null);
   useSyncBotLanguage();
 
-  // Opened from a café's sticker: that café's page over Explore. From a
-  // friend's invite: ask about it, over the café if there's both.
+  // Opened from a café's QR stand or sticker: that café's page over Explore.
+  // From a friend's invite: ask about it, over the café if there's both. A
+  // stand carries the café's slug, which waits for the catalog to find it.
   useEffect(() => {
-    const { invite, shopId } = takeLaunchLink();
+    const { invite, shopId, shopSlug } = takeLaunchLink();
+    if (!shopId && shopSlug) {
+      setLaunchSlug({ slug: shopSlug, invite });
+      return;
+    }
     if (shopId) push({ name: "shop", id: shopId });
     if (invite) push({ name: "invite", token: invite });
   }, [push]);
+  useOpenLaunchSlug(launchSlug, () => setLaunchSlug(null));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -143,6 +151,25 @@ function Screens() {
     case "addCafe":
       return <AddCafe cafeName={route.cafeName} />;
   }
+}
+
+/**
+ * Opens the café a QR stand's slug names, once the catalog has it. The copy
+ * kept from last time may predate a new café, so a slug it lacks waits for
+ * the fresh one; a slug that one lacks too opens the map instead.
+ */
+function useOpenLaunchSlug(launch: { slug: string; invite: string | null } | null, done: () => void) {
+  const { push } = useNavigation();
+  const catalog = useCatalog();
+
+  useEffect(() => {
+    if (!launch) return;
+    const shop = catalog.data?.find((s) => s.slug === launch.slug);
+    if (!shop && !catalog.isFetched && !catalog.isError) return;
+    push(shop ? { name: "shop", id: shop.id } : { name: "map" });
+    if (launch.invite) push({ name: "invite", token: launch.invite });
+    done();
+  }, [launch, catalog.data, catalog.isFetched, catalog.isError, push, done]);
 }
 
 function Launching() {

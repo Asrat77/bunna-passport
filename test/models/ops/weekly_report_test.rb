@@ -64,6 +64,16 @@ class Ops::WeeklyReportTest < ActiveSupport::TestCase
     assert_match "New people came from:</b> Buna House sticker 2, direct 1, ig-addiscoffee 1, invite 1", Telegram::Messages.weekly_report(report)[:text]
   end
 
+  test "lists last week's café QR scans and what came of them" do
+    Shop::Scan.record!(shop: shops(:bole), user: users(:one), opened_at: NOW - 3.days, first_open: true)
+    Shop::Scan.record!(shop: shops(:bole), user: users(:two), opened_at: NOW - 2.days, first_open: false)
+    Shop::Scan.record!(shop: shops(:piassa), user: users(:two), opened_at: NOW - 10.days, first_open: false)
+
+    report = Ops::WeeklyReport.new(now: NOW)
+    assert_equal [ [ "Buna House", { scans: 2, check_ins: 0, signups: 1 } ] ], report.scans
+    assert_match "Café QR scans:</b> Buna House 2 (0 checked in, 1 new)", Telegram::Messages.weekly_report(report)[:text]
+  end
+
   private
     def check_in!(user, rating: nil)
       shop = shops(:bole)

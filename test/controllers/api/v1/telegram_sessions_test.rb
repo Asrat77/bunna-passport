@@ -53,6 +53,44 @@ class Api::V1::TelegramSessionsTest < ActionDispatch::IntegrationTest
     assert_equal "invite", User.find_by!(telegram_user_id: 5550021).signup_source
   end
 
+  test "a café's QR stand opens by slug, counts as a scan, and tags a new account with the café" do
+    shop = shops(:bole)
+    opened = 10.minutes.ago.change(usec: 0)
+    scan = signed_init_data(user: { id: 5550030, first_name: "Tsion" }, start_param: shop.slug, auth_date: opened)
+
+    assert_difference -> { Shop::Scan.count }, 1 do
+      # The same launch reloading signs in again with the same auth_date.
+      2.times { post api_v1_telegram_sessions_path, params: { init_data: scan }, as: :json }
+    end
+    assert_response :created
+    user = User.find_by!(telegram_user_id: 5550030)
+    assert_equal "qr-#{shop.id}", user.signup_source
+    recorded = Shop::Scan.last
+    assert_equal [ shop, user, opened, true ], [ recorded.shop, recorded.user, recorded.opened_at, recorded.first_open ]
+
+    again = signed_init_data(user: { id: 5550030, first_name: "Tsion" }, start_param: shop.slug)
+    post api_v1_telegram_sessions_path, params: { init_data: again }, as: :json
+    assert_not Shop::Scan.order(:id).last.first_open
+  end
+
+  test "an unknown slug signs in without a scan or a café source" do
+    unknown = signed_init_data(user: { id: 5550031, first_name: "Kidus" }, start_param: "no-such-cafe")
+
+    assert_no_difference -> { Shop::Scan.count } do
+      post api_v1_telegram_sessions_path, params: { init_data: unknown }, as: :json
+    end
+    assert_response :created
+    assert_nil User.find_by!(telegram_user_id: 5550031).signup_source
+  end
+
+  test "the first counter stickers still count as scans" do
+    sticker = signed_init_data(user: { id: 5550032, first_name: "Mahlet" }, start_param: "shop_#{shops(:bole).id}__src_qr-#{shops(:bole).id}")
+
+    assert_difference -> { shops(:bole).scans.count }, 1 do
+      post api_v1_telegram_sessions_path, params: { init_data: sticker }, as: :json
+    end
+  end
+
   test "a tampered payload is refused" do
     init_data = signed_init_data(user: { id: 5550002, first_name: "Dawit" }).sub("Dawit", "Admin")
 

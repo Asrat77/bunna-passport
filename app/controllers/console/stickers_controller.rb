@@ -1,6 +1,7 @@
 # Counter stickers for partner cafés, printed from the browser. Each one's QR
-# code opens that café's page in the Mini App and tags the signup with the
-# café ("qr-<id>"), so the weekly report can say which sticker brought people.
+# code opens that café's page in the Mini App (startapp=<slug>), counts as a
+# scan for the café (Shop::Scan), and tags a signup with the café ("qr-<id>"),
+# so the weekly report can say which sticker brought people.
 #
 # Also makes a tracked link for anything else, like a post or a poster.
 class Console::StickersController < Console::BaseController
@@ -18,6 +19,6 @@ class Console::StickersController < Console::BaseController
 
   private
     def sticker_link(shop)
-      LaunchLink.url(base_url: request.base_url, shop: shop.id, source: LaunchLink.sticker_source(shop))
+      LaunchLink.stand_url(shop, base_url: request.base_url)
     end
 end

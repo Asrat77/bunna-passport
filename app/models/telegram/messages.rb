@@ -218,7 +218,7 @@ module Telegram::Messages
       "• <b>#{now}</b> #{WEEKLY_LABELS.fetch(metric)} #{weekly_change(now, before)}"
     end
 
-    text = "📊 <b>Bunna last week (#{span})</b>\n\n#{lines.join("\n")}\n\n#{[ weekly_funnel(report), weekly_sources(report) ].compact.join("\n")}\n\n#{report.total_users} people have signed up so far."
+    text = "📊 <b>Bunna last week (#{span})</b>\n\n#{lines.join("\n")}\n\n#{[ weekly_funnel(report), weekly_sources(report), weekly_scans(report) ].compact.join("\n")}\n\n#{report.total_users} people have signed up so far."
     { text: text, reply_markup: keyboard([ console_button("Open the console", "/console/dashboard") ]) }
   end
 
@@ -342,6 +342,20 @@ module Telegram::Messages
       shown = sources.first(5).map { |label, count| "#{h(label)} #{count}" }
       shown << "others #{sources.drop(5).sum(&:last)}" if sources.size > 5
       "🔗 <b>New people came from:</b> #{shown.join(', ')}"
+    end
+
+    # "QR scans: Tomoca 12 (4 checked in, 3 new), Kaldi's 5 (1 checked in)",
+    # top five cafés.
+    def weekly_scans(report)
+      scans = report.scans
+      return if scans.empty?
+
+      shown = scans.first(5).map do |name, counts|
+        detail = [ "#{counts[:check_ins]} checked in", ("#{counts[:signups]} new" if counts[:signups].positive?) ].compact.join(", ")
+        "#{h(name)} #{counts[:scans]} (#{detail})"
+      end
+      shown << "others #{scans.drop(5).sum { |_, counts| counts[:scans] }}" if scans.size > 5
+      "📷 <b>Café QR scans:</b> #{shown.join(', ')}"
     end
 
     def weekly_change(now, before)

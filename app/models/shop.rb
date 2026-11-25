@@ -15,6 +15,7 @@ class Shop < ApplicationRecord
   has_many :check_ins, dependent: :restrict_with_exception
   has_many :stamps, dependent: :restrict_with_exception
   has_many :edits, class_name: "Shop::Edit", dependent: :restrict_with_exception
+  has_many :scans, class_name: "Shop::Scan", dependent: :delete_all
 
   enum :status, {
     pending: "pending",

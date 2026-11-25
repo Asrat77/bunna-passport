@@ -85,7 +85,8 @@ class Telegram::Update
     def start_source(text)
       return unless command(text) == "start"
 
-      LaunchLink.parse(text.to_s.split(" ", 2).second).signup_source
+      link = LaunchLink.parse(text.to_s.split(" ", 2).second)
+      link.signup_source(link.shop_record)
     end
 
     # "/start payload" and "/start@bunnabot" both read as "start".

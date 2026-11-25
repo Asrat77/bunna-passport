@@ -58,6 +58,16 @@ class Ops::WeeklyReport
     end
   end
 
+  # Last week's café QR scans (Shop::Scan.funnel), busiest café first, as
+  # [name, { scans:, check_ins:, signups: }].
+  def scans
+    @scans ||= begin
+      funnel = Shop::Scan.funnel(week)
+      names = Shop.where(id: funnel.keys).pluck(:id, :name).to_h
+      funnel.map { |shop_id, counts| [ names.fetch(shop_id), counts ] }.sort_by { |name, counts| [ -counts[:scans], name ] }
+    end
+  end
+
   private
     def first_stamp_counts(range)
       joined = User.where(created_at: range).pluck(:id, :created_at).to_h

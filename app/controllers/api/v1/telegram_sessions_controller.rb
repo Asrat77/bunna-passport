@@ -7,7 +7,11 @@ class Api::V1::TelegramSessionsController < Api::V1::BaseController
   # issues, creating the account on first launch.
   def create
     init_data = Telegram::InitData.verify!(params.require(:init_data))
-    user = User.from_telegram!(init_data.user, signup_source: LaunchLink.parse(init_data.start_param).signup_source)
+    link = LaunchLink.parse(init_data.start_param)
+    shop = link.shop_record
+    user = User.from_telegram!(init_data.user, signup_source: link.signup_source(shop))
+    # Opened from a café's QR: counted for that café's numbers (Shop::Scan).
+    Shop::Scan.record!(shop: shop, user: user, opened_at: init_data.auth_date, first_open: user.previously_new_record?) if shop
     # Telegram says the bot may write to them (they started it, or allowed it
     # when opening the app), even if we never saw a /start: say, it came
     # before the webhook was set, or a link opened the app straight away.
