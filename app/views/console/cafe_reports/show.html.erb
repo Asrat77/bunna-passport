@@ -1,0 +1,36 @@
+<% content_for(:title) { "#{@shop.name} · #{@report.label} · Bunna Passport" } %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow"><%= link_to "Café numbers", console_cafe_reports_path %> · <%= link_to @shop.name, console_shop_path(@shop) %></p>
+    <h1><%= @report.label %> <span class="title-am" lang="am"><%= @shop.name_am %></span></h1>
+  </div>
+  <div class="actions">
+    <% @months.each do |month| %>
+      <%= link_to month.strftime("%b %Y"), console_cafe_report_path(@shop, month: month.strftime("%Y-%m")), "aria-current": (month == @report.month.begin ? "page" : nil) %>
+    <% end %>
+  </div>
+</div>
+
+<section class="metric-grid">
+  <article class="metric"><strong><%= @report.check_ins %></strong><span>Verified check-ins (<%= @report.previous_check_ins %> the month before)</span></article>
+  <article class="metric"><strong><%= @report.visitors %></strong><span>Unique visitors</span></article>
+  <article class="metric"><strong><%= @report.new_visitors %> / <%= @report.returning_visitors %></strong><span>New / returning</span></article>
+  <article class="metric"><strong><%= @report.scans[:scans] %></strong><span>QR scans: <%= @report.scans[:check_ins] %> checked in, <%= @report.scans[:signups] %> new signups</span></article>
+</section>
+
+<section class="panel">
+  <h2>Check-ins by day of the week</h2>
+  <% top = [ @report.weekdays.map(&:last).max, 1 ].max %>
+  <ul class="weekday-bars">
+    <% @report.weekdays.each do |day, count| %>
+      <li><span><%= day %></span><span class="weekday-bars__bar" style="--share: <%= (100.0 * count / top).round %>%"></span><b><%= count %></b></li>
+    <% end %>
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>For the owner</h2>
+  <p class="muted">Copy this into a Telegram chat with the owner.</p>
+  <textarea id="owner-report" class="owner-report" rows="10" readonly><%= @report.to_text %></textarea>
+  <p><button type="button" class="button" onclick="navigator.clipboard.writeText(document.getElementById('owner-report').value).then(() => { this.textContent = 'Copied' })">Copy text</button></p>
+</section>

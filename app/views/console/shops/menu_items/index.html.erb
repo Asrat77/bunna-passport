@@ -1,0 +1,56 @@
+<% content_for(:title) { "Menu · #{@shop.name} · Bunna Passport" } %>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow"><%= link_to @shop.name, console_shop_path(@shop) %></p>
+    <h1>Menu <span class="title-am" lang="am"><%= @shop.name_am %></span></h1>
+  </div>
+</div>
+<p class="muted">Shown on the café's page in the Mini App, in English and Amharic. Untick <b>Available</b> to hide a line for now without losing it. Prices are in birr; leave one blank if you don't know it.</p>
+
+<% if @items.any? %>
+  <%# One form per row, kept out of the table (a form can't sit in a <tr>); each row's fields join theirs with form=. %>
+  <% @items.each do |item| %>
+    <%= form_with model: item, url: console_shop_menu_item_path(@shop, item), method: :patch, id: "#{dom_id(item)}_form" do %><% end %>
+  <% end %>
+  <div class="table-wrap">
+    <table class="menu-table">
+      <thead><tr><th>Name</th><th>Amharic</th><th>Birr</th><th>Category</th><th>Order</th><th>Available</th><th></th></tr></thead>
+      <tbody>
+        <% @items.each do |item| %>
+          <tr id="<%= dom_id(item) %>" class="<%= "menu-table__off" unless item.available? %>">
+            <% form = "#{dom_id(item)}_form" %>
+            <td><%= text_field_tag "shop_menu_item[name]", item.name, form: form, required: true, maxlength: 80, "aria-label": "Name" %></td>
+            <td><%= text_field_tag "shop_menu_item[name_am]", item.name_am, form: form, maxlength: 80, lang: "am", "aria-label": "Amharic name" %></td>
+            <td><%= number_field_tag "shop_menu_item[price_birr]", item.price_birr, form: form, min: 1, max: 100_000, class: "menu-table__price", "aria-label": "Price in birr" %></td>
+            <td><%= select_tag "shop_menu_item[category]", options_for_select(Shop::MenuItem::CATEGORIES.map { |category| [ category.humanize, category ] }, item.category), form: form, "aria-label": "Category" %></td>
+            <td><%= number_field_tag "shop_menu_item[position]", item.position, form: form, class: "menu-table__position", "aria-label": "Order" %></td>
+            <td>
+              <%= hidden_field_tag "shop_menu_item[available]", "0", form: form, id: nil %>
+              <%= check_box_tag "shop_menu_item[available]", "1", item.available?, form: form, id: "#{dom_id(item)}_available", "aria-label": "Available" %>
+            </td>
+            <td class="menu-table__actions">
+              <button type="submit" form="<%= form %>">Save</button>
+              <%= button_to "Remove", console_shop_menu_item_path(@shop, item), method: :delete, class: "button button--danger", form: { data: { turbo_confirm: "Remove #{item.name} from the menu?" } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <section class="panel"><p class="muted">No menu yet. Add the first line below.</p></section>
+<% end %>
+
+<section class="panel">
+  <h2>Add a line</h2>
+  <% if @item.errors.any? %>
+    <p class="flash flash--alert"><%= @item.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= form_with model: @item, url: console_shop_menu_items_path(@shop), class: "inline-form menu-add" do |form| %>
+    <%= form.text_field :name, placeholder: "Macchiato", required: true, maxlength: 80, "aria-label": "Name" %>
+    <%= form.text_field :name_am, placeholder: "ማኪያቶ", maxlength: 80, lang: "am", "aria-label": "Amharic name" %>
+    <%= form.number_field :price_birr, placeholder: "Birr", min: 1, max: 100_000, class: "menu-table__price", "aria-label": "Price in birr" %>
+    <%= form.select :category, Shop::MenuItem::CATEGORIES.map { |category| [ category.humanize, category ] }, {}, "aria-label": "Category" %>
+    <%= form.submit "Add" %>
+  <% end %>
+</section>

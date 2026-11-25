@@ -72,11 +72,12 @@ Rails.application.routes.draw do
       resource :merge, only: %i[ new create ], module: :shops
       resource :landmark, only: :update, module: :shops
       resources :photos, only: :create, module: :shops
+      resources :menu_items, only: %i[ index create update destroy ], module: :shops
     end
     resource :data_gaps, only: :show
     resources :shop_batches, only: %i[ new create ]
     resources :stickers, only: :index
-    resources :cafe_reports, only: :index
+    resources :cafe_reports, only: %i[ index show ]
     resources :users, only: %i[ index show update ]
   end
 

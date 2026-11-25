@@ -16,6 +16,7 @@ import { BackControl, PrimaryAction } from "@/telegram/buttons";
 import { AddChip, FilterChip, TagChip } from "@/ui/Chip";
 import { Icon } from "@/ui/Icon";
 import { StatStrip } from "@/ui/StatStrip";
+import { ShopMenu } from "./menu/Menu";
 import { ReviewComposer } from "./review/ReviewComposer";
 import { ReviewHighlights, ScoreLine, ShopReviews, useVisitToReview } from "./review/ShopReviews";
 import "./shop.css";
@@ -149,6 +150,7 @@ function ShopBody({
       {section === "overview" ? (
         <>
           {visitToReview ? <ReviewComposer key={visitToReview.id} visit={visitToReview} /> : null}
+          <ShopMenu items={shop.menu ?? []} />
           <section className="card getting-there" aria-labelledby="getting-there">
             <h2 id="getting-there" className="eyebrow">
               {t("shop.gettingThere")}

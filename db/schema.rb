@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -257,6 +257,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_090000) do
     t.index ["shop_id"], name: "index_shop_hours_on_shop_id", unique: true
   end
 
+  create_table "shop_menu_items", force: :cascade do |t|
+    t.integer "shop_id", null: false
+    t.string "name", null: false
+    t.string "name_am"
+    t.integer "price_birr"
+    t.string "category", default: "coffee", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "available", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id"], name: "index_shop_menu_items_on_shop_id"
+    t.check_constraint "price_birr IS NULL OR price_birr BETWEEN 1 AND 100000", name: "shop_menu_items_price_birr"
+  end
+
   create_table "shop_photo_submissions", force: :cascade do |t|
     t.bigint "approved_photo_id"
     t.string "caption"
@@ -416,6 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_090000) do
   add_foreign_key "shop_edits", "shops"
   add_foreign_key "shop_hours", "shops"
   add_foreign_key "shop_hours", "users", column: "confirmed_by_id"
+  add_foreign_key "shop_menu_items", "shops"
   add_foreign_key "shop_photo_submissions", "shop_photos", column: "approved_photo_id"
   add_foreign_key "shop_photo_submissions", "shops"
   add_foreign_key "shop_photos", "shops"

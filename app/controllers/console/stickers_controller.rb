@@ -4,8 +4,22 @@
 # so the weekly report can say which sticker brought people.
 #
 # Also makes a tracked link for anything else, like a post or a poster.
+#
+# Table tents (format=tent) are the pilot's QR stands: two A6 panels on a
+# strip, two strips to an A4 sheet. Cut down the middle and fold each strip
+# in half, and the café's QR faces both sides of the table.
 class Console::StickersController < Console::BaseController
+  FORMATS = %w[ sticker tent ].freeze
+
+  # The tent's Amharic call to action. Machine-drafted: a native speaker
+  # has to check it before anything is printed for a café.
+  TENT_CALL = "Scan for the menu and your Bunna Passport stamp"
+  TENT_CALL_AM = "ምናሌውን ለማየትና የቡና ፓስፖርት ማህተምዎን ለማግኘት ስካን ያድርጉ"
+  TENT_CALL_AM_REVIEWED = false
+  TENT_TAGLINE = "the coffee map of Addis"
+
   def index
+    @format = params[:format_type].presence_in(FORMATS) || "sticker"
     @neighborhoods = Neighborhood.order(:name)
     @neighborhood = Neighborhood.find_by(id: params[:neighborhood_id]) || Neighborhood.find_by(name: "Bole")
     @candidates = @neighborhood ? Shop.live.where(neighborhood: @neighborhood).alphabetically : Shop.none
