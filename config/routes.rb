@@ -15,7 +15,13 @@ Rails.application.routes.draw do
         resources :edits, controller: :shop_edits, only: :create
         resources :photos, controller: :shop_photos, only: :create
         resources :reviews, controller: :shop_reviews, only: :index
+        resources :menu_items, only: %i[ index create ]
+        # PATCH only, like check_ins below.
+        patch "menu_items/:id", to: "menu_items#update", as: :menu_item
+        delete "menu_items/:id", to: "menu_items#destroy"
+        post "claim", to: "shop_accounts#create", as: :claim
       end
+      resources :shop_accounts, only: :index
 
       get "contributions/pending", to: "pending_contributions#show", as: :pending_contributions
       resources :contributions, only: %i[ index show ] do
@@ -78,6 +84,10 @@ Rails.application.routes.draw do
     resources :shop_batches, only: %i[ new create ]
     resources :stickers, only: :index
     resources :cafe_reports, only: %i[ index show ]
+    resources :shop_accounts, only: :index do
+      resource :approval, only: :create, module: :shop_accounts
+      resource :rejection, only: :create, module: :shop_accounts
+    end
     resources :users, only: %i[ index show update ]
   end
 

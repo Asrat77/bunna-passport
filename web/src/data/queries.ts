@@ -52,6 +52,21 @@ export function usePassport() {
   return useQuery({ queryKey: ["passport"], queryFn: async () => (await api.getPassport()).data, enabled });
 }
 
+/** The caller's claims on cafés, by shop id. */
+export function useShopAccounts() {
+  const enabled = useSignedIn();
+  return useQuery({
+    queryKey: ["shopAccounts"],
+    queryFn: async () => new Map((await api.listShopAccounts()).data.map((account) => [account.shop_id, account])),
+    enabled,
+  });
+}
+
+/** Whether the caller is this café's approved owner. */
+export function useOwnsShop(id: OpaqueId) {
+  return useShopAccounts().data?.get(id)?.status === "approved";
+}
+
 export function useShop(id: OpaqueId) {
   return useQuery({ queryKey: ["shop", id], queryFn: async () => (await api.getShop(id)).data });
 }

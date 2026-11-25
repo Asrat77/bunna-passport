@@ -21,6 +21,7 @@ class User < ApplicationRecord
   has_many :inverse_friendships, class_name: "Friendship", foreign_key: :friend_id, dependent: :delete_all
   has_many :check_in_reactions, dependent: :delete_all
   has_many :shop_scans, class_name: "Shop::Scan", dependent: :delete_all
+  has_many :shop_accounts, dependent: :destroy
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 
@@ -194,6 +195,16 @@ class User < ApplicationRecord
 
   def can_merge_shops?
     curator? || moderator?
+  end
+
+  # Whether a moderator approved them as this café's owner (ShopAccount).
+  def owns_shop?(shop)
+    shop.present? && shop_accounts.approved.exists?(shop_id: shop.id)
+  end
+
+  # Owners and moderators keep a café's menu.
+  def can_edit_menu?(shop)
+    moderator? || owns_shop?(shop)
   end
 
   def submission_limit

@@ -32,6 +32,9 @@ import type {
   ShareCards,
   Shop,
   ShopDetail,
+  ShopAccount,
+  EditableMenuItem,
+  MenuItemInput,
   SignupInput,
   Timestamp,
   User,
@@ -430,6 +433,32 @@ export const api = {
   /** What people said on visits the server verified, newest first, a page at a time. */
   listReviews(shopId: OpaqueId, options: { cursor?: OpaqueId; filter?: ReviewFilter } = {}) {
     return request<Review[]>(`/shops/${shopId}/reviews`, { query: { cursor: options.cursor, filter: options.filter } });
+  },
+
+  /** Asks the moderators to make the caller this café's owner. */
+  claimShop(shopId: OpaqueId, note?: string) {
+    return request<ShopAccount>(`/shops/${shopId}/claim`, { method: "POST", body: { shop_account: { note } } });
+  },
+
+  listShopAccounts() {
+    return request<ShopAccount[]>("/shop_accounts");
+  },
+
+  /** The whole menu, switched-off lines too: for the café's owner. */
+  listMenuItems(shopId: OpaqueId) {
+    return request<EditableMenuItem[]>(`/shops/${shopId}/menu_items`);
+  },
+
+  createMenuItem(shopId: OpaqueId, menu_item: MenuItemInput) {
+    return request<EditableMenuItem>(`/shops/${shopId}/menu_items`, { method: "POST", body: { menu_item } });
+  },
+
+  updateMenuItem(shopId: OpaqueId, id: OpaqueId, menu_item: MenuItemInput) {
+    return request<EditableMenuItem>(`/shops/${shopId}/menu_items/${id}`, { method: "PATCH", body: { menu_item } });
+  },
+
+  deleteMenuItem(shopId: OpaqueId, id: OpaqueId) {
+    return request<void>(`/shops/${shopId}/menu_items/${id}`, { method: "DELETE" });
   },
 
   suggestEdit(shopId: OpaqueId, proposed_changes: Record<string, unknown>) {

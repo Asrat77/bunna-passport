@@ -129,6 +129,22 @@ module Telegram::Messages
     end
   end
 
+  # A moderator's answer to someone's claim on a café.
+  def shop_claim_decision(account)
+    in_language_of(account.user) do
+      { text: t("shop_claim.#{account.status}", shop: h(account.shop.name)), reply_markup: keyboard([ app_button(t("buttons.open_app")) ]) }
+    end
+  end
+
+  # For the moderators: someone asked to claim a café. English, like the
+  # rest of what goes to them.
+  def shop_claim(account)
+    text = "🏷 <b>#{person(account.user)} wants to claim #{h(account.shop.name)}</b>"
+    text += "\n\n“#{h(account.note)}”" if account.note.present?
+    text += "\n\nCheck with the café before approving: an owner can change its photos, hours, landmark and menu without review."
+    { text: text, reply_markup: keyboard([ console_button("Review in the console", "/console/shop_accounts") ]) }
+  end
+
   # A while after a visit nobody rated: one tap on a cup saves the rating.
   def review_prompt(check_in)
     in_language_of(check_in.user) do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_110000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -237,6 +237,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
     t.index ["token"], name: "index_share_images_on_token", unique: true
   end
 
+  create_table "shop_accounts", force: :cascade do |t|
+    t.integer "shop_id", null: false
+    t.integer "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.string "note"
+    t.integer "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reviewed_by_id"], name: "index_shop_accounts_on_reviewed_by_id"
+    t.index ["shop_id", "user_id"], name: "index_shop_accounts_on_shop_id_and_user_id", unique: true
+    t.index ["shop_id"], name: "index_shop_accounts_on_shop_id"
+    t.index ["user_id"], name: "index_shop_accounts_on_user_id"
+    t.check_constraint "status IN ('pending', 'approved', 'rejected')", name: "shop_accounts_status"
+  end
+
   create_table "shop_edits", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "previous_values", default: {}, null: false
@@ -427,6 +443,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_100000) do
   add_foreign_key "reports", "users", column: "reviewed_by_id"
   add_foreign_key "sessions", "users"
   add_foreign_key "share_images", "check_ins"
+  add_foreign_key "shop_accounts", "shops"
+  add_foreign_key "shop_accounts", "users"
+  add_foreign_key "shop_accounts", "users", column: "reviewed_by_id"
   add_foreign_key "shop_edits", "shops"
   add_foreign_key "shop_hours", "shops"
   add_foreign_key "shop_hours", "users", column: "confirmed_by_id"

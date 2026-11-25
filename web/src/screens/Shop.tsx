@@ -1,7 +1,7 @@
 import { phCheck, phMapPin, phPencilSimple, phShareNetwork } from "@/ui/icons";
 import { useState } from "react";
 import type { ShopAttributes, ShopDetail } from "@/api/types";
-import { useCatalog, useShop } from "@/data/queries";
+import { useCatalog, useShop, useShopAccounts } from "@/data/queries";
 import { useStampsByShop } from "@/data/stamps";
 import { InkStamp } from "@/design/stamp/InkStamp";
 import { stampDate, stampRotation } from "@/design/stamp/geometry";
@@ -78,6 +78,7 @@ function ShopBody({
   // viewer's own stamp comes from their passport.
   const stamp = shop.stamp ?? stamps.get(shop.id) ?? null;
   const visitToReview = useVisitToReview(shop.id);
+  const claim = useShopAccounts().data?.get(shop.id);
 
   const statusText =
     status === "open" ? t("shop.openNow") : status === "closingSoon" ? t("shop.closingSoon") : status === "closed" ? t("shop.closedNow") : null;
@@ -174,10 +175,23 @@ function ShopBody({
               {t("suggest.entry")}
             </AddChip>
           </div>
+          {claim?.status === "approved" ? (
+            <button type="button" className="getting-there__maps shop-manage" onClick={() => push({ name: "manageCafe", shopId: shop.id })}>
+              <Icon path={phPencilSimple} size={18} />
+              {t("manage.entry")}
+            </button>
+          ) : null}
           <div className="shop-fix">
             <button type="button" className="link-button" onClick={() => push({ name: "report", shopId: shop.id })}>
               {t("reportCafe.entry")}
             </button>
+            {claim?.status === "pending" ? (
+              <span className="shop-fix__note">{t("claim.pending")}</span>
+            ) : claim?.status !== "approved" ? (
+              <button type="button" className="link-button" onClick={() => push({ name: "claimCafe", shopId: shop.id })}>
+                {t("claim.entry")}
+              </button>
+            ) : null}
           </div>
         </>
       ) : section === "photos" ? (

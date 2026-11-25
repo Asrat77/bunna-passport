@@ -68,6 +68,9 @@ en:
         photo_submission: "Your photo of <b>%{shop}</b> wasn't approved."
         thanks: "Thanks for sending it anyway. If you can fix what's missing, you're welcome to send it again."
       reason: "Moderator's note: %{reason}"
+    shop_claim:
+      approved: "✅ You're now the owner of <b>%{shop}</b> on Bunna Passport. Open the café's page to update its photos, hours, landmark and menu."
+      rejected: "We couldn't confirm you run <b>%{shop}</b>, so the claim wasn't approved. Reply here if we got it wrong."
     badge:
       earned: "🏅 Badge earned: <b>%{name}</b>"
       tally: "%{description} That's %{count} of %{total} badges."

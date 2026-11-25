@@ -1,0 +1,90 @@
+.manage-cafe__section {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manage-cafe__section h2 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.manage-cafe__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.menu-editor {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-editor__line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.menu-editor__line--off .menu-editor__names,
+.menu-editor__line--off .menu-editor__price {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.menu-editor__line--editing {
+  display: block;
+}
+
+.menu-editor__names {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-editor__price {
+  white-space: nowrap;
+}
+
+.menu-editor__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.menu-editor__remove {
+  color: var(--negative);
+}
+
+.menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-form input,
+.menu-form select {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--ink);
+  font: inherit;
+}
+
+.menu-form__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.menu-form__row > input,
+.menu-form__row > select {
+  flex: 1;
+  min-width: 0;
+}
