@@ -99,9 +99,19 @@ module Api::V1::Rendering
         check_ins_count: shop.check_ins_count,
         stamps_count: shop.stamps_count,
         photos: shop.photos.map { |photo| photo_json(photo) },
+        # What's on the menu right now; lines a moderator switched off stay out.
+        menu: shop.menu_items.select(&:available?).sort_by { |item| menu_sort_key(item) }.map { |item| menu_item_json(item) },
         merged_into_id: shop.merged_into_id,
         stamp: viewer_stamp_json(shop)
       )
+    end
+
+    def menu_item_json(item)
+      { id: item.id, name: item.name, name_am: item.name_am, price_birr: item.price_birr, category: item.category }
+    end
+
+    def menu_sort_key(item)
+      [ Shop::MenuItem::CATEGORIES.index(item.category), item.position, item.name, item.id ]
     end
 
     # The signed-in viewer's own standing at this shop, or nil for a stranger.

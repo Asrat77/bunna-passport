@@ -1923,6 +1923,28 @@ components:
             photos:
               type: array
               items: { $ref: "#/components/schemas/Photo" }
+            menu:
+              type: array
+              description: What the café serves now, in menu order. Lines a moderator marked unavailable are left out.
+              items: { $ref: "#/components/schemas/MenuItem" }
+    MenuItem:
+      type: object
+      required: [id, name, name_am, price_birr, category]
+      properties:
+        id: { $ref: "#/components/schemas/OpaqueId" }
+        name: { type: string }
+        name_am:
+          oneOf:
+            - type: string
+            - type: "null"
+        price_birr:
+          oneOf:
+            - type: integer
+              minimum: 1
+            - type: "null"
+        category:
+          type: string
+          enum: [coffee, tea, drinks, food, sweets]
     Photo:
       type: object
       required: [id, urls]

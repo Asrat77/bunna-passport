@@ -103,7 +103,19 @@ export type Photo = {
   urls: { thumb: string; medium: string; full: string };
 };
 
+export type MenuCategory = "coffee" | "tea" | "drinks" | "food" | "sweets";
+
+export type MenuItem = {
+  id: OpaqueId;
+  name: string;
+  name_am: string | null;
+  price_birr: number | null;
+  category: MenuCategory;
+};
+
 export type ShopDetail = Shop & {
+  /** What's on the menu now, in menu order. Older cached pages lack it. */
+  menu?: MenuItem[];
   check_ins_count: number;
   stamps_count: number;
   /** The signed-in viewer's own standing here, null for a stranger. */

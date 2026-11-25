@@ -20,7 +20,7 @@
       <tbody>
         <% @shops.each do |shop| %>
           <tr>
-            <td><%= link_to shop.name, console_shop_path(shop) %></td>
+            <td><%= link_to shop.name, console_shop_path(shop) %><br><small><%= link_to "Monthly report", console_cafe_report_path(shop) %></small></td>
             <% @weeks.each do |week| %>
               <% counts = @funnels[week][shop.id] %>
               <td>

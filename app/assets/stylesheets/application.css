@@ -185,8 +185,27 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
 .sticker__name { font-size: 13pt; line-height: 1.2; margin: 4mm 0 2mm; }
 .sticker__call { font-size: 8.5pt; margin: 0; }
 
+/* Table tents: a 105 x 296 mm strip of two A6 panels, the top one upside
+   down so it reads from the other side once folded. Two strips per A4. */
+.format-picker { border: 0; display: flex; flex-wrap: wrap; gap: 1rem; margin: 0; padding: 0; }
+.format-picker label { align-items: center; display: flex; font-weight: 500; gap: .4rem; }
+.format-picker input { margin: 0; width: auto; }
+.tent-sheet { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem; page: tent; }
+.tent { border-left: 1px dashed #b9ada3; border-right: 1px dashed #b9ada3; break-inside: avoid; display: flex; flex-direction: column; height: 296mm; width: 105mm; }
+.tent__panel { align-items: center; background: #fff; box-sizing: border-box; color: #2b1d14; display: flex; flex-direction: column; height: 148mm; justify-content: center; padding: 10mm 9mm; text-align: center; }
+.tent__panel--back { border-bottom: 1px dashed #b9ada3; transform: rotate(180deg); }
+.tent__brand { font-size: 9pt; font-weight: 800; letter-spacing: .08em; margin: 0 0 4mm; text-transform: uppercase; }
+.tent__name { font-size: 17pt; line-height: 1.15; margin: 0; }
+.tent__name-am { font-size: 13pt; margin: 1mm 0 0; }
+.tent .qr { height: 58mm; margin: 5mm 0; width: 58mm; }
+.tent__call { font-size: 10.5pt; font-weight: 700; line-height: 1.3; margin: 0; }
+.tent__call--am { font-size: 10pt; font-weight: 500; margin-top: 1.5mm; }
+.tent__tagline { color: #705f56; font-size: 8.5pt; font-style: italic; margin: 4mm 0 0; }
+
 @media print {
   @page { margin: 12mm; size: A4; }
+  @page tent { margin: 0; size: A4; }
+  .tent-sheet { margin: 0; }
   .site-header, .no-print, .flash { display: none !important; }
   .page-shell { margin: 0; max-width: none; padding: 0; }
   .sticker-sheet { margin: 0; }
@@ -194,6 +213,15 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
 
 /* Data gaps */
 .gaps-table td small { display: block; }
+.menu-table input, .menu-table select { min-width: 0; width: 100%; }
+.menu-table__price, .menu-table__position { max-width: 6rem; }
+.menu-table__off td { opacity: .55; }
+.menu-table__actions { display: flex; gap: .4rem; }
+.menu-add input[type="text"] { min-width: 12rem; }
+.weekday-bars { list-style: none; margin: 0; padding: 0; }
+.weekday-bars li { align-items: center; display: grid; gap: .6rem; grid-template-columns: 6.5rem 1fr 2.5rem; padding: .2rem 0; }
+.weekday-bars__bar { background: var(--leaf); border-radius: 4px; height: .8rem; width: var(--share); min-width: 2px; }
+.owner-report { font: inherit; width: 100%; }
 .scans-table td small { color: var(--muted); display: block; white-space: nowrap; }
 .gaps-table .inline-form { margin-top: .35rem; }
 .gaps-table .inline-form input[type="text"] { min-width: 16rem; }

@@ -23,7 +23,7 @@ class Api::V1::ShopsController < Api::V1::BaseController
 
   def show
     shop = Shop.where.not(status: %w[ hidden pending ])
-      .includes(:neighborhood, :hours, photos: { image_attachment: :blob })
+      .includes(:neighborhood, :hours, :menu_items, photos: { image_attachment: :blob })
       .find(params[:id])
     render_data(shop_json(shop, detailed: true))
   end

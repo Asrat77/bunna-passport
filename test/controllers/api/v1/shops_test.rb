@@ -44,6 +44,21 @@ class Api::V1::ShopsTest < ActionDispatch::IntegrationTest
     assert_equal "unknown", response_json.dig("data", "hours", "freshness")
   end
 
+  test "a café's page carries its available menu, in menu order" do
+    shop = shops(:bole)
+    shop.menu_items.create!(name: "Croissant", category: "food", price_birr: 120, position: 1)
+    shop.menu_items.create!(name: "Spris", name_am: "ስፕሪስ", category: "coffee", price_birr: 70, position: 2)
+    shop.menu_items.create!(name: "Buna", name_am: "ቡና", category: "coffee", price_birr: 40, position: 1)
+    shop.menu_items.create!(name: "Old cake", category: "sweets", available: false)
+
+    get api_v1_shop_path(shop), as: :json
+
+    assert_response :success
+    menu = response.parsed_body.dig("data", "menu")
+    assert_equal %w[ Buna Spris Croissant ], menu.map { |item| item["name"] }
+    assert_equal({ "name" => "Buna", "name_am" => "ቡና", "price_birr" => 40, "category" => "coffee" }, menu.first.except("id"))
+  end
+
   test "the catalog carries hours so a list can say whether a shop is open" do
     get api_v1_shops_path, params: { q: "Buna" }, as: :json
 

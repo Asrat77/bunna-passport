@@ -1,8 +1,8 @@
 <% content_for(:title) { "Café stickers · Bunna Passport" } %>
 <div class="no-print">
   <p class="eyebrow">Launch</p>
-  <h1>Café QR stickers</h1>
-  <p class="muted">Pick the partner cafés and print. Each QR opens that café's page in the Mini App, and anyone who signs up through it is counted under the café in the Monday report. Print at 100% scale on A4; each sticker is 90 mm square.</p>
+  <h1>Café QR stickers and table tents</h1>
+  <p class="muted">Pick the partner cafés and print. Each QR opens that café's page in the Mini App, counts as a scan under Café numbers, and anyone who signs up through it is counted under the café in the Monday report. Print at 100% scale on A4. Counter stickers are 90 mm square. Table tents are A6: two to a sheet, cut down the middle and fold each strip in half.</p>
 
   <%= form_with url: console_stickers_path, method: :get, class: "stack", data: { turbo: false } do |form| %>
     <%= form.label :neighborhood_id, "Neighborhood" %>
@@ -14,7 +14,12 @@
           <label><%= check_box_tag "shop_ids[]", shop.id, @shops.include?(shop), id: "shop_#{shop.id}" %> <%= shop.name %> <span class="muted"><%= shop.landmark %></span></label>
         <% end %>
       </fieldset>
-      <%= form.submit "Make sticker sheet" %>
+      <fieldset class="format-picker">
+        <legend>Print as</legend>
+        <label><%= radio_button_tag :format_type, "sticker", @format == "sticker" %> Counter stickers (90 mm)</label>
+        <label><%= radio_button_tag :format_type, "tent", @format == "tent" %> Table tents (A6)</label>
+      </fieldset>
+      <%= form.submit "Make print sheet" %>
     <% else %>
       <p class="muted">No live cafés here yet.</p>
     <% end %>
@@ -34,12 +39,33 @@
     <% end %>
   </section>
 
+  <% if @stickers.any? && @format == "tent" && !Console::StickersController::TENT_CALL_AM_REVIEWED %>
+    <p class="panel panel--warning"><b>Check the Amharic before printing.</b> “<span lang="am"><%= Console::StickersController::TENT_CALL_AM %></span>” is a machine draft of “<%= Console::StickersController::TENT_CALL %>” and hasn't been checked by a native speaker yet.</p>
+  <% end %>
   <% if @stickers.any? %>
-    <p><button type="button" class="button" onclick="window.print()">Print <%= pluralize(@stickers.size, "sticker") %></button></p>
+    <p><button type="button" class="button" onclick="window.print()">Print <%= pluralize(@stickers.size, @format == "tent" ? "table tent" : "sticker") %></button></p>
   <% end %>
 </div>
 
-<% if @stickers.any? %>
+<% if @stickers.any? && @format == "tent" %>
+  <section class="tent-sheet" aria-label="Table tents">
+    <% @stickers.each do |shop, link| %>
+      <article class="tent" aria-label="Table tent for <%= shop.name %>">
+        <% 2.times do |side| %>
+          <div class="tent__panel<%= " tent__panel--back" if side.zero? %>">
+            <p class="tent__brand">Bunna Passport <span lang="am">ቡና ፓስፖርት</span></p>
+            <h2 class="tent__name"><%= shop.name %></h2>
+            <% if shop.name_am.present? %><p class="tent__name-am" lang="am"><%= shop.name_am %></p><% end %>
+            <%= qr_code_svg(link, label: "QR code for #{shop.name}") %>
+            <p class="tent__call"><%= Console::StickersController::TENT_CALL %></p>
+            <p class="tent__call tent__call--am" lang="am"><%= Console::StickersController::TENT_CALL_AM %></p>
+            <p class="tent__tagline"><%= Console::StickersController::TENT_TAGLINE %></p>
+          </div>
+        <% end %>
+      </article>
+    <% end %>
+  </section>
+<% elsif @stickers.any? %>
   <section class="sticker-sheet" aria-label="Sticker sheet">
     <% @stickers.each do |shop, link| %>
       <article class="sticker">
