@@ -3,22 +3,32 @@ import { readFlag, writeFlag } from "@/telegram/storage";
 
 const TOKEN = /^[A-Za-z0-9]{8,64}$/;
 const SHOP = /^[1-9][0-9]{0,9}$/;
+const SLUG = /^[a-z0-9][a-z0-9-]{0,99}$/;
 
-/** What a launch link carries (app/models/launch_link.rb on the server). */
-export type LaunchLink = { invite: string | null; shopId: number | null };
+/**
+ * What a launch link carries (app/models/launch_link.rb on the server). A
+ * café's QR stand carries just its slug; the first stickers carried its id.
+ */
+export type LaunchLink = { invite: string | null; shopId: number | null; shopSlug: string | null };
+
+const NO_LINK: LaunchLink = { invite: null, shopId: null, shopSlug: null };
 
 /**
  * Reads a launch link. Inside Telegram it all arrives as the Mini App's
  * start parameter, parts joined by "__" (t.me/<bot>?startapp=invite_<token>,
- * or shop_12__src_qr-12 from a café sticker); on the plain website as
+ * a café stand's bare slug like tomoca-bole, or shop_12__src_qr-12 from the
+ * first café stickers); on the plain website as
  * ?invite=<token>&shop=<id>. The src tag is only for the server, which reads
  * it from the signed launch data when it makes the account.
  */
 export function launchLinkFrom(startParam: string | undefined | null, search: string): LaunchLink {
   const parts = new Map<string, string>();
+  let slug: string | null = null;
   for (const part of (startParam ?? "").split("__")) {
     const cut = part.indexOf("_");
     if (cut > 0) parts.set(part.slice(0, cut), part.slice(cut + 1));
+    // A slug never holds "_", so a part without one can only be a slug.
+    else if (cut < 0 && !slug && SLUG.test(part)) slug = part;
   }
   const query = new URLSearchParams(search);
   const invite = parts.get("invite") ?? query.get("invite");
@@ -26,6 +36,7 @@ export function launchLinkFrom(startParam: string | undefined | null, search: st
   return {
     invite: invite && TOKEN.test(invite) ? invite : null,
     shopId: shop && SHOP.test(shop) ? Number(shop) : null,
+    shopSlug: slug,
   };
 }
 
@@ -38,7 +49,7 @@ let taken = false;
 
 /** The launch's link, handed out once so Back doesn't reopen it. */
 export function takeLaunchLink(): LaunchLink {
-  if (taken) return { invite: null, shopId: null };
+  if (taken) return NO_LINK;
   taken = true;
 
   let startParam: string | undefined;

@@ -20,6 +20,7 @@ class User < ApplicationRecord
   has_many :friends, through: :friendships
   has_many :inverse_friendships, class_name: "Friendship", foreign_key: :friend_id, dependent: :delete_all
   has_many :check_in_reactions, dependent: :delete_all
+  has_many :shop_scans, class_name: "Shop::Scan", dependent: :delete_all
   belongs_to :home_neighborhood, class_name: "Neighborhood", optional: true
   has_one_attached :avatar
 

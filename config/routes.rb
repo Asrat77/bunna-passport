@@ -76,6 +76,7 @@ Rails.application.routes.draw do
     resource :data_gaps, only: :show
     resources :shop_batches, only: %i[ new create ]
     resources :stickers, only: :index
+    resources :cafe_reports, only: :index
     resources :users, only: %i[ index show update ]
   end
 

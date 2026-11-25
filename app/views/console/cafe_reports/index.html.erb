@@ -1,0 +1,40 @@
+<% content_for(:title) { "Café numbers · Bunna Passport" } %>
+<div class="page-heading">
+  <div><p class="eyebrow">Pilot</p><h1>Café QR scans</h1></div>
+</div>
+<p class="muted">Every Mini App open from a café's QR stand or sticker, by week (Monday to Sunday, Addis time). <b>Checked in</b> means a verified check-in at that café within <%= distance_of_time_in_words(Shop::Scan::CHECK_IN_WITHIN) %> of the scan; <b>new</b> means the scan made their account.</p>
+
+<% if @shops.empty? %>
+  <section class="panel"><p class="muted">No scans yet. Print stands from <%= link_to "Stickers", console_stickers_path %>.</p></section>
+<% else %>
+  <div class="table-wrap">
+    <table class="scans-table">
+      <thead>
+        <tr>
+          <th>Café</th>
+          <% @weeks.each_with_index do |week, index| %>
+            <th><%= index.zero? ? "This week" : week.begin.strftime("%b %-d") %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @shops.each do |shop| %>
+          <tr>
+            <td><%= link_to shop.name, console_shop_path(shop) %></td>
+            <% @weeks.each do |week| %>
+              <% counts = @funnels[week][shop.id] %>
+              <td>
+                <% if counts %>
+                  <b><%= counts[:scans] %></b>
+                  <small><%= counts[:check_ins] %> checked in<% if counts[:signups].positive? %> · <%= counts[:signups] %> new<% end %></small>
+                <% else %>
+                  <span class="muted">–</span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

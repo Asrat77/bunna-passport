@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_090000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -276,6 +276,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_090100) do
     t.index ["shop_id"], name: "index_shop_photos_on_shop_id"
   end
 
+  create_table "shop_scans", force: :cascade do |t|
+    t.integer "shop_id", null: false
+    t.integer "user_id", null: false
+    t.boolean "first_open", default: false, null: false
+    t.datetime "opened_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "opened_at"], name: "index_shop_scans_on_shop_id_and_opened_at"
+    t.index ["user_id", "shop_id", "opened_at"], name: "index_shop_scans_on_user_id_and_shop_id_and_opened_at", unique: true
+  end
+
   create_table "shop_submissions", force: :cascade do |t|
     t.json "amenities", default: {}, null: false
     t.datetime "created_at", null: false
@@ -409,6 +420,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_090100) do
   add_foreign_key "shop_photo_submissions", "shops"
   add_foreign_key "shop_photos", "shops"
   add_foreign_key "shop_photos", "users", column: "contributor_id"
+  add_foreign_key "shop_scans", "shops"
+  add_foreign_key "shop_scans", "users"
   add_foreign_key "shop_submissions", "neighborhoods"
   add_foreign_key "shop_submissions", "shops", column: "created_shop_id"
   add_foreign_key "shops", "neighborhoods"

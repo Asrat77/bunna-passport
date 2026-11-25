@@ -194,6 +194,7 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
 
 /* Data gaps */
 .gaps-table td small { display: block; }
+.scans-table td small { color: var(--muted); display: block; white-space: nowrap; }
 .gaps-table .inline-form { margin-top: .35rem; }
 .gaps-table .inline-form input[type="text"] { min-width: 16rem; }
 .gaps-table input[type="file"] { max-width: 14rem; padding: .4rem; }
