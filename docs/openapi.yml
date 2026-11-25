@@ -16,6 +16,8 @@ tags:
     description: Public bilingual shop discovery and incremental synchronization.
   - name: Community
     description: User-supplied shops, corrections, photos, confirmations, and reports.
+  - name: Owners
+    description: Claiming a café, and what its approved owner can change.
   - name: Activity
     description: GPS check-ins, passport progress, badges, profiles, and leaderboards.
   - name: Friends
@@ -307,6 +309,168 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "422":
           $ref: "#/components/responses/Unprocessable"
+
+  /shops/{shop_id}/menu_items:
+    get:
+      tags: [Owners]
+      operationId: listMenuItems
+      summary: Every line of a café's menu, for its owner to edit
+      description: >
+        Only the café's approved owner or a moderator. Includes lines marked
+        unavailable, which the public café page leaves out.
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      responses:
+        "200":
+          description: The menu in menu order
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/EditableMenuItem" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Owners]
+      operationId: createMenuItem
+      summary: Add a line to a café's menu
+      description: Goes live at once. Without a position, the line goes after the last one in its category.
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [menu_item]
+              properties:
+                menu_item: { $ref: "#/components/schemas/MenuItemInput" }
+      responses:
+        "201":
+          $ref: "#/components/responses/EditableMenuItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+
+  /shops/{shop_id}/menu_items/{id}:
+    patch:
+      tags: [Owners]
+      operationId: updateMenuItem
+      summary: Change a line of a café's menu
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [menu_item]
+              properties:
+                menu_item: { $ref: "#/components/schemas/MenuItemInput" }
+      responses:
+        "200":
+          $ref: "#/components/responses/EditableMenuItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+    delete:
+      tags: [Owners]
+      operationId: deleteMenuItem
+      summary: Remove a line from a café's menu
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /shops/{shop_id}/claim:
+    post:
+      tags: [Owners]
+      operationId: claimShop
+      summary: Ask to be a café's owner on Bunna Passport
+      description: >
+        Sends the moderators a request, who check with the café. Asking again
+        while a request waits, or once approved, changes nothing; after a
+        rejection it asks again.
+      parameters:
+        - $ref: "#/components/parameters/ShopId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shop_account:
+                  type: object
+                  properties:
+                    note:
+                      type: string
+                      maxLength: 500
+                      description: Who they are at the café and how to reach them.
+      responses:
+        "201":
+          description: The claim as it stands
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/ShopAccount" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /shop_accounts:
+    get:
+      tags: [Owners]
+      operationId: listShopAccounts
+      summary: The cafés the caller has claimed, and how each claim stands
+      responses:
+        "200":
+          description: The caller's claims
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ShopAccount" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /shops/{shop_id}/reviews:
     get:
@@ -1281,6 +1445,15 @@ components:
       schema: { $ref: "#/components/schemas/OpaqueId" }
 
   responses:
+    EditableMenuItem:
+      description: The menu line as saved
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data: { $ref: "#/components/schemas/EditableMenuItem" }
     Invite:
       description: The caller's invite link
       content:
@@ -1927,6 +2100,43 @@ components:
               type: array
               description: What the café serves now, in menu order. Lines a moderator marked unavailable are left out.
               items: { $ref: "#/components/schemas/MenuItem" }
+    EditableMenuItem:
+      allOf:
+        - $ref: "#/components/schemas/MenuItem"
+        - type: object
+          required: [position, available]
+          properties:
+            position: { type: integer }
+            available: { type: boolean }
+    MenuItemInput:
+      type: object
+      properties:
+        name: { type: string, maxLength: 80 }
+        name_am:
+          oneOf:
+            - type: string
+              maxLength: 80
+            - type: "null"
+        price_birr:
+          oneOf:
+            - type: integer
+              minimum: 1
+              maximum: 100000
+            - type: "null"
+        category:
+          type: string
+          enum: [coffee, tea, drinks, food, sweets]
+        position: { type: integer }
+        available: { type: boolean }
+    ShopAccount:
+      type: object
+      required: [shop_id, status, requested_at]
+      properties:
+        shop_id: { $ref: "#/components/schemas/OpaqueId" }
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        requested_at: { type: string, format: date-time }
     MenuItem:
       type: object
       required: [id, name, name_am, price_birr, category]

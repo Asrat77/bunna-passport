@@ -23,6 +23,8 @@ import { Welcome } from "./screens/Welcome";
 import { AddCafe } from "./screens/contribute/AddCafe";
 import { ReportCafe } from "./screens/contribute/ReportCafe";
 import { SuggestEdit } from "./screens/contribute/SuggestEdit";
+import { ClaimCafe } from "./screens/owner/ClaimCafe";
+import { ManageCafe } from "./screens/owner/ManageCafe";
 import { setErrorScreen } from "./lib/errorReporting";
 import { useSyncBotLanguage } from "./data/me";
 import { takeLaunchLink } from "./lib/invite";
@@ -148,6 +150,10 @@ function Screens() {
       return <SuggestEdit shopId={route.shopId} />;
     case "report":
       return <ReportCafe shopId={route.shopId} />;
+    case "claimCafe":
+      return <ClaimCafe shopId={route.shopId} />;
+    case "manageCafe":
+      return <ManageCafe shopId={route.shopId} />;
     case "addCafe":
       return <AddCafe cafeName={route.cafeName} />;
   }

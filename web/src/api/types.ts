@@ -113,6 +113,18 @@ export type MenuItem = {
   category: MenuCategory;
 };
 
+/** A line of the menu as its owner edits it: switched-off lines too. */
+export type EditableMenuItem = MenuItem & { position: number; available: boolean };
+
+export type MenuItemInput = Partial<Omit<EditableMenuItem, "id">>;
+
+/** The caller's claim on a café. */
+export type ShopAccount = {
+  shop_id: OpaqueId;
+  status: "pending" | "approved" | "rejected";
+  requested_at: Timestamp;
+};
+
 export type ShopDetail = Shop & {
   /** What's on the menu now, in menu order. Older cached pages lack it. */
   menu?: MenuItem[];

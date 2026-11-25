@@ -22,7 +22,8 @@ class Contribution < ApplicationRecord
   scope :accepted, -> { where(status: %w[ approved auto_approved ]) }
 
   def self.record!(user:, contributable:)
-    raise DailyLimitExceeded if user.contributions.where(created_at: Time.current.all_day).count >= user.submission_limit
+    owner = user.owns_shop?(contributable.try(:shop))
+    raise DailyLimitExceeded if !owner && user.contributions.where(created_at: Time.current.all_day).count >= user.submission_limit
 
     transaction do
       contribution = create!(user: user, contributable: contributable)
@@ -114,8 +115,17 @@ class Contribution < ApplicationRecord
   def auto_approvable?
     return false if shop_submission? && contributable.duplicate_override?
     return true if user.curator? || user.moderator?
+    return true if by_owner?
 
     user.regular? && shop_edit?
+  end
+
+  # The café's approved owner sending its photo, or changing only what an
+  # owner may (ShopAccount::OWNER_EDITABLE).
+  def by_owner?
+    return false if shop_submission? || !user.owns_shop?(contributable.shop)
+
+    shop_photo_submission? || (contributable.proposed_changes.to_h.keys.map(&:to_s) - ShopAccount::OWNER_EDITABLE).empty?
   end
 
   class DailyLimitExceeded < StandardError; end

@@ -1,0 +1,49 @@
+<% content_for(:title) { "Café owners · Bunna Passport" } %>
+<div class="page-heading">
+  <div><p class="eyebrow">Pilot</p><h1>Café owners</h1></div>
+</div>
+<p class="muted">People who tapped “Claim this café” in the Mini App. Check with the café before approving: an approved owner can change its photos, hours, landmark and menu without review. They hear the answer from the bot.</p>
+
+<h2>Waiting</h2>
+<% if @pending.any? %>
+  <div class="table-wrap">
+    <table class="claims-table">
+      <thead><tr><th>Café</th><th>Person</th><th>Their note</th><th>Asked</th><th></th></tr></thead>
+      <tbody>
+        <% @pending.each do |account| %>
+          <tr id="<%= dom_id(account) %>">
+            <td><%= link_to account.shop.name, console_shop_path(account.shop) %></td>
+            <td><%= link_to account.user.display_name, console_user_path(account.user) %><br><small>@<%= account.user.handle %></small></td>
+            <td><%= account.note.presence || content_tag(:span, "none", class: "muted") %></td>
+            <td><%= time_ago_in_words(account.created_at) %> ago</td>
+            <td class="claims-table__actions">
+              <%= button_to "Approve", console_shop_account_approval_path(account), class: "button" %>
+              <%= button_to "Reject", console_shop_account_rejection_path(account), class: "button button--danger" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <section class="panel"><p class="muted">No claims waiting.</p></section>
+<% end %>
+
+<% if @decided.any? %>
+  <h2>Decided</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Café</th><th>Person</th><th>Outcome</th><th>By</th></tr></thead>
+      <tbody>
+        <% @decided.each do |account| %>
+          <tr>
+            <td><%= link_to account.shop.name, console_shop_path(account.shop) %></td>
+            <td><%= link_to account.user.display_name, console_user_path(account.user) %></td>
+            <td><%= account.status.humanize %><% if account.approved? %><br><small><%= button_to "Remove owner", console_shop_account_rejection_path(account), class: "link-button", form: { data: { turbo_confirm: "Stop #{account.user.display_name} managing #{account.shop.name}?" } } %></small><% end %></td>
+            <td><%= account.reviewed_by&.display_name %><% if account.reviewed_at %><br><small><%= account.reviewed_at.to_date.to_fs(:long) %></small><% end %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

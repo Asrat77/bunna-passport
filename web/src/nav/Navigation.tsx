@@ -18,6 +18,8 @@ export type Route =
   | { name: "cafes"; query?: string; filter?: ShopFilter }
   | { name: "suggestEdit"; shopId: OpaqueId }
   | { name: "report"; shopId: OpaqueId }
+  | { name: "claimCafe"; shopId: OpaqueId }
+  | { name: "manageCafe"; shopId: OpaqueId }
   | { name: "addCafe"; cafeName?: string };
 
 type Navigation = {

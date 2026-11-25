@@ -222,6 +222,7 @@ pre { background: #2b211d; border-radius: 8px; color: #f8eee7; overflow: auto; p
 .weekday-bars li { align-items: center; display: grid; gap: .6rem; grid-template-columns: 6.5rem 1fr 2.5rem; padding: .2rem 0; }
 .weekday-bars__bar { background: var(--leaf); border-radius: 4px; height: .8rem; width: var(--share); min-width: 2px; }
 .owner-report { font: inherit; width: 100%; }
+.claims-table__actions { display: flex; gap: .4rem; }
 .scans-table td small { color: var(--muted); display: block; white-space: nowrap; }
 .gaps-table .inline-form { margin-top: .35rem; }
 .gaps-table .inline-form input[type="text"] { min-width: 16rem; }

@@ -67,6 +67,10 @@ am:
         photo_submission: "ያቀረቡት የ<b>%{shop}</b> ፎቶ አልጸደቀም።"
         thanks: "ስለላኩልን እናመሰግናለን። የጎደለውን ማስተካከል ከቻሉ እንደገና መላክ ይችላሉ።"
       reason: "የአወያዩ ማስታወሻ፦ %{reason}"
+    # Machine-drafted 2026-11-25; needs a native speaker's check.
+    shop_claim:
+      approved: "✅ አሁን በቡና ፓስፖርት ላይ የ<b>%{shop}</b> ባለቤት ነዎት። ፎቶዎቹን፣ የስራ ሰዓቱን፣ ምልክቱን እና ምናሌውን ለማስተካከል የካፌውን ገጽ ይክፈቱ።"
+      rejected: "<b>%{shop}</b>ን እንደሚያስተዳድሩ ማረጋገጥ ስላልቻልን ጥያቄዎ አልጸደቀም። ስህተት ከሆነ እዚህ ይመልሱልን።"
     badge:
       earned: "🏅 ባጅ አግኝተዋል፦ <b>%{name}</b>"
       tally: "%{description} እስካሁን ከ%{total} ባጆች %{count} አግኝተዋል።"

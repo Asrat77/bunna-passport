@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import type { OpaqueId, ShopDetail } from "@/api/types";
-import { useCatalog, useShop } from "@/data/queries";
+import { useCatalog, useOwnsShop, useShop } from "@/data/queries";
 import { useI18n } from "@/i18n/context";
 import { useNavigation } from "@/nav/Navigation";
 import { BackControl, PrimaryAction } from "@/telegram/buttons";
@@ -47,6 +47,7 @@ function EditBody({ shop }: { shop: ShopDetail }) {
   const { back } = useNavigation();
   const queryClient = useQueryClient();
   const catalog = useCatalog();
+  const owner = useOwnsShop(shop.id);
   const [form, setForm] = useState<EditForm>(() => editFormFor(shop));
   const areas = useMemo(() => neighborhoodsOf(catalog.data ?? [shop], language), [catalog.data, shop, language]);
   const changes = proposedChanges(shop, form);
@@ -64,7 +65,7 @@ function EditBody({ shop }: { shop: ShopDetail }) {
     onError: hapticError,
   });
 
-  if (send.data) return <Sent body={send.data.status === "pending" ? "sent.editPending" : "sent.editLive"} />;
+  if (send.data) return <Sent body={send.data.status === "pending" ? "sent.editPending" : owner ? "sent.editLiveOwner" : "sent.editLive"} />;
 
   return (
     <main className="screen contribute">
